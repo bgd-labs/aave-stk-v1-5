@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-// most imports are only here to force import order for better flattening diff
+// most imports are only here to force import order for better (i.e smaller) diff on flattening
 import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {Context} from '../lib/Context.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
