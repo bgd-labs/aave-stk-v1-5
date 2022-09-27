@@ -67,7 +67,10 @@ contract StakedToken is
     uint8 decimals
   )
     public
-    ERC20WithSnapshot(name, symbol, decimals)
+    ERC20WithSnapshot(
+      name,
+      symbol /**, decimals*/
+    )
     AaveDistributionManager(emissionManager, distributionDuration)
   {
     STAKED_TOKEN = stakedToken;
@@ -86,9 +89,9 @@ contract StakedToken is
     string calldata symbol,
     uint8 decimals
   ) external initializer {
-    _setName(name);
-    _setSymbol(symbol);
-    _setDecimals(decimals);
+    // _setName(name);
+    // _setSymbol(symbol);
+    // _setDecimals(decimals);
     _setAaveGovernance(aaveGovernance);
   }
 
@@ -150,7 +153,7 @@ contract StakedToken is
 
     _burn(msg.sender, amountToRedeem);
 
-    if (balanceOfMessageSender.sub(amountToRedeem) == 0) {
+    if (balanceOfMessageSender - amountToRedeem == 0) {
       stakersCooldowns[msg.sender] = 0;
     }
 

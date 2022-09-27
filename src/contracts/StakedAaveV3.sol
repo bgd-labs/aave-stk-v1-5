@@ -35,7 +35,6 @@ contract StakedAaveV3 is StakedTokenV3 {
       distributionDuration,
       NAME,
       SYMBOL,
-      DECIMALS,
       governance
     )
   {}

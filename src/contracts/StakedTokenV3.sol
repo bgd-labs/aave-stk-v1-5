@@ -34,12 +34,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   Duration internal duration;
 
-  //maximum percentage of the underlying that can be slashed in a single realization event
-  uint256 internal _maxSlashablePercentage;
-  uint256 internal _lastSlashing = 0;
-
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  uint256 public immutable UNSTAKE_WINDOW;
+  // uint256 public immutable UNSTAKE_WINDOW;
 
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
@@ -53,6 +49,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
+  uint256 internal _lastSlashing = 0;
   bool _cooldownPaused;
 
   modifier onlySlashingAdmin() {
@@ -96,6 +93,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   event Slashed(address indexed destination, uint256 amount);
   event CooldownPauseAdminChanged(address indexed newAdmin);
   event SlashingAdminChanged(address indexed newAdmin);
+  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
+  event CooldownSecondsChanged(uint256 cooldownSeconds);
 
   constructor(
     IERC20 stakedToken,
@@ -107,7 +106,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint128 distributionDuration,
     string memory name,
     string memory symbol,
-    uint8 decimals,
     address governance
   )
     public
@@ -121,7 +119,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       distributionDuration,
       name,
       symbol,
-      decimals,
       governance
     )
   {}
@@ -141,9 +138,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address cooldownPauseAdmin,
     address claimHelper,
     uint256 maxSlashablePercentage,
-    string calldata name,
-    string calldata symbol,
-    uint8 decimals,
     uint40 cooldownSeconds,
     uint40 slashingExitWindowSeconds
   ) external initializer {
@@ -167,12 +161,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         address(this)
       )
     );
-
-    if (REVISION() == 1) {
-      _name = name;
-      _symbol = symbol;
-      _setupDecimals(decimals);
-    }
 
     address[] memory adminsAddresses = new address[](3);
     uint256[] memory adminsRoles = new uint256[](3);
@@ -472,7 +460,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    */
   function setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
     external
-    override
     onlySlashingAdmin
   {
     _setSlashingExitWindowSeconds(slashingExitWindowSeconds);
@@ -485,12 +472,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit SlashingExitWindowDurationChanged(slashingExitWindowSeconds);
   }
 
-  function getSlashingExitWindowSeconds()
-    external
-    view
-    override
-    returns (uint40)
-  {
+  function getSlashingExitWindowSeconds() external view returns (uint40) {
     return duration.slashingExitWindowSeconds;
   }
 
@@ -500,7 +482,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    */
   function setCooldownSeconds(uint40 cooldownSeconds)
     external
-    override
     onlyCooldownAdmin
   {
     _setCooldownSeconds(cooldownSeconds);
@@ -511,7 +492,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
-  function getCooldownSeconds() external view override returns (uint40) {
+  function getCooldownSeconds() external view returns (uint40) {
     return duration.cooldownSeconds;
   }
 

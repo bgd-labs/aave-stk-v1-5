@@ -35,7 +35,6 @@ contract StakedAaveV2 is StakedTokenV2 {
       distributionDuration,
       NAME,
       SYMBOL,
-      DECIMALS,
       governance
     )
   {}

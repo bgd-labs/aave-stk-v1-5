@@ -12,6 +12,15 @@ interface IStakedTokenV3 is IStakedToken {
 
   function slash(address destination, uint256 amount) external;
 
+  function getSlashingExitWindowSeconds() external view returns (uint40);
+
+  function setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
+    external;
+
+  function getCooldownSeconds() external view returns (uint40);
+
+  function setCooldownSeconds(uint40 cooldownSeconds) external;
+
   function getMaxSlashablePercentage() external view returns (uint256);
 
   function setMaxSlashablePercentage(uint256 percentage) external;
@@ -38,7 +47,9 @@ interface IStakedTokenV3 is IStakedToken {
     uint256 amount
   ) external;
 
-  function claimRewardsAndStake(address to, uint256 amount) external returns (uint256);
+  function claimRewardsAndStake(address to, uint256 amount)
+    external
+    returns (uint256);
 
   function claimRewardsAndRedeem(
     address to,

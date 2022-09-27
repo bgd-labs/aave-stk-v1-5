@@ -5,7 +5,7 @@ import {ERC20} from '../lib/ERC20.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 import {
   GovernancePowerDelegationERC20
-} from '@aave/aave-token/contracts/token/base/GovernancePowerDelegationERC20.sol';
+} from './GovernancePowerDelegationERC20.sol';
 
 /**
  * @title ERC20WithSnapshot
