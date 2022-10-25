@@ -10,7 +10,7 @@
 | \_votingSnapshotsCounts           | mapping(address => uint256)                                                            |    7 |      0 |    32 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
 | \_aaveGovernance                  | contract ITransferHook                                                                 |    8 |      0 |    20 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
 | lastInitializedRevision           | uint256                                                                                |    9 |      0 |    32 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
-| **\_\_**gap                       | uint256[50]                                                                            |   10 |      0 |  1600 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
+| \_\_\_\_\_\_gap                   | uint256[50]                                                                            |   10 |      0 |  1600 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
 | assets                            | mapping(address => struct AaveDistributionManager.AssetData)                           |   60 |      0 |    32 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
 | stakerRewardsToClaim              | mapping(address => uint256)                                                            |   61 |      0 |    32 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
 | stakersCooldowns                  | mapping(address => uint256)                                                            |   62 |      0 |    32 | src/flattened/StakedTokenV2Rev3.sol:StakedTokenV2Rev3 |
