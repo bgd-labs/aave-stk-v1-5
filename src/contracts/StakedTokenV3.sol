@@ -27,11 +27,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
 
-  struct CooldownTimes {
-    uint40 cooldownSeconds;
-    uint40 slashingExitWindowSeconds;
-  }
-
   CooldownTimes internal cooldownTimes;
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
@@ -73,26 +68,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     );
     _;
   }
-
-  event Staked(
-    address indexed from,
-    address indexed to,
-    uint256 amount,
-    uint256 sharesMinted
-  );
-  event Redeem(
-    address indexed from,
-    address indexed to,
-    uint256 amount,
-    uint256 underlyingTransferred
-  );
-  event CooldownPauseChanged(bool pause);
-  event MaxSlashablePercentageChanged(uint256 newPercentage);
-  event Slashed(address indexed destination, uint256 amount);
-  event CooldownPauseAdminChanged(address indexed newAdmin);
-  event SlashingAdminChanged(address indexed newAdmin);
-  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
-  event CooldownSecondsChanged(uint256 cooldownSeconds);
 
   constructor(
     IERC20 stakedToken,
