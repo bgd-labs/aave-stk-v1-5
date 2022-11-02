@@ -27,12 +27,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
 
-  struct Duration {
+  struct CooldownTimes {
     uint40 cooldownSeconds;
     uint40 slashingExitWindowSeconds;
   }
 
-  Duration internal duration;
+  CooldownTimes internal cooldownTimes;
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
   uint256 public constant SLASH_ADMIN_ROLE = 0;
@@ -466,12 +466,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   function _setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
     internal
   {
-    duration.slashingExitWindowSeconds = slashingExitWindowSeconds;
+    cooldownTimes.slashingExitWindowSeconds = slashingExitWindowSeconds;
     emit SlashingExitWindowDurationChanged(slashingExitWindowSeconds);
   }
 
   function getSlashingExitWindowSeconds() external view returns (uint40) {
-    return duration.slashingExitWindowSeconds;
+    return cooldownTimes.slashingExitWindowSeconds;
   }
 
   /**
@@ -486,12 +486,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   function _setCooldownSeconds(uint40 cooldownSeconds) internal {
-    duration.cooldownSeconds = cooldownSeconds;
+    cooldownTimes.cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
   function getCooldownSeconds() external view returns (uint40) {
-    return duration.cooldownSeconds;
+    return cooldownTimes.cooldownSeconds;
   }
 
   /**
@@ -589,7 +589,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     }
 
     uint256 minimalValidCooldownTimestamp = block.timestamp -
-      duration.cooldownSeconds -
+      cooldownTimes.cooldownSeconds -
       UNSTAKE_WINDOW;
 
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
@@ -626,16 +626,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
     bool slashingGracePeriod = block.timestamp <=
-      _lastSlashing + duration.slashingExitWindowSeconds;
+      _lastSlashing + cooldownTimes.slashingExitWindowSeconds;
 
     if (!slashingGracePeriod) {
       require(
-        (block.timestamp > cooldownStartTimestamp + duration.cooldownSeconds),
+        (block.timestamp >
+          cooldownStartTimestamp + cooldownTimes.cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
         (block.timestamp -
-          (cooldownStartTimestamp + duration.cooldownSeconds) <=
+          (cooldownStartTimestamp + cooldownTimes.cooldownSeconds) <=
           UNSTAKE_WINDOW),
         'UNSTAKE_WINDOW_FINISHED'
       );
