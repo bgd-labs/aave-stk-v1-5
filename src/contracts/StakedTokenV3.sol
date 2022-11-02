@@ -257,23 +257,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     returns (uint256)
   {
-    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-
-    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-      msg.sender,
-      balanceOf(msg.sender),
-      true
-    );
-    uint256 amountToClaim = (amount > userUpdatedRewards)
-      ? userUpdatedRewards
-      : amount;
-
-    if (amountToClaim != 0) {
-      _stake(address(this), to, amountToClaim, false);
-      _claimRewards(msg.sender, address(this), amountToClaim);
-    }
-
-    return amountToClaim;
+    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
   /**
@@ -287,23 +271,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) external override onlyClaimHelper returns (uint256) {
-    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-
-    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-      from,
-      balanceOf(from),
-      true
-    );
-    uint256 amountToClaim = (amount > userUpdatedRewards)
-      ? userUpdatedRewards
-      : amount;
-
-    if (amountToClaim != 0) {
-      _stake(address(this), to, amountToClaim, false);
-      _claimRewards(from, address(this), amountToClaim);
-    }
-
-    return (amountToClaim);
+    return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
   /**
@@ -496,6 +464,30 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
     emit RewardsClaimed(from, to, amountToClaim);
+    return amountToClaim;
+  }
+
+  function _claimRewardsAndStakeOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) internal returns (uint256) {
+    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
+
+    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
+      from,
+      balanceOf(from),
+      true
+    );
+    uint256 amountToClaim = (amount > userUpdatedRewards)
+      ? userUpdatedRewards
+      : amount;
+
+    if (amountToClaim != 0) {
+      _stake(address(this), to, amountToClaim, false);
+      _claimRewards(from, address(this), amountToClaim);
+    }
+
     return amountToClaim;
   }
 
