@@ -42,7 +42,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
-  uint256 internal _lastSlashing = 0;
+  uint256 internal _lastSlashing;
   bool _cooldownPaused;
 
   modifier onlySlashingAdmin() {
