@@ -35,8 +35,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   Duration internal duration;
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  // uint256 public immutable UNSTAKE_WINDOW;
-
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
