@@ -21,7 +21,6 @@ interface IStakedTokenV3 is IStakedToken {
     uint256 amount,
     uint256 shares
   );
-  event CooldownPauseChanged(bool pause);
   event MaxSlashablePercentageChanged(uint256 newPercentage);
   event Slashed(address indexed destination, uint256 amount);
   event CooldownPauseAdminChanged(address indexed newAdmin);
@@ -30,10 +29,6 @@ interface IStakedTokenV3 is IStakedToken {
   event CooldownSecondsChanged(uint256 cooldownSeconds);
 
   function exchangeRate() external view returns (uint256);
-
-  function getCooldownPaused() external view returns (bool);
-
-  function setCooldownPause(bool paused) external;
 
   function slash(address destination, uint256 amount) external;
 

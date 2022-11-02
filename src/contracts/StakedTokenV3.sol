@@ -43,7 +43,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
   uint256 internal _lastSlashing;
-  bool _cooldownPaused;
 
   modifier onlySlashingAdmin() {
     require(
@@ -343,22 +342,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _lastSlashing = block.timestamp;
 
     emit Slashed(destination, amount);
-  }
-
-  /**
-   * @dev returns true if the unstake cooldown is paused
-   */
-  function getCooldownPaused() external view override returns (bool) {
-    return _cooldownPaused;
-  }
-
-  /**
-   * @dev sets the state of the cooldown pause
-   * @param paused true if the cooldown needs to be paused, false otherwise
-   */
-  function setCooldownPause(bool paused) external override onlyCooldownAdmin {
-    _cooldownPaused = paused;
-    emit CooldownPauseChanged(paused);
   }
 
   /**
