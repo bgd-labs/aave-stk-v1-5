@@ -523,7 +523,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
     emit RewardsClaimed(from, to, amountToClaim);
-    return (amountToClaim);
+    return amountToClaim;
   }
 
   function _stake(
