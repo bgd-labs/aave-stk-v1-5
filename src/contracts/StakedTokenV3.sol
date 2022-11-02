@@ -509,6 +509,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal returns (uint256) {
+    require(amount != 0, 'INVALID_ZERO_AMOUNT');
     uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
       from,
       balanceOf(from),
