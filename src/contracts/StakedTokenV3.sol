@@ -632,6 +632,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
 
-    emit Redeem(from, to, amountToRedeem, underlyingToRedeem);
+    emit Redeem(from, to, underlyingToRedeem, amountToRedeem);
   }
 }
