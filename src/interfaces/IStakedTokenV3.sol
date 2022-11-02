@@ -23,8 +23,6 @@ interface IStakedTokenV3 is IStakedToken {
   );
   event MaxSlashablePercentageChanged(uint256 newPercentage);
   event Slashed(address indexed destination, uint256 amount);
-  event CooldownPauseAdminChanged(address indexed newAdmin);
-  event SlashingAdminChanged(address indexed newAdmin);
   event SlashingExitWindowDurationChanged(uint256 windowSeconds);
   event CooldownSecondsChanged(uint256 cooldownSeconds);
 
