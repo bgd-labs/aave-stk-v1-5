@@ -1,19 +1,62 @@
-```diff --git a/src/flattened/StakedTokenV2Rev3.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 46a5dfd..a435f8f 100644
---- a/src/flattened/StakedTokenV2Rev3.sol
+```diff
+diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
+index 893cc8c..1be6414 100644
+--- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
-@@ -1,6 +1,7 @@
+@@ -1,13 +1,13 @@
+-/**
+- *Submitted for verification at Etherscan.io on 2020-12-10
+- */
+-
  // SPDX-License-Identifier: agpl-3.0
 -pragma solidity 0.7.5;
 -pragma experimental ABIEncoderV2;
 +pragma solidity ^0.8.0;
 +
-+// most imports are only here to force import order for better flattening diff
++// most imports are only here to force import order for better (i.e smaller) diff on flattening
  
  interface IGovernancePowerDelegationToken {
-   enum DelegationType {
-@@ -88,24 +89,24 @@ interface IGovernancePowerDelegationToken {
-     returns (uint256);
+-  enum DelegationType {VOTING_POWER, PROPOSITION_POWER}
++  enum DelegationType {
++    VOTING_POWER,
++    PROPOSITION_POWER
++  }
+ 
+   /**
+    * @dev emitted when a user delegates to another
+@@ -27,14 +27,20 @@ interface IGovernancePowerDelegationToken {
+    * @param amount the amount of delegated power for the user
+    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+    **/
+-  event DelegatedPowerChanged(address indexed user, uint256 amount, DelegationType delegationType);
++  event DelegatedPowerChanged(
++    address indexed user,
++    uint256 amount,
++    DelegationType delegationType
++  );
+ 
+   /**
+    * @dev delegates the specific power to a delegatee
+    * @param delegatee the user which delegated power has changed
+    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+    **/
+-  function delegateByType(address delegatee, DelegationType delegationType) external virtual;
++  function delegateByType(address delegatee, DelegationType delegationType)
++    external
++    virtual;
+ 
+   /**
+    * @dev delegates all the powers to a specific user
+@@ -76,27 +82,31 @@ interface IGovernancePowerDelegationToken {
+   /**
+    * @dev returns the total supply at a certain block number
+    **/
+-  function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
++  function totalSupplyAt(uint256 blockNumber)
++    external
++    view
++    virtual
++    returns (uint256);
  }
  
 +// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -43,7 +86,19 @@ index 46a5dfd..a435f8f 100644
      return msg.data;
    }
  }
-@@ -192,167 +193,7 @@ interface IERC20 {
+@@ -132,7 +142,10 @@ interface IERC20 {
+    *
+    * This value changes when {approve} or {transferFrom} are called.
+    */
+-  function allowance(address owner, address spender) external view returns (uint256);
++  function allowance(address owner, address spender)
++    external
++    view
++    returns (uint256);
+ 
+   /**
+    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+@@ -180,167 +193,7 @@ interface IERC20 {
    event Approval(address indexed owner, address indexed spender, uint256 value);
  }
  
@@ -212,7 +267,7 @@ index 46a5dfd..a435f8f 100644
  
  /**
   * @dev Collection of functions related to the address type
-@@ -375,18 +216,22 @@ library Address {
+@@ -363,18 +216,22 @@ library Address {
     *  - an address where a contract will be created
     *  - an address where a contract lived, but was destroyed
     * ====
@@ -245,16 +300,17 @@ index 46a5dfd..a435f8f 100644
    }
  
    /**
-@@ -408,13 +253,219 @@ library Address {
+@@ -396,10 +253,219 @@ library Address {
    function sendValue(address payable recipient, uint256 amount) internal {
      require(address(this).balance >= amount, 'Address: insufficient balance');
  
 -    // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
      (bool success, ) = recipient.call{value: amount}('');
-     require(
-       success,
-       'Address: unable to send value, recipient may have reverted'
-     );
+-    require(success, 'Address: unable to send value, recipient may have reverted');
++    require(
++      success,
++      'Address: unable to send value, recipient may have reverted'
++    );
    }
 +
 +  /**
@@ -466,7 +522,7 @@ index 46a5dfd..a435f8f 100644
  }
  
  /**
-@@ -428,9 +479,10 @@ library Address {
+@@ -413,9 +479,10 @@ library Address {
   * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
   * to implement supply mechanisms].
   *
@@ -480,7 +536,7 @@ index 46a5dfd..a435f8f 100644
   *
   * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
   * This allows applications to reconstruct the allowance for all accounts just
-@@ -441,39 +493,35 @@ library Address {
+@@ -426,39 +493,35 @@ library Address {
   * functions have been added to mitigate the well-known issues around setting
   * allowances. See {IERC20-approve}.
   */
@@ -534,7 +590,7 @@ index 46a5dfd..a435f8f 100644
      return _name;
    }
  
-@@ -481,38 +529,44 @@ contract ERC20 is Context, IERC20 {
+@@ -466,38 +529,44 @@ contract ERC20 is Context, IERC20 {
     * @dev Returns the symbol of the token, usually a shorter version of the
     * name.
     */
@@ -587,7 +643,7 @@ index 46a5dfd..a435f8f 100644
      return _balances[account];
    }
  
-@@ -521,16 +575,17 @@ contract ERC20 is Context, IERC20 {
+@@ -506,11 +575,17 @@ contract ERC20 is Context, IERC20 {
     *
     * Requirements:
     *
@@ -595,20 +651,20 @@ index 46a5dfd..a435f8f 100644
 +   * - `to` cannot be the zero address.
     * - the caller must have a balance of at least `amount`.
     */
--  function transfer(address recipient, uint256 amount)
-+  function transfer(address to, uint256 amount)
-     public
-     virtual
-     override
-     returns (bool)
-   {
+-  function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
 -    _transfer(_msgSender(), recipient, amount);
++  function transfer(address to, uint256 amount)
++    public
++    virtual
++    override
++    returns (bool)
++  {
 +    address owner = _msgSender();
 +    _transfer(owner, to, amount);
      return true;
    }
  
-@@ -550,6 +605,9 @@ contract ERC20 is Context, IERC20 {
+@@ -530,12 +605,21 @@ contract ERC20 is Context, IERC20 {
    /**
     * @dev See {IERC20-approve}.
     *
@@ -618,17 +674,21 @@ index 46a5dfd..a435f8f 100644
     * Requirements:
     *
     * - `spender` cannot be the zero address.
-@@ -560,7 +618,8 @@ contract ERC20 is Context, IERC20 {
-     override
-     returns (bool)
-   {
+    */
+-  function approve(address spender, uint256 amount) public virtual override returns (bool) {
 -    _approve(_msgSender(), spender, amount);
++  function approve(address spender, uint256 amount)
++    public
++    virtual
++    override
++    returns (bool)
++  {
 +    address owner = _msgSender();
 +    _approve(owner, spender, amount);
      return true;
    }
  
-@@ -568,28 +627,26 @@ contract ERC20 is Context, IERC20 {
+@@ -543,25 +627,26 @@ contract ERC20 is Context, IERC20 {
     * @dev See {IERC20-transferFrom}.
     *
     * Emits an {Approval} event indicating the updated allowance. This is not
@@ -659,10 +719,7 @@ index 46a5dfd..a435f8f 100644
 -    _approve(
 -      sender,
 -      _msgSender(),
--      _allowances[sender][_msgSender()].sub(
--        amount,
--        'ERC20: transfer amount exceeds allowance'
--      )
+-      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
 -    );
 +    address spender = _msgSender();
 +    _spendAllowance(from, spender, amount);
@@ -670,21 +727,23 @@ index 46a5dfd..a435f8f 100644
      return true;
    }
  
-@@ -610,11 +667,8 @@ contract ERC20 is Context, IERC20 {
-     virtual
-     returns (bool)
-   {
--    _approve(
--      _msgSender(),
--      spender,
--      _allowances[_msgSender()][spender].add(addedValue)
--    );
+@@ -577,8 +662,13 @@ contract ERC20 is Context, IERC20 {
+    *
+    * - `spender` cannot be the zero address.
+    */
+-  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+-    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
++  function increaseAllowance(address spender, uint256 addedValue)
++    public
++    virtual
++    returns (bool)
++  {
 +    address owner = _msgSender();
 +    _approve(owner, spender, allowance(owner, spender) + addedValue);
      return true;
    }
  
-@@ -637,47 +691,53 @@ contract ERC20 is Context, IERC20 {
+@@ -601,44 +691,53 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -742,10 +801,7 @@ index 46a5dfd..a435f8f 100644
 -    _beforeTokenTransfer(sender, recipient, amount);
 +    _beforeTokenTransfer(from, to, amount);
  
--    _balances[sender] = _balances[sender].sub(
--      amount,
--      'ERC20: transfer amount exceeds balance'
--    );
+-    _balances[sender] = _balances[sender].sub(amount, 'ERC20: transfer amount exceeds balance');
 -    _balances[recipient] = _balances[recipient].add(amount);
 -    emit Transfer(sender, recipient, amount);
 +    uint256 fromBalance = _balances[from];
@@ -761,7 +817,7 @@ index 46a5dfd..a435f8f 100644
    }
  
    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-@@ -685,18 +745,20 @@ contract ERC20 is Context, IERC20 {
+@@ -646,18 +745,20 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `from` set to the zero address.
     *
@@ -786,7 +842,7 @@ index 46a5dfd..a435f8f 100644
    }
  
    /**
-@@ -705,7 +767,7 @@ contract ERC20 is Context, IERC20 {
+@@ -666,7 +767,7 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `to` set to the zero address.
     *
@@ -795,14 +851,11 @@ index 46a5dfd..a435f8f 100644
     *
     * - `account` cannot be the zero address.
     * - `account` must have at least `amount` tokens.
-@@ -715,18 +777,22 @@ contract ERC20 is Context, IERC20 {
+@@ -676,15 +777,22 @@ contract ERC20 is Context, IERC20 {
  
      _beforeTokenTransfer(account, address(0), amount);
  
--    _balances[account] = _balances[account].sub(
--      amount,
--      'ERC20: burn amount exceeds balance'
--    );
+-    _balances[account] = _balances[account].sub(amount, 'ERC20: burn amount exceeds balance');
 -    _totalSupply = _totalSupply.sub(amount);
 +    uint256 accountBalance = _balances[account];
 +    require(accountBalance >= amount, 'ERC20: burn amount exceeds balance');
@@ -825,7 +878,7 @@ index 46a5dfd..a435f8f 100644
     * e.g. set automatic allowances for certain subsystems, etc.
     *
     * Emits an {Approval} event.
-@@ -749,14 +815,25 @@ contract ERC20 is Context, IERC20 {
+@@ -707,14 +815,25 @@ contract ERC20 is Context, IERC20 {
    }
  
    /**
@@ -857,7 +910,7 @@ index 46a5dfd..a435f8f 100644
    }
  
    /**
-@@ -766,7 +843,7 @@ contract ERC20 is Context, IERC20 {
+@@ -724,7 +843,7 @@ contract ERC20 is Context, IERC20 {
     * Calling conditions:
     *
     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
@@ -866,7 +919,7 @@ index 46a5dfd..a435f8f 100644
     * - when `from` is zero, `amount` tokens will be minted for `to`.
     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
     * - `from` and `to` are never both zero.
-@@ -778,6 +855,26 @@ contract ERC20 is Context, IERC20 {
+@@ -736,6 +855,26 @@ contract ERC20 is Context, IERC20 {
      address to,
      uint256 amount
    ) internal virtual {}
@@ -893,7 +946,7 @@ index 46a5dfd..a435f8f 100644
  }
  
  interface IStakedAave {
-@@ -812,10 +909,11 @@ library DistributionTypes {
+@@ -770,10 +909,11 @@ library DistributionTypes {
    }
  }
  
@@ -907,7 +960,7 @@ index 46a5dfd..a435f8f 100644
   * contract returns false). Tokens that return no value (and instead revert or
   * throw on failure) are also supported, non-reverting calls are assumed to be
   * successful.
-@@ -823,7 +921,6 @@ library DistributionTypes {
+@@ -781,7 +921,6 @@ library DistributionTypes {
   * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
   */
  library SafeERC20 {
@@ -915,24 +968,27 @@ index 46a5dfd..a435f8f 100644
    using Address for address;
  
    function safeTransfer(
-@@ -831,7 +928,7 @@ library SafeERC20 {
+@@ -789,7 +928,10 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
--    callOptionalReturn(
+-    callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
 +    _callOptionalReturn(
-       token,
-       abi.encodeWithSelector(token.transfer.selector, to, value)
-     );
-@@ -843,37 +940,85 @@ library SafeERC20 {
++      token,
++      abi.encodeWithSelector(token.transfer.selector, to, value)
++    );
+   }
+ 
+   function safeTransferFrom(
+@@ -798,32 +940,89 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
--    callOptionalReturn(
+-    callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
 +    _callOptionalReturn(
-       token,
-       abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-     );
++      token,
++      abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
++    );
    }
  
 +  /**
@@ -954,11 +1010,11 @@ index 46a5dfd..a435f8f 100644
        (value == 0) || (token.allowance(address(this), spender) == 0),
        'SafeERC20: approve from non-zero to non-zero allowance'
      );
--    callOptionalReturn(
+-    callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
 +    _callOptionalReturn(
-       token,
-       abi.encodeWithSelector(token.approve.selector, spender, value)
-     );
++      token,
++      abi.encodeWithSelector(token.approve.selector, spender, value)
++    );
    }
  
 -  function callOptionalReturn(IERC20 token, bytes memory data) private {
@@ -974,10 +1030,7 @@ index 46a5dfd..a435f8f 100644
 +      abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
 +    );
 +  }
- 
--    // solhint-disable-next-line avoid-low-level-calls
--    (bool success, bytes memory returndata) = address(token).call(data);
--    require(success, 'SafeERC20: low-level call failed');
++
 +  function safeDecreaseAllowance(
 +    IERC20 token,
 +    address spender,
@@ -997,6 +1050,9 @@ index 46a5dfd..a435f8f 100644
 +    }
 +  }
  
+-    // solhint-disable-next-line avoid-low-level-calls
+-    (bool success, bytes memory returndata) = address(token).call(data);
+-    require(success, 'SafeERC20: low-level call failed');
 +  /**
 +   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
 +   * on the return value: the return value is optional (but if data is returned, it must not be false).
@@ -1007,7 +1063,7 @@ index 46a5dfd..a435f8f 100644
 +    // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
 +    // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
 +    // the target address contains contract code and also asserts for success in the low-level call.
-+
+ 
 +    bytes memory returndata = address(token).functionCall(
 +      data,
 +      'SafeERC20: low-level call failed'
@@ -1015,10 +1071,39 @@ index 46a5dfd..a435f8f 100644
      if (returndata.length > 0) {
        // Return data is optional
 -      // solhint-disable-next-line max-line-length
-       require(
-         abi.decode(returndata, (bool)),
-         'SafeERC20: ERC20 operation did not succeed'
-@@ -937,8 +1082,6 @@ interface IAaveDistributionManager {
+-      require(abi.decode(returndata, (bool)), 'SafeERC20: ERC20 operation did not succeed');
++      require(
++        abi.decode(returndata, (bool)),
++        'SafeERC20: ERC20 operation did not succeed'
++      );
+     }
+   }
+ }
+@@ -853,7 +1052,10 @@ abstract contract VersionedInitializable {
+    */
+   modifier initializer() {
+     uint256 revision = getRevision();
+-    require(revision > lastInitializedRevision, 'Contract instance has already been initialized');
++    require(
++      revision > lastInitializedRevision,
++      'Contract instance has already been initialized'
++    );
+ 
+     lastInitializedRevision = revision;
+ 
+@@ -869,8 +1071,9 @@ abstract contract VersionedInitializable {
+ }
+ 
+ interface IAaveDistributionManager {
+-  function configureAssets(DistributionTypes.AssetConfigInput[] calldata assetsConfigInput)
+-    external;
++  function configureAssets(
++    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
++  ) external;
+ }
+ 
+ /**
+@@ -879,8 +1082,6 @@ interface IAaveDistributionManager {
   * @author Aave
   **/
  contract AaveDistributionManager is IAaveDistributionManager {
@@ -1027,8 +1112,16 @@ index 46a5dfd..a435f8f 100644
    struct AssetData {
      uint128 emissionPerSecond;
      uint128 lastUpdateTimestamp;
-@@ -963,7 +1106,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-   );
+@@ -898,10 +1099,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+ 
+   event AssetConfigUpdated(address indexed asset, uint256 emission);
+   event AssetIndexUpdated(address indexed asset, uint256 index);
+-  event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
++  event UserIndexUpdated(
++    address indexed user,
++    address indexed asset,
++    uint256 index
++  );
  
    constructor(address emissionManager, uint256 distributionDuration) public {
 -    DISTRIBUTION_END = block.timestamp.add(distributionDuration);
@@ -1036,7 +1129,54 @@ index 46a5dfd..a435f8f 100644
      EMISSION_MANAGER = emissionManager;
    }
  
-@@ -1077,14 +1220,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -909,14 +1114,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @dev Configures the distribution of rewards for a list of assets
+    * @param assetsConfigInput The list of configurations to apply
+    **/
+-  function configureAssets(DistributionTypes.AssetConfigInput[] calldata assetsConfigInput)
+-    external
+-    override
+-  {
++  function configureAssets(
++    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
++  ) external override {
+     require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+ 
+     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+-      AssetData storage assetConfig = assets[assetsConfigInput[i].underlyingAsset];
++      AssetData storage assetConfig = assets[
++        assetsConfigInput[i].underlyingAsset
++      ];
+ 
+       _updateAssetStateInternal(
+         assetsConfigInput[i].underlyingAsset,
+@@ -952,8 +1158,12 @@ contract AaveDistributionManager is IAaveDistributionManager {
+       return oldIndex;
+     }
+ 
+-    uint256 newIndex =
+-      _getAssetIndex(oldIndex, assetConfig.emissionPerSecond, lastUpdateTimestamp, totalStaked);
++    uint256 newIndex = _getAssetIndex(
++      oldIndex,
++      assetConfig.emissionPerSecond,
++      lastUpdateTimestamp,
++      totalStaked
++    );
+ 
+     if (newIndex != oldIndex) {
+       assetConfig.index = newIndex;
+@@ -1003,21 +1213,21 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param stakes List of structs of the user data related with his stake
+    * @return The accrued rewards for the user until the moment
+    **/
+-  function _claimRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
+-    internal
+-    returns (uint256)
+-  {
++  function _claimRewards(
++    address user,
++    DistributionTypes.UserStakeInput[] memory stakes
++  ) internal returns (uint256) {
      uint256 accruedRewards = 0;
  
      for (uint256 i = 0; i < stakes.length; i++) {
@@ -1054,13 +1194,40 @@ index 46a5dfd..a435f8f 100644
      }
  
      return accruedRewards;
-@@ -1111,9 +1254,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
-         stakes[i].totalStaked
-       );
+@@ -1029,26 +1239,28 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param stakes List of structs of the user data related with his stake
+    * @return The accrued rewards for the user until the moment
+    **/
+-  function _getUnclaimedRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
+-    internal
+-    view
+-    returns (uint256)
+-  {
++  function _getUnclaimedRewards(
++    address user,
++    DistributionTypes.UserStakeInput[] memory stakes
++  ) internal view returns (uint256) {
+     uint256 accruedRewards = 0;
  
+     for (uint256 i = 0; i < stakes.length; i++) {
+       AssetData storage assetConfig = assets[stakes[i].underlyingAsset];
+-      uint256 assetIndex =
+-        _getAssetIndex(
+-          assetConfig.index,
+-          assetConfig.emissionPerSecond,
+-          assetConfig.lastUpdateTimestamp,
+-          stakes[i].totalStaked
+-        );
+-
 -      accruedRewards = accruedRewards.add(
 -        _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user])
--      );
++      uint256 assetIndex = _getAssetIndex(
++        assetConfig.index,
++        assetConfig.emissionPerSecond,
++        assetConfig.lastUpdateTimestamp,
++        stakes[i].totalStaked
+       );
++
 +      accruedRewards =
 +        accruedRewards +
 +        _getRewards(
@@ -1071,44 +1238,136 @@ index 46a5dfd..a435f8f 100644
      }
      return accruedRewards;
    }
-@@ -1131,9 +1278,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1065,7 +1277,9 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 reserveIndex,
      uint256 userIndex
    ) internal pure returns (uint256) {
-     return
--      principalUserBalance.mul(reserveIndex.sub(userIndex)).div(
--        10**uint256(PRECISION)
--      );
+-    return principalUserBalance.mul(reserveIndex.sub(userIndex)).div(10**uint256(PRECISION));
++    return
 +      (principalUserBalance * (reserveIndex - userIndex)) /
 +      (10**uint256(PRECISION));
    }
  
    /**
-@@ -1162,13 +1308,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
-     uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
-       ? DISTRIBUTION_END
-       : block.timestamp;
+@@ -1091,13 +1305,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+       return currentIndex;
+     }
+ 
+-    uint256 currentTimestamp =
+-      block.timestamp > DISTRIBUTION_END ? DISTRIBUTION_END : block.timestamp;
 -    uint256 timeDelta = currentTimestamp.sub(lastUpdateTimestamp);
++    uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
++      ? DISTRIBUTION_END
++      : block.timestamp;
 +    uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
      return
--      emissionPerSecond
--        .mul(timeDelta)
--        .mul(10**uint256(PRECISION))
--        .div(totalBalance)
--        .add(currentIndex);
+-      emissionPerSecond.mul(timeDelta).mul(10**uint256(PRECISION)).div(totalBalance).add(
+-        currentIndex
+-      );
 +      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
 +        totalBalance) + currentIndex;
    }
  
    /**
-@@ -1194,7 +1337,6 @@ abstract contract GovernancePowerDelegationERC20 is
-   ERC20,
-   IGovernancePowerDelegationToken
- {
+@@ -1106,7 +1320,11 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param asset The address of the reference asset of the distribution
+    * @return The new index
+    **/
+-  function getUserAssetData(address user, address asset) public view returns (uint256) {
++  function getUserAssetData(address user, address asset)
++    public
++    view
++    returns (uint256)
++  {
+     return assets[asset].users[user];
+   }
+ }
+@@ -1115,11 +1333,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+  * @notice implementation of the AAVE token contract
+  * @author Aave
+  */
+-abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDelegationToken {
 -  using SafeMath for uint256;
++abstract contract GovernancePowerDelegationERC20 is
++  ERC20,
++  IGovernancePowerDelegationToken
++{
    /// @notice The EIP-712 typehash for the delegation struct used by the contract
    bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
-     keccak256(
-@@ -1374,10 +1516,10 @@ abstract contract GovernancePowerDelegationERC20 is
+-    keccak256('DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)');
++    keccak256(
++      'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
++    );
+ 
+   bytes32 public constant DELEGATE_TYPEHASH =
+     keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
+@@ -1135,7 +1357,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+    * @param delegatee the user which delegated power has changed
+    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+    **/
+-  function delegateByType(address delegatee, DelegationType delegationType) external override {
++  function delegateByType(address delegatee, DelegationType delegationType)
++    external
++    override
++  {
+     _delegateByType(msg.sender, delegatee, delegationType);
+   }
+ 
+@@ -1158,7 +1383,11 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+     override
+     returns (address)
+   {
+-    (, , mapping(address => address) storage delegates) = _getDelegationDataByType(delegationType);
++    (
++      ,
++      ,
++      mapping(address => address) storage delegates
++    ) = _getDelegationDataByType(delegationType);
+ 
+     return _getDelegatee(delegator, delegates);
+   }
+@@ -1207,7 +1436,12 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+    * In this initial implementation with no AAVE minting, simply returns the current supply
+    * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
+    **/
+-  function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
++  function totalSupplyAt(uint256 blockNumber)
++    external
++    view
++    override
++    returns (uint256)
++  {
+     return super.totalSupply();
+   }
+ 
+@@ -1223,7 +1457,11 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+   ) internal {
+     require(delegatee != address(0), 'INVALID_DELEGATEE');
+ 
+-    (, , mapping(address => address) storage delegates) = _getDelegationDataByType(delegationType);
++    (
++      ,
++      ,
++      mapping(address => address) storage delegates
++    ) = _getDelegationDataByType(delegationType);
+ 
+     uint256 delegatorBalance = balanceOf(delegator);
+ 
+@@ -1231,7 +1469,12 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+ 
+     delegates[delegator] = delegatee;
+ 
+-    _moveDelegatesByType(previousDelegatee, delegatee, delegatorBalance, delegationType);
++    _moveDelegatesByType(
++      previousDelegatee,
++      delegatee,
++      delegatorBalance,
++      delegationType
++    );
+     emit DelegateChanged(delegator, delegatee, delegationType);
+   }
+ 
+@@ -1273,10 +1516,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
          snapshotsCounts,
          from,
          uint128(previous),
@@ -1121,7 +1380,7 @@ index 46a5dfd..a435f8f 100644
      }
      if (to != address(0)) {
        uint256 previous = 0;
-@@ -1393,10 +1535,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1292,10 +1535,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
          snapshotsCounts,
          to,
          uint128(previous),
@@ -1134,16 +1393,36 @@ index 46a5dfd..a435f8f 100644
      }
    }
  
-@@ -1522,8 +1664,6 @@ abstract contract GovernancePowerDelegationERC20 is
- abstract contract GovernancePowerWithSnapshot is
-   GovernancePowerDelegationERC20
- {
+@@ -1399,11 +1642,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+    * @param delegator the address of the user for which return the delegatee
+    * @param delegates the array of delegates for a particular type of delegation
+    **/
+-  function _getDelegatee(address delegator, mapping(address => address) storage delegates)
+-    internal
+-    view
+-    returns (address)
+-  {
++  function _getDelegatee(
++    address delegator,
++    mapping(address => address) storage delegates
++  ) internal view returns (address) {
+     address previousDelegatee = delegates[delegator];
+ 
+     if (previousDelegatee == address(0)) {
+@@ -1419,9 +1661,9 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+  * @notice ERC20 including snapshots of balances on transfer-related actions
+  * @author Aave
+  **/
+-abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20 {
 -  using SafeMath for uint256;
 -
++abstract contract GovernancePowerWithSnapshot is
++  GovernancePowerDelegationERC20
++{
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1543,22 +1683,170 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1441,22 +1683,188 @@ abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20
    }
  }
  
@@ -1170,11 +1449,29 @@ index 46a5dfd..a435f8f 100644
 +}
 +
 +interface IStakedTokenV3 is IStakedToken {
++  struct CooldownTimes {
++    uint40 cooldownSeconds;
++    uint40 slashingExitWindowSeconds;
++  }
++
++  event Staked(
++    address indexed from,
++    address indexed to,
++    uint256 amount,
++    uint256 shares
++  );
++  event Redeem(
++    address indexed from,
++    address indexed to,
++    uint256 amount,
++    uint256 shares
++  );
++  event MaxSlashablePercentageChanged(uint256 newPercentage);
++  event Slashed(address indexed destination, uint256 amount);
++  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
++  event CooldownSecondsChanged(uint256 cooldownSeconds);
++
 +  function exchangeRate() external view returns (uint256);
-+
-+  function getCooldownPaused() external view returns (bool);
-+
-+  function setCooldownPause(bool paused) external;
 +
 +  function slash(address destination, uint256 amount) external;
 +
@@ -1319,15 +1616,65 @@ index 46a5dfd..a435f8f 100644
  
    IERC20 public immutable STAKED_TOKEN;
    IERC20 public immutable REWARD_TOKEN;
-@@ -1623,7 +1911,6 @@ contract StakedTokenV2Rev3 is
+@@ -1476,25 +1884,38 @@ contract StakedTokenV2Rev3 is
+   /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
+   mapping(address => address) internal _votingDelegates;
+ 
+-  mapping(address => mapping(uint256 => Snapshot)) internal _propositionPowerSnapshots;
++  mapping(address => mapping(uint256 => Snapshot))
++    internal _propositionPowerSnapshots;
+   mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
+   mapping(address => address) internal _propositionPowerDelegates;
+ 
+   bytes32 public DOMAIN_SEPARATOR;
+   bytes public constant EIP712_REVISION = bytes('1');
+   bytes32 internal constant EIP712_DOMAIN =
+-    keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
++    keccak256(
++      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
++    );
+   bytes32 public constant PERMIT_TYPEHASH =
+-    keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
++    keccak256(
++      'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
++    );
+ 
+   /// @dev owner => next valid nonce to submit with permit()
+   mapping(address => uint256) public _nonces;
+ 
+-  event Staked(address indexed from, address indexed onBehalfOf, uint256 amount);
++  event Staked(
++    address indexed from,
++    address indexed onBehalfOf,
++    uint256 amount
++  );
+   event Redeem(address indexed from, address indexed to, uint256 amount);
+ 
+   event RewardsAccrued(address user, uint256 amount);
+-  event RewardsClaimed(address indexed from, address indexed to, uint256 amount);
++  event RewardsClaimed(
++    address indexed from,
++    address indexed to,
++    uint256 amount
++  );
+ 
+   event Cooldown(address indexed user);
+ 
+@@ -1508,22 +1929,24 @@ contract StakedTokenV2Rev3 is
      uint128 distributionDuration,
      string memory name,
      string memory symbol,
 -    uint8 decimals,
      address governance
-   )
-     public
-@@ -1636,13 +1923,12 @@ contract StakedTokenV2Rev3 is
+-  ) public ERC20(name, symbol) AaveDistributionManager(emissionManager, distributionDuration) {
++  )
++    public
++    ERC20(name, symbol)
++    AaveDistributionManager(emissionManager, distributionDuration)
++  {
+     STAKED_TOKEN = stakedToken;
+     REWARD_TOKEN = rewardToken;
+     COOLDOWN_SECONDS = cooldownSeconds;
      UNSTAKE_WINDOW = unstakeWindow;
      REWARDS_VAULT = rewardsVault;
      _aaveGovernance = ITransferHook(governance);
@@ -1342,7 +1689,7 @@ index 46a5dfd..a435f8f 100644
      uint256 chainId;
  
      //solium-disable-next-line
-@@ -1659,13 +1945,9 @@ contract StakedTokenV2Rev3 is
+@@ -1540,24 +1963,31 @@ contract StakedTokenV2Rev3 is
          address(this)
        )
      );
@@ -1357,20 +1704,33 @@ index 46a5dfd..a435f8f 100644
      require(amount != 0, 'INVALID_ZERO_AMOUNT');
      uint256 balanceOfUser = balanceOf(onBehalfOf);
  
-@@ -1677,9 +1959,9 @@ contract StakedTokenV2Rev3 is
-     );
+-    uint256 accruedRewards =
+-      _updateUserAssetInternal(onBehalfOf, address(this), balanceOfUser, totalSupply());
++    uint256 accruedRewards = _updateUserAssetInternal(
++      onBehalfOf,
++      address(this),
++      balanceOfUser,
++      totalSupply()
++    );
      if (accruedRewards != 0) {
        emit RewardsAccrued(onBehalfOf, accruedRewards);
--      stakerRewardsToClaim[onBehalfOf] = stakerRewardsToClaim[onBehalfOf].add(
--        accruedRewards
--      );
+-      stakerRewardsToClaim[onBehalfOf] = stakerRewardsToClaim[onBehalfOf].add(accruedRewards);
 +      stakerRewardsToClaim[onBehalfOf] =
 +        stakerRewardsToClaim[onBehalfOf] +
 +        accruedRewards;
      }
  
-     stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-@@ -1700,16 +1982,16 @@ contract StakedTokenV2Rev3 is
+-    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(0, amount, onBehalfOf, balanceOfUser);
++    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
++      0,
++      amount,
++      onBehalfOf,
++      balanceOfUser
++    );
+ 
+     _mint(onBehalfOf, amount);
+     IERC20(STAKED_TOKEN).safeTransferFrom(msg.sender, address(this), amount);
+@@ -1570,27 +2000,30 @@ contract StakedTokenV2Rev3 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     **/
@@ -1385,12 +1745,19 @@ index 46a5dfd..a435f8f 100644
        'INSUFFICIENT_COOLDOWN'
      );
      require(
--      block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <=
+-      block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <= UNSTAKE_WINDOW,
 +      block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-         UNSTAKE_WINDOW,
++        UNSTAKE_WINDOW,
        'UNSTAKE_WINDOW_FINISHED'
      );
-@@ -1723,7 +2005,7 @@ contract StakedTokenV2Rev3 is
+     uint256 balanceOfMessageSender = balanceOf(msg.sender);
+ 
+-    uint256 amountToRedeem = (amount > balanceOfMessageSender) ? balanceOfMessageSender : amount;
++    uint256 amountToRedeem = (amount > balanceOfMessageSender)
++      ? balanceOfMessageSender
++      : amount;
+ 
+     _updateCurrentUnclaimedRewards(msg.sender, balanceOfMessageSender, true);
  
      _burn(msg.sender, amountToRedeem);
  
@@ -1399,37 +1766,47 @@ index 46a5dfd..a435f8f 100644
        stakersCooldowns[msg.sender] = 0;
      }
  
-@@ -1749,7 +2031,7 @@ contract StakedTokenV2Rev3 is
+@@ -1616,12 +2049,17 @@ contract StakedTokenV2Rev3 is
     * @param to Address to stake for
     * @param amount Amount to stake
     **/
 -  function claimRewards(address to, uint256 amount) external override {
+-    uint256 newTotalRewards =
+-      _updateCurrentUnclaimedRewards(msg.sender, balanceOf(msg.sender), false);
+-    uint256 amountToClaim = (amount == type(uint256).max) ? newTotalRewards : amount;
 +  function claimRewards(address to, uint256 amount) external virtual override {
-     uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
-       msg.sender,
-       balanceOf(msg.sender),
-@@ -1759,10 +2041,7 @@ contract StakedTokenV2Rev3 is
-       ? newTotalRewards
-       : amount;
++    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
++      msg.sender,
++      balanceOf(msg.sender),
++      false
++    );
++    uint256 amountToClaim = (amount == type(uint256).max)
++      ? newTotalRewards
++      : amount;
  
--    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(
--      amountToClaim,
--      'INVALID_AMOUNT'
--    );
+-    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(amountToClaim, 'INVALID_AMOUNT');
 +    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
  
      REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
  
-@@ -1823,7 +2102,7 @@ contract StakedTokenV2Rev3 is
-       userBalance,
-       totalSupply()
-     );
+@@ -1676,9 +2114,13 @@ contract StakedTokenV2Rev3 is
+     uint256 userBalance,
+     bool updateStorage
+   ) internal returns (uint256) {
+-    uint256 accruedRewards =
+-      _updateUserAssetInternal(user, address(this), userBalance, totalSupply());
 -    uint256 unclaimedRewards = stakerRewardsToClaim[user].add(accruedRewards);
++    uint256 accruedRewards = _updateUserAssetInternal(
++      user,
++      address(this),
++      userBalance,
++      totalSupply()
++    );
 +    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1854,16 +2133,15 @@ contract StakedTokenV2Rev3 is
+@@ -1709,30 +2151,31 @@ contract StakedTokenV2Rev3 is
      uint256 amountToReceive,
      address toAddress,
      uint256 toBalance
@@ -1440,25 +1817,31 @@ index 46a5dfd..a435f8f 100644
        return 0;
      }
  
--    uint256 minimalValidCooldownTimestamp = block
--      .timestamp
--      .sub(COOLDOWN_SECONDS)
--      .sub(UNSTAKE_WINDOW);
+-    uint256 minimalValidCooldownTimestamp =
+-      block.timestamp.sub(COOLDOWN_SECONDS).sub(UNSTAKE_WINDOW);
 +    uint256 minimalValidCooldownTimestamp = block.timestamp -
 +      COOLDOWN_SECONDS -
 +      UNSTAKE_WINDOW;
  
      if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
        toCooldownTimestamp = 0;
-@@ -1876,11 +2154,10 @@ contract StakedTokenV2Rev3 is
+     } else {
+-      uint256 fromCooldownTimestamp =
+-        (minimalValidCooldownTimestamp > fromCooldownTimestamp)
+-          ? block.timestamp
+-          : fromCooldownTimestamp;
++      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
++        fromCooldownTimestamp)
++        ? block.timestamp
++        : fromCooldownTimestamp;
+ 
        if (fromCooldownTimestamp < toCooldownTimestamp) {
          return toCooldownTimestamp;
        } else {
 -        toCooldownTimestamp = (
--          amountToReceive.mul(fromCooldownTimestamp).add(
--            toBalance.mul(toCooldownTimestamp)
--          )
--        ).div(amountToReceive.add(toBalance));
+-          amountToReceive.mul(fromCooldownTimestamp).add(toBalance.mul(toCooldownTimestamp))
+-        )
+-          .div(amountToReceive.add(toBalance));
 +        toCooldownTimestamp =
 +          ((amountToReceive * fromCooldownTimestamp) +
 +            (toBalance * toCooldownTimestamp)) /
@@ -1466,13 +1849,27 @@ index 46a5dfd..a435f8f 100644
        }
      }
      return toCooldownTimestamp;
-@@ -1904,17 +2181,16 @@ contract StakedTokenV2Rev3 is
+@@ -1743,23 +2186,29 @@ contract StakedTokenV2Rev3 is
+    * @param staker The staker address
+    * @return The rewards
+    */
+-  function getTotalRewardsBalance(address staker) external view returns (uint256) {
+-    DistributionTypes.UserStakeInput[] memory userStakeInputs =
+-      new DistributionTypes.UserStakeInput[](1);
++  function getTotalRewardsBalance(address staker)
++    external
++    view
++    returns (uint256)
++  {
++    DistributionTypes.UserStakeInput[]
++      memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
+     userStakeInputs[0] = DistributionTypes.UserStakeInput({
+       underlyingAsset: address(this),
+       stakedByUser: balanceOf(staker),
        totalStaked: totalSupply()
      });
-     return
--      stakerRewardsToClaim[staker].add(
--        _getUnclaimedRewards(staker, userStakeInputs)
--      );
+-    return stakerRewardsToClaim[staker].add(_getUnclaimedRewards(staker, userStakeInputs));
++    return
 +      stakerRewardsToClaim[staker] +
 +      _getUnclaimedRewards(staker, userStakeInputs);
    }
@@ -1488,8 +1885,33 @@ index 46a5dfd..a435f8f 100644
    }
  
    /**
-@@ -1959,7 +2235,7 @@ contract StakedTokenV2Rev3 is
-     );
+@@ -1786,17 +2235,25 @@ contract StakedTokenV2Rev3 is
+     //solium-disable-next-line
+     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
+     uint256 currentValidNonce = _nonces[owner];
+-    bytes32 digest =
+-      keccak256(
+-        abi.encodePacked(
+-          '\x19\x01',
+-          DOMAIN_SEPARATOR,
+-          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
++    bytes32 digest = keccak256(
++      abi.encodePacked(
++        '\x19\x01',
++        DOMAIN_SEPARATOR,
++        keccak256(
++          abi.encode(
++            PERMIT_TYPEHASH,
++            owner,
++            spender,
++            value,
++            currentValidNonce,
++            deadline
++          )
+         )
+-      );
++      )
++    );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 -    _nonces[owner] = currentValidNonce.add(1);
@@ -1497,7 +1919,7 @@ index 46a5dfd..a435f8f 100644
      _approve(owner, spender, value);
    }
  
-@@ -2013,7 +2289,7 @@ contract StakedTokenV2Rev3 is
+@@ -1850,7 +2307,7 @@ contract StakedTokenV2Rev3 is
  
      // caching the aave governance address to avoid multiple state loads
      ITransferHook aaveGovernance = _aaveGovernance;
@@ -1506,7 +1928,46 @@ index 46a5dfd..a435f8f 100644
        aaveGovernance.onTransfer(from, to, amount);
      }
    }
-@@ -2108,3 +2384,762 @@ contract StakedTokenV2Rev3 is
+@@ -1895,11 +2352,18 @@ contract StakedTokenV2Rev3 is
+     bytes32 r,
+     bytes32 s
+   ) public {
+-    bytes32 structHash =
+-      keccak256(
+-        abi.encode(DELEGATE_BY_TYPE_TYPEHASH, delegatee, uint256(delegationType), nonce, expiry)
+-      );
+-    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash));
++    bytes32 structHash = keccak256(
++      abi.encode(
++        DELEGATE_BY_TYPE_TYPEHASH,
++        delegatee,
++        uint256(delegationType),
++        nonce,
++        expiry
++      )
++    );
++    bytes32 digest = keccak256(
++      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
++    );
+     address signatory = ecrecover(digest, v, r, s);
+     require(signatory != address(0), 'INVALID_SIGNATURE');
+     require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
+@@ -1924,8 +2388,12 @@ contract StakedTokenV2Rev3 is
+     bytes32 r,
+     bytes32 s
+   ) public {
+-    bytes32 structHash = keccak256(abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry));
+-    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash));
++    bytes32 structHash = keccak256(
++      abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry)
++    );
++    bytes32 digest = keccak256(
++      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
++    );
+     address signatory = ecrecover(digest, v, r, s);
+     require(signatory != address(0), 'INVALID_SIGNATURE');
+     require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
+@@ -1934,3 +2402,712 @@ contract StakedTokenV2Rev3 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -1600,16 +2061,9 @@ index 46a5dfd..a435f8f 100644
 +  using SafeERC20 for IERC20;
 +  using PercentageMath for uint256;
 +
-+  struct Duration {
-+    uint40 cooldownSeconds;
-+    uint40 slashingExitWindowSeconds;
-+  }
-+
-+  Duration internal duration;
++  CooldownTimes internal cooldownTimes;
 +
 +  /// @notice Seconds available to redeem once the cooldown period is fullfilled
-+  // uint256 public immutable UNSTAKE_WINDOW;
-+
 +  uint256 public constant SLASH_ADMIN_ROLE = 0;
 +  uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
 +  uint256 public constant CLAIM_HELPER_ROLE = 2;
@@ -1620,10 +2074,17 @@ index 46a5dfd..a435f8f 100644
 +    return 3;
 +  }
 +
++  /**
++   * @dev returns the revision of the implementation contract
++   * @return The revision
++   */
++  function getRevision() internal pure virtual override returns (uint256) {
++    return REVISION();
++  }
++
 +  //maximum percentage of the underlying that can be slashed in a single realization event
 +  uint256 internal _maxSlashablePercentage;
-+  uint256 internal _lastSlashing = 0;
-+  bool _cooldownPaused;
++  uint256 internal _lastSlashing;
 +
 +  modifier onlySlashingAdmin() {
 +    require(
@@ -1648,26 +2109,6 @@ index 46a5dfd..a435f8f 100644
 +    );
 +    _;
 +  }
-+
-+  event Staked(
-+    address indexed from,
-+    address indexed to,
-+    uint256 amount,
-+    uint256 sharesMinted
-+  );
-+  event Redeem(
-+    address indexed from,
-+    address indexed to,
-+    uint256 amount,
-+    uint256 underlyingTransferred
-+  );
-+  event CooldownPauseChanged(bool pause);
-+  event MaxSlashablePercentageChanged(uint256 newPercentage);
-+  event Slashed(address indexed destination, uint256 amount);
-+  event CooldownPauseAdminChanged(address indexed newAdmin);
-+  event SlashingAdminChanged(address indexed newAdmin);
-+  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
-+  event CooldownSecondsChanged(uint256 cooldownSeconds);
 +
 +  constructor(
 +    IERC20 stakedToken,
@@ -1857,23 +2298,7 @@ index 46a5dfd..a435f8f 100644
 +    override
 +    returns (uint256)
 +  {
-+    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-+
-+    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-+      msg.sender,
-+      balanceOf(msg.sender),
-+      true
-+    );
-+    uint256 amountToClaim = (amount > userUpdatedRewards)
-+      ? userUpdatedRewards
-+      : amount;
-+
-+    if (amountToClaim != 0) {
-+      _stake(address(this), to, amountToClaim, false);
-+      _claimRewards(msg.sender, address(this), amountToClaim);
-+    }
-+
-+    return amountToClaim;
++    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
 +  }
 +
 +  /**
@@ -1887,23 +2312,7 @@ index 46a5dfd..a435f8f 100644
 +    address to,
 +    uint256 amount
 +  ) external override onlyClaimHelper returns (uint256) {
-+    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-+
-+    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-+      from,
-+      balanceOf(from),
-+      true
-+    );
-+    uint256 amountToClaim = (amount > userUpdatedRewards)
-+      ? userUpdatedRewards
-+      : amount;
-+
-+    if (amountToClaim != 0) {
-+      _stake(address(this), to, amountToClaim, false);
-+      _claimRewards(from, address(this), amountToClaim);
-+    }
-+
-+    return (amountToClaim);
++    return _claimRewardsAndStakeOnBehalf(from, to, amount);
 +  }
 +
 +  /**
@@ -1978,22 +2387,6 @@ index 46a5dfd..a435f8f 100644
 +  }
 +
 +  /**
-+   * @dev returns true if the unstake cooldown is paused
-+   */
-+  function getCooldownPaused() external view override returns (bool) {
-+    return _cooldownPaused;
-+  }
-+
-+  /**
-+   * @dev sets the state of the cooldown pause
-+   * @param paused true if the cooldown needs to be paused, false otherwise
-+   */
-+  function setCooldownPause(bool paused) external override onlyCooldownAdmin {
-+    _cooldownPaused = paused;
-+    emit CooldownPauseChanged(paused);
-+  }
-+
-+  /**
 +   * @dev sets the admin of the slashing pausing function
 +   * @param percentage the new maximum slashable percentage
 +   */
@@ -2041,12 +2434,12 @@ index 46a5dfd..a435f8f 100644
 +  function _setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
 +    internal
 +  {
-+    duration.slashingExitWindowSeconds = slashingExitWindowSeconds;
++    cooldownTimes.slashingExitWindowSeconds = slashingExitWindowSeconds;
 +    emit SlashingExitWindowDurationChanged(slashingExitWindowSeconds);
 +  }
 +
 +  function getSlashingExitWindowSeconds() external view returns (uint40) {
-+    return duration.slashingExitWindowSeconds;
++    return cooldownTimes.slashingExitWindowSeconds;
 +  }
 +
 +  /**
@@ -2061,20 +2454,12 @@ index 46a5dfd..a435f8f 100644
 +  }
 +
 +  function _setCooldownSeconds(uint40 cooldownSeconds) internal {
-+    duration.cooldownSeconds = cooldownSeconds;
++    cooldownTimes.cooldownSeconds = cooldownSeconds;
 +    emit CooldownSecondsChanged(cooldownSeconds);
 +  }
 +
 +  function getCooldownSeconds() external view returns (uint40) {
-+    return duration.cooldownSeconds;
-+  }
-+
-+  /**
-+   * @dev returns the revision of the implementation contract
-+   * @return The revision
-+   */
-+  function getRevision() internal pure virtual override returns (uint256) {
-+    return REVISION();
++    return cooldownTimes.cooldownSeconds;
 +  }
 +
 +  function _claimRewards(
@@ -2082,6 +2467,7 @@ index 46a5dfd..a435f8f 100644
 +    address to,
 +    uint256 amount
 +  ) internal returns (uint256) {
++    require(amount != 0, 'INVALID_ZERO_AMOUNT');
 +    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
 +      from,
 +      balanceOf(from),
@@ -2095,7 +2481,31 @@ index 46a5dfd..a435f8f 100644
 +    stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
 +    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
 +    emit RewardsClaimed(from, to, amountToClaim);
-+    return (amountToClaim);
++    return amountToClaim;
++  }
++
++  function _claimRewardsAndStakeOnBehalf(
++    address from,
++    address to,
++    uint256 amount
++  ) internal returns (uint256) {
++    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
++
++    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
++      from,
++      balanceOf(from),
++      true
++    );
++    uint256 amountToClaim = (amount > userUpdatedRewards)
++      ? userUpdatedRewards
++      : amount;
++
++    if (amountToClaim != 0) {
++      _stake(address(this), to, amountToClaim, false);
++      _claimRewards(from, address(this), amountToClaim);
++    }
++
++    return amountToClaim;
 +  }
 +
 +  function _stake(
@@ -2163,7 +2573,7 @@ index 46a5dfd..a435f8f 100644
 +    }
 +
 +    uint256 minimalValidCooldownTimestamp = block.timestamp -
-+      duration.cooldownSeconds -
++      cooldownTimes.cooldownSeconds -
 +      UNSTAKE_WINDOW;
 +
 +    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
@@ -2200,16 +2610,17 @@ index 46a5dfd..a435f8f 100644
 +    //solium-disable-next-line
 +    uint256 cooldownStartTimestamp = stakersCooldowns[from];
 +    bool slashingGracePeriod = block.timestamp <=
-+      _lastSlashing + duration.slashingExitWindowSeconds;
++      _lastSlashing + cooldownTimes.slashingExitWindowSeconds;
 +
 +    if (!slashingGracePeriod) {
 +      require(
-+        (block.timestamp > cooldownStartTimestamp + duration.cooldownSeconds),
++        (block.timestamp >
++          cooldownStartTimestamp + cooldownTimes.cooldownSeconds),
 +        'INSUFFICIENT_COOLDOWN'
 +      );
 +      require(
 +        (block.timestamp -
-+          (cooldownStartTimestamp + duration.cooldownSeconds) <=
++          (cooldownStartTimestamp + cooldownTimes.cooldownSeconds) <=
 +          UNSTAKE_WINDOW),
 +        'UNSTAKE_WINDOW_FINISHED'
 +      );
@@ -2230,7 +2641,7 @@ index 46a5dfd..a435f8f 100644
 +
 +    IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
 +
-+    emit Redeem(from, to, amountToRedeem, underlyingToRedeem);
++    emit Redeem(from, to, underlyingToRedeem, amountToRedeem);
 +  }
 +}
 +
@@ -2269,3 +2680,4 @@ index 46a5dfd..a435f8f 100644
 +    )
 +  {}
 +}
+```

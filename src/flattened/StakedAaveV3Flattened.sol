@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-// most imports are only here to force import order for better flattening diff
+// most imports are only here to force import order for better (i.e smaller) diff on flattening
 
 interface IGovernancePowerDelegationToken {
   enum DelegationType {
@@ -1706,11 +1706,29 @@ interface IStakedToken {
 }
 
 interface IStakedTokenV3 is IStakedToken {
+  struct CooldownTimes {
+    uint40 cooldownSeconds;
+    uint40 slashingExitWindowSeconds;
+  }
+
+  event Staked(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 shares
+  );
+  event Redeem(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 shares
+  );
+  event MaxSlashablePercentageChanged(uint256 newPercentage);
+  event Slashed(address indexed destination, uint256 amount);
+  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
+  event CooldownSecondsChanged(uint256 cooldownSeconds);
+
   function exchangeRate() external view returns (uint256);
-
-  function getCooldownPaused() external view returns (bool);
-
-  function setCooldownPause(bool paused) external;
 
   function slash(address destination, uint256 amount) external;
 
@@ -2474,16 +2492,9 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
 
-  struct Duration {
-    uint40 cooldownSeconds;
-    uint40 slashingExitWindowSeconds;
-  }
-
-  Duration internal duration;
+  CooldownTimes internal cooldownTimes;
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  // uint256 public immutable UNSTAKE_WINDOW;
-
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
@@ -2494,10 +2505,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return 3;
   }
 
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
+  function getRevision() internal pure virtual override returns (uint256) {
+    return REVISION();
+  }
+
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
-  uint256 internal _lastSlashing = 0;
-  bool _cooldownPaused;
+  uint256 internal _lastSlashing;
 
   modifier onlySlashingAdmin() {
     require(
@@ -2522,26 +2540,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     );
     _;
   }
-
-  event Staked(
-    address indexed from,
-    address indexed to,
-    uint256 amount,
-    uint256 sharesMinted
-  );
-  event Redeem(
-    address indexed from,
-    address indexed to,
-    uint256 amount,
-    uint256 underlyingTransferred
-  );
-  event CooldownPauseChanged(bool pause);
-  event MaxSlashablePercentageChanged(uint256 newPercentage);
-  event Slashed(address indexed destination, uint256 amount);
-  event CooldownPauseAdminChanged(address indexed newAdmin);
-  event SlashingAdminChanged(address indexed newAdmin);
-  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
-  event CooldownSecondsChanged(uint256 cooldownSeconds);
 
   constructor(
     IERC20 stakedToken,
@@ -2731,23 +2729,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     returns (uint256)
   {
-    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-
-    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-      msg.sender,
-      balanceOf(msg.sender),
-      true
-    );
-    uint256 amountToClaim = (amount > userUpdatedRewards)
-      ? userUpdatedRewards
-      : amount;
-
-    if (amountToClaim != 0) {
-      _stake(address(this), to, amountToClaim, false);
-      _claimRewards(msg.sender, address(this), amountToClaim);
-    }
-
-    return amountToClaim;
+    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
   /**
@@ -2761,23 +2743,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) external override onlyClaimHelper returns (uint256) {
-    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-
-    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
-      from,
-      balanceOf(from),
-      true
-    );
-    uint256 amountToClaim = (amount > userUpdatedRewards)
-      ? userUpdatedRewards
-      : amount;
-
-    if (amountToClaim != 0) {
-      _stake(address(this), to, amountToClaim, false);
-      _claimRewards(from, address(this), amountToClaim);
-    }
-
-    return (amountToClaim);
+    return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
   /**
@@ -2852,22 +2818,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /**
-   * @dev returns true if the unstake cooldown is paused
-   */
-  function getCooldownPaused() external view override returns (bool) {
-    return _cooldownPaused;
-  }
-
-  /**
-   * @dev sets the state of the cooldown pause
-   * @param paused true if the cooldown needs to be paused, false otherwise
-   */
-  function setCooldownPause(bool paused) external override onlyCooldownAdmin {
-    _cooldownPaused = paused;
-    emit CooldownPauseChanged(paused);
-  }
-
-  /**
    * @dev sets the admin of the slashing pausing function
    * @param percentage the new maximum slashable percentage
    */
@@ -2915,12 +2865,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   function _setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
     internal
   {
-    duration.slashingExitWindowSeconds = slashingExitWindowSeconds;
+    cooldownTimes.slashingExitWindowSeconds = slashingExitWindowSeconds;
     emit SlashingExitWindowDurationChanged(slashingExitWindowSeconds);
   }
 
   function getSlashingExitWindowSeconds() external view returns (uint40) {
-    return duration.slashingExitWindowSeconds;
+    return cooldownTimes.slashingExitWindowSeconds;
   }
 
   /**
@@ -2935,20 +2885,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   function _setCooldownSeconds(uint40 cooldownSeconds) internal {
-    duration.cooldownSeconds = cooldownSeconds;
+    cooldownTimes.cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
   function getCooldownSeconds() external view returns (uint40) {
-    return duration.cooldownSeconds;
-  }
-
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
+    return cooldownTimes.cooldownSeconds;
   }
 
   function _claimRewards(
@@ -2956,6 +2898,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal returns (uint256) {
+    require(amount != 0, 'INVALID_ZERO_AMOUNT');
     uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
       from,
       balanceOf(from),
@@ -2969,7 +2912,31 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
     emit RewardsClaimed(from, to, amountToClaim);
-    return (amountToClaim);
+    return amountToClaim;
+  }
+
+  function _claimRewardsAndStakeOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) internal returns (uint256) {
+    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
+
+    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
+      from,
+      balanceOf(from),
+      true
+    );
+    uint256 amountToClaim = (amount > userUpdatedRewards)
+      ? userUpdatedRewards
+      : amount;
+
+    if (amountToClaim != 0) {
+      _stake(address(this), to, amountToClaim, false);
+      _claimRewards(from, address(this), amountToClaim);
+    }
+
+    return amountToClaim;
   }
 
   function _stake(
@@ -3037,7 +3004,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     }
 
     uint256 minimalValidCooldownTimestamp = block.timestamp -
-      duration.cooldownSeconds -
+      cooldownTimes.cooldownSeconds -
       UNSTAKE_WINDOW;
 
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
@@ -3074,16 +3041,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
     bool slashingGracePeriod = block.timestamp <=
-      _lastSlashing + duration.slashingExitWindowSeconds;
+      _lastSlashing + cooldownTimes.slashingExitWindowSeconds;
 
     if (!slashingGracePeriod) {
       require(
-        (block.timestamp > cooldownStartTimestamp + duration.cooldownSeconds),
+        (block.timestamp >
+          cooldownStartTimestamp + cooldownTimes.cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
         (block.timestamp -
-          (cooldownStartTimestamp + duration.cooldownSeconds) <=
+          (cooldownStartTimestamp + cooldownTimes.cooldownSeconds) <=
           UNSTAKE_WINDOW),
         'UNSTAKE_WINDOW_FINISHED'
       );
@@ -3104,7 +3072,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
 
-    emit Redeem(from, to, amountToRedeem, underlyingToRedeem);
+    emit Redeem(from, to, underlyingToRedeem, amountToRedeem);
   }
 }
 

@@ -62,3 +62,5 @@ $$
 $$
 redeemAmount_{t1} = {stkAmount_{t0} * exchangeRate_{t1}}
 $$
+
+### Governance
