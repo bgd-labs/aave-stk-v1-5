@@ -545,16 +545,16 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
       toCooldownTimestamp = 0;
     } else {
-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
+      uint256 _fromCooldownTimestamp = (minimalValidCooldownTimestamp >
         fromCooldownTimestamp)
         ? block.timestamp
         : fromCooldownTimestamp;
 
-      if (fromCooldownTimestamp < toCooldownTimestamp) {
+      if (_fromCooldownTimestamp < toCooldownTimestamp) {
         return toCooldownTimestamp;
       } else {
         toCooldownTimestamp =
-          ((amountToReceive * fromCooldownTimestamp) +
+          ((amountToReceive * _fromCooldownTimestamp) +
             (toBalance * toCooldownTimestamp)) /
           (amountToReceive + toBalance);
       }
