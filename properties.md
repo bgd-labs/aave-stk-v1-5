@@ -52,7 +52,7 @@ $$
 - staking after a slashing should not penalize people entering the pool and therefore scale up the staked amount
 
 $$
-amount_{t1} = {amount \over exchangeRate_{t1}}
+stkAmount_{t1} = {amount_{t1} \over exchangeRate_{t1}}
 $$
 
 ### Redeem after slashing
@@ -60,5 +60,5 @@ $$
 - the redeemable amount should be scaled down by the correct exchange factor
 
 $$
-amount_{t1} = {amount * exchangeRate_{t1}}
+redeemAmount_{t1} = {stkAmount_{t0} * exchangeRate_{t1}}
 $$
