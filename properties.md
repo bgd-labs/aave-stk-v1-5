@@ -30,12 +30,35 @@ With the new iteration the StakedTokenV3 adds mechanics for slashing in the case
 
 ### Slashing
 
-- `slash(destination, amount)` should revert when amount exceeds max slashing amount
+- `slash` should revert when amount exceeds max slashing amount
 
-- `slash(destination, amount)` should transfer `amount` of the staked tokens to the destination address
+- `slash` should transfer `amount` of the staked tokens to the `destination` address
 
 - after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount
 
+$$
+underlyingAmount_{t0} = n \\
+totalSupply_{t0} = n \\
+exchangeRate_{t0} = {underlyingAmount_{t0} \over totalSupply_{t0}} = 1 \\
+slashAmount = 0.3*n \\
+\Downarrow \\
+underlyingAmount_{t1} = n - slash \\
+totalSupply_{t1} = n \\
+exchangeRate_{t1} = {underlyingAmount_{t0} \over totalSupply_{t0}} = {n - slash \over n}
+$$
+
 ### Stake after slashing
 
+- staking after a slashing should not penalize people entering the pool and therefore scale up the staked amount
+
+$$
+amount_{t1} = {amount \over exchangeRate_{t1}}
+$$
+
 ### Redeem after slashing
+
+- the redeemable amount should be scaled down by the correct exchange factor
+
+$$
+amount_{t1} = {amount * exchangeRate_{t1}}
+$$
