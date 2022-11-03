@@ -40,6 +40,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return 3;
   }
 
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
+  function getRevision() internal pure virtual override returns (uint256) {
+    return REVISION();
+  }
+
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
   uint256 internal _lastSlashing;
@@ -418,14 +426,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   function getCooldownSeconds() external view returns (uint40) {
     return cooldownTimes.cooldownSeconds;
-  }
-
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
   }
 
   function _claimRewards(
