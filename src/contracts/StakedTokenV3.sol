@@ -33,24 +33,15 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
-  uint256 public constant INITIAL_EXCHANGE_RATE = 1e18;
+  uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant TOKEN_UNIT = 1e18;
-
-  function REVISION() public pure virtual override returns (uint256) {
-    return 3;
-  }
-
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
-  }
 
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
   uint256 internal _lastSlashing;
+
+  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
+  uint256 _exchangeRateSnapshotsCount;
 
   modifier onlySlashingAdmin() {
     require(
@@ -102,6 +93,18 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       governance
     )
   {}
+
+  function REVISION() public pure virtual override returns (uint256) {
+    return 4;
+  }
+
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
+  function getRevision() internal pure virtual override returns (uint256) {
+    return REVISION();
+  }
 
   /**
    * @dev Inherited from StakedTokenV2, deprecated
@@ -319,14 +322,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * Slashing will reduce the exchange rate. Supplying STAKED_TOKEN to the stake contract
    * can replenish the slashed STAKED_TOKEN and bring the exchange rate back to 1
    **/
-  function exchangeRate() public view override returns (uint256) {
-    uint256 currentSupply = totalSupply();
+  function exchangeRate() public view override returns (uint128) {
+    if (_exchangeRateSnapshotsCount == 0) return INITIAL_EXCHANGE_RATE;
+    return _exchangeRateSnapshots[_exchangeRateSnapshotsCount - 1].value;
+  }
 
-    if (currentSupply == 0) {
-      return INITIAL_EXCHANGE_RATE; //initial exchange rate is 1:1
-    }
-
-    return (STAKED_TOKEN.balanceOf(address(this)) * TOKEN_UNIT) / currentSupply;
+  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
+    public
+    pure
+    returns (uint128)
+  {
+    return uint128((totalAssets * TOKEN_UNIT) / totalShares);
   }
 
   /**
@@ -340,7 +346,9 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     onlySlashingAdmin
   {
-    uint256 balance = STAKED_TOKEN.balanceOf(address(this));
+    uint256 currentExchangeRate = exchangeRate();
+    uint256 currentShares = totalSupply();
+    uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
 
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
 
@@ -350,7 +358,19 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _lastSlashing = block.timestamp;
 
+    _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
+
     emit Slashed(destination, amount);
+  }
+
+  function returnFunds(uint256 amount) external override {
+    STAKED_TOKEN.safeTransfer(address(this), amount);
+    uint256 currentExchangeRate = exchangeRate();
+    uint256 currentShares = totalSupply();
+    uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
+    _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
+
+    // TODO: emit funds returned event
   }
 
   /**
@@ -609,5 +629,68 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
 
     emit Redeem(from, to, underlyingToRedeem, amountToRedeem);
+  }
+
+  function _updateExchangeRate(uint128 newExchangeRate) internal {
+    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
+      uint128(block.number),
+      newExchangeRate
+    );
+    _exchangeRateSnapshotsCount += 1;
+    // TODO: emit event
+  }
+
+  /**
+   * @dev binary search to return closest exchangeRate
+   */
+  function _searchExchangeRateByBlockNumber(uint256 blockNumber)
+    internal
+    view
+    returns (uint256)
+  {
+    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
+    uint256 snapshotsCount = _exchangeRateSnapshotsCount;
+
+    if (snapshotsCount == 0) {
+      return INITIAL_EXCHANGE_RATE;
+    }
+
+    // First check most recent balance
+    if (_exchangeRateSnapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
+      return _exchangeRateSnapshots[snapshotsCount - 1].value;
+    }
+
+    uint256 lower = 0;
+    uint256 upper = snapshotsCount - 1;
+    while (upper > lower) {
+      uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+      Snapshot memory snapshot = _exchangeRateSnapshots[center];
+      if (snapshot.blockNumber == blockNumber) {
+        return snapshot.value;
+      } else if (snapshot.blockNumber < blockNumber) {
+        lower = center;
+      } else {
+        upper = center - 1;
+      }
+    }
+    return _exchangeRateSnapshots[lower].value;
+  }
+
+  /**
+   * @dev accounts for voting power adjustment based on exchangeRate
+   */
+  function _searchByBlockNumber(
+    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+    mapping(address => uint256) storage snapshotsCounts,
+    address user,
+    uint256 blockNumber
+  ) internal view override returns (uint256) {
+    return
+      (super._searchByBlockNumber(
+        snapshots,
+        snapshotsCounts,
+        user,
+        blockNumber
+      ) * _searchExchangeRateByBlockNumber(blockNumber)) / TOKEN_UNIT;
   }
 }
