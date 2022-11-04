@@ -92,7 +92,7 @@ contract StakedToken is
     // _setName(name);
     // _setSymbol(symbol);
     // _setDecimals(decimals);
-    _setAaveGovernance(aaveGovernance);
+    // _setAaveGovernance(aaveGovernance);
   }
 
   function stake(address onBehalfOf, uint256 amount) external override {

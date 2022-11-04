@@ -12,13 +12,13 @@ interface IStakedTokenV3 is IStakedToken {
   event Staked(
     address indexed from,
     address indexed to,
-    uint256 amount,
+    uint256 assets,
     uint256 shares
   );
   event Redeem(
     address indexed from,
     address indexed to,
-    uint256 amount,
+    uint256 assets,
     uint256 shares
   );
   event MaxSlashablePercentageChanged(uint256 newPercentage);

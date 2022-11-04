@@ -25,9 +25,10 @@ abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20 
   /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
   /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
   /// to control all potential reentrancies by calling back the this contract
+  /// @dev DEPRECATED
   ITransferHook public _aaveGovernance;
 
-  function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
-    _aaveGovernance = aaveGovernance;
-  }
+  // function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
+  //   _aaveGovernance = aaveGovernance;
+  // }
 }

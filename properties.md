@@ -64,3 +64,7 @@ redeemAmount_{t1} = {stkAmount_{t0} * exchangeRate_{t1}}
 $$
 
 ### Governance
+
+### Changed events
+
+- `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616
