@@ -6,7 +6,6 @@ import {IStakedToken} from './IStakedToken.sol';
 interface IStakedTokenV3 is IStakedToken {
   struct CooldownTimes {
     uint40 cooldownSeconds;
-    uint40 slashingExitWindowSeconds;
   }
 
   event Staked(
@@ -32,10 +31,7 @@ interface IStakedTokenV3 is IStakedToken {
 
   function returnFunds(uint256 amount) external;
 
-  function getSlashingExitWindowSeconds() external view returns (uint40);
-
-  function setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
-    external;
+  function settleSlashing() external;
 
   function getCooldownSeconds() external view returns (uint40);
 

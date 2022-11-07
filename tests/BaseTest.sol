@@ -43,13 +43,12 @@ contract BaseTest is Test {
     stkProxy.upgradeToAndCall(
       stkImpl,
       abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint40,uint40)',
+        'initialize(address,address,address,uint256,uint40)',
         slashingAdmin,
         cooldownAdmin,
         claimHelper,
         3000,
-        864000,
-        172800
+        864000
       )
     );
     vm.stopPrank();

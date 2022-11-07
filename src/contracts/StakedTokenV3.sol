@@ -38,7 +38,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   //maximum percentage of the underlying that can be slashed in a single realization event
   uint256 internal _maxSlashablePercentage;
-  uint256 internal _lastSlashing;
+  bool public isPendingSlashing;
 
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint256 _exchangeRateSnapshotsCount;
@@ -122,8 +122,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address cooldownPauseAdmin,
     address claimHelper,
     uint256 maxSlashablePercentage,
-    uint40 cooldownSeconds,
-    uint40 slashingExitWindowSeconds
+    uint40 cooldownSeconds
   ) external initializer {
     require(
       maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
@@ -155,7 +154,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
-    _setSlashingExitWindowSeconds(slashingExitWindowSeconds);
   }
 
   /**
@@ -340,6 +338,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     onlySlashingAdmin
   {
+    require(isPendingSlashing != true, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentExchangeRate = exchangeRate();
     uint256 currentShares = totalSupply();
     uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
@@ -350,7 +349,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     STAKED_TOKEN.safeTransfer(destination, amount);
 
-    _lastSlashing = block.timestamp;
+    isPendingSlashing = true;
 
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
 
@@ -365,6 +364,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
 
     // TODO: emit funds returned event
+  }
+
+  function settleSlashing() external override {
+    isPendingSlashing = false;
   }
 
   /**
@@ -399,28 +402,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     returns (uint256)
   {
     return _maxSlashablePercentage;
-  }
-
-  /**
-   * @dev sets the window size in which users can leave the staking without a cooldown
-   * @param slashingExitWindowSeconds the new maximum slashable percentage
-   */
-  function setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
-    external
-    onlySlashingAdmin
-  {
-    _setSlashingExitWindowSeconds(slashingExitWindowSeconds);
-  }
-
-  function _setSlashingExitWindowSeconds(uint40 slashingExitWindowSeconds)
-    internal
-  {
-    cooldownTimes.slashingExitWindowSeconds = slashingExitWindowSeconds;
-    emit SlashingExitWindowDurationChanged(slashingExitWindowSeconds);
-  }
-
-  function getSlashingExitWindowSeconds() external view returns (uint40) {
-    return cooldownTimes.slashingExitWindowSeconds;
   }
 
   /**
@@ -495,6 +476,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal {
+    require(isPendingSlashing != true, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     uint256 balanceOfUser = balanceOf(to);
@@ -588,10 +570,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
-    bool isInSlashingGracePeriod = block.timestamp <=
-      _lastSlashing + cooldownTimes.slashingExitWindowSeconds;
 
-    if (!isInSlashingGracePeriod) {
+    if (!isPendingSlashing) {
       require(
         (block.timestamp >
           cooldownStartTimestamp + cooldownTimes.cooldownSeconds),

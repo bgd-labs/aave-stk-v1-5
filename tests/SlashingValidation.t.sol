@@ -59,6 +59,12 @@ contract SlashingValidation is BaseTest {
     vm.stopPrank();
   }
 
+  function _settleSlashing() internal {
+    vm.startPrank(slashingAdmin);
+    STAKE_CONTRACT.settleSlashing();
+    vm.stopPrank();
+  }
+
   function testSlashExchangeRate() internal {
     address receiver = address(42);
     uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * 2) / 10;
@@ -100,9 +106,7 @@ contract SlashingValidation is BaseTest {
     STAKE_CONTRACT.stake(address(this), amount);
 
     _slash20();
-    vm.warp(
-      STAKE_CONTRACT.getSlashingExitWindowSeconds() + block.timestamp + 1
-    );
+    _settleSlashing();
     STAKE_CONTRACT.redeem(address(this), amount);
     assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(address(this)), 8 ether);
   }
@@ -112,6 +116,7 @@ contract SlashingValidation is BaseTest {
    */
   function testSlash20Stake() public {
     _slash20();
+    _settleSlashing();
     uint256 amount = 1 ether;
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
     STAKE_CONTRACT.stake(address(this), amount);
@@ -120,6 +125,8 @@ contract SlashingValidation is BaseTest {
 
   function testSlashTwice() public {
     _slash20();
+    _settleSlashing();
+
     _slash20();
   }
 
