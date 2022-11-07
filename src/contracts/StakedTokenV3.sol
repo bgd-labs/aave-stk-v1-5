@@ -27,8 +27,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
 
-  CooldownTimes internal cooldownTimes;
-
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
@@ -37,6 +35,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 public constant TOKEN_UNIT = 1e18;
 
   //maximum percentage of the underlying that can be slashed in a single realization event
+  uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
   bool public isPendingSlashing;
 
@@ -123,7 +122,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address cooldownPauseAdmin,
     address claimHelper,
     uint256 maxSlashablePercentage,
-    uint40 cooldownSeconds
+    uint256 cooldownSeconds
   ) external initializer {
     require(
       maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
@@ -407,20 +406,20 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev sets the cooldown duration whch needs to pass before the user can unstake
    * @param cooldownSeconds the new cooldown duration
    */
-  function setCooldownSeconds(uint40 cooldownSeconds)
+  function setCooldownSeconds(uint256 cooldownSeconds)
     external
     onlyCooldownAdmin
   {
     _setCooldownSeconds(cooldownSeconds);
   }
 
-  function _setCooldownSeconds(uint40 cooldownSeconds) internal {
-    cooldownTimes.cooldownSeconds = cooldownSeconds;
+  function _setCooldownSeconds(uint256 cooldownSeconds) internal {
+    _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
-  function getCooldownSeconds() external view returns (uint40) {
-    return cooldownTimes.cooldownSeconds;
+  function getCooldownSeconds() external view returns (uint256) {
+    return _cooldownSeconds;
   }
 
   function _claimRewards(
@@ -533,7 +532,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     }
 
     uint256 minimalValidCooldownTimestamp = block.timestamp -
-      cooldownTimes.cooldownSeconds -
+      _cooldownSeconds -
       UNSTAKE_WINDOW;
 
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
@@ -572,13 +571,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     if (!isPendingSlashing) {
       require(
-        (block.timestamp >
-          cooldownStartTimestamp + cooldownTimes.cooldownSeconds),
+        (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
-        (block.timestamp -
-          (cooldownStartTimestamp + cooldownTimes.cooldownSeconds) <=
+        (block.timestamp - (cooldownStartTimestamp + _cooldownSeconds) <=
           UNSTAKE_WINDOW),
         'UNSTAKE_WINDOW_FINISHED'
       );

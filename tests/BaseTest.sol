@@ -43,7 +43,7 @@ contract BaseTest is Test {
     stkProxy.upgradeToAndCall(
       stkImpl,
       abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint40)',
+        'initialize(address,address,address,uint256,uint256)',
         slashingAdmin,
         cooldownAdmin,
         claimHelper,

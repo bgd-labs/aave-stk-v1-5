@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 import {IStakedToken} from './IStakedToken.sol';
 
 interface IStakedTokenV3 is IStakedToken {
-  struct CooldownTimes {
-    uint40 cooldownSeconds;
-  }
-
   event Staked(
     address indexed from,
     address indexed to,
@@ -36,9 +32,9 @@ interface IStakedTokenV3 is IStakedToken {
 
   function settleSlashing() external;
 
-  function getCooldownSeconds() external view returns (uint40);
+  function getCooldownSeconds() external view returns (uint256);
 
-  function setCooldownSeconds(uint40 cooldownSeconds) external;
+  function setCooldownSeconds(uint256 cooldownSeconds) external;
 
   function getMaxSlashablePercentage() external view returns (uint256);
 
