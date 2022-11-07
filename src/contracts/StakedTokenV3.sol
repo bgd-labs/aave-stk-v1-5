@@ -155,6 +155,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
+
+    STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
   /**
@@ -359,7 +361,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
     _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
 
-    STAKED_TOKEN.safeTransfer(address(this), amount);
+    STAKED_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
     emit FundsReturned(amount);
   }
 
@@ -462,7 +464,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     if (amountToClaim != 0) {
       _claimRewards(from, address(this), amountToClaim);
-      STAKED_TOKEN.approve(address(this), amountToClaim);
       _stake(address(this), to, amountToClaim);
     }
 

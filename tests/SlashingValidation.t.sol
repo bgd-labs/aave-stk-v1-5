@@ -215,4 +215,11 @@ contract SlashingValidation is BaseTest {
     STAKE_CONTRACT.slash(receiver, amountToSlash);
     vm.stopPrank();
   }
+
+  function test_refund() public {
+    uint256 amount = 10 ether;
+
+    STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
+    STAKE_CONTRACT.returnFunds(amount);
+  }
 }
