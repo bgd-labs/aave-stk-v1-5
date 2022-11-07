@@ -338,7 +338,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     onlySlashingAdmin
   {
-    require(isPendingSlashing != true, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentExchangeRate = exchangeRate();
     uint256 currentShares = totalSupply();
     uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
