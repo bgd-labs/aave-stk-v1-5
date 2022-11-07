@@ -41,7 +41,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   bool public isPendingSlashing;
 
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint256 _exchangeRateSnapshotsCount;
+  uint256 internal _exchangeRateSnapshotsCount;
+  uint128 internal _currentExchangeRate;
 
   modifier onlySlashingAdmin() {
     require(
@@ -154,6 +155,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
+    _updateExchangeRate(INITIAL_EXCHANGE_RATE);
   }
 
   /**
@@ -315,12 +317,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * can replenish the slashed STAKED_TOKEN and bring the exchange rate back to 1
    **/
   function exchangeRate() public view override returns (uint128) {
-    if (_exchangeRateSnapshotsCount == 0) return INITIAL_EXCHANGE_RATE;
-    return _exchangeRateSnapshots[_exchangeRateSnapshotsCount - 1].value;
+    return _currentExchangeRate;
   }
 
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
-    public
+    internal
     pure
     returns (uint128)
   {
@@ -339,9 +340,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     onlySlashingAdmin
   {
     require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
-    uint256 currentExchangeRate = exchangeRate();
     uint256 currentShares = totalSupply();
-    uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
+    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
 
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
 
@@ -358,9 +358,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   function returnFunds(uint256 amount) external override {
     STAKED_TOKEN.safeTransfer(address(this), amount);
-    uint256 currentExchangeRate = exchangeRate();
     uint256 currentShares = totalSupply();
-    uint256 balance = (currentExchangeRate * currentShares) / TOKEN_UNIT;
+    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
     _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
 
     // TODO: emit funds returned event
@@ -609,7 +608,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       newExchangeRate
     );
     _exchangeRateSnapshotsCount += 1;
-    // TODO: emit event
+    _currentExchangeRate = newExchangeRate;
+    emit ExchangeRateChanged(newExchangeRate);
   }
 
   /**

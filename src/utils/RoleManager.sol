@@ -69,9 +69,7 @@ contract RoleManager {
     emit RoleClaimed(msg.sender, role);
   }
 
-  function _initAdmins(
-    InitAdmin[] memory initAdmins /*uint256[] memory roles, address[] memory admins*/
-  ) internal {
+  function _initAdmins(InitAdmin[] memory initAdmins) internal {
     for (uint256 i = 0; i < initAdmins.length; i++) {
       require(
         _admins[initAdmins[i].role] == address(0) &&
