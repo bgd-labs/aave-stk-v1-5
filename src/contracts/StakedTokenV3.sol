@@ -146,18 +146,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       )
     );
 
-    address[] memory adminsAddresses = new address[](3);
-    uint256[] memory adminsRoles = new uint256[](3);
+    InitAdmin[] memory initAdmins = new InitAdmin[](3);
+    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
+    initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
+    initAdmins[2] = InitAdmin(CLAIM_HELPER_ROLE, claimHelper);
 
-    adminsAddresses[0] = slashingAdmin;
-    adminsAddresses[1] = cooldownPauseAdmin;
-    adminsAddresses[2] = claimHelper;
-
-    adminsRoles[0] = SLASH_ADMIN_ROLE;
-    adminsRoles[1] = COOLDOWN_ADMIN_ROLE;
-    adminsRoles[2] = CLAIM_HELPER_ROLE;
-
-    _initAdmins(adminsRoles, adminsAddresses);
+    _initAdmins(initAdmins);
 
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
