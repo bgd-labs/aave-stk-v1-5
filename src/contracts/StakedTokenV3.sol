@@ -588,10 +588,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
-    bool slashingGracePeriod = block.timestamp <=
+    bool isInSlashingGracePeriod = block.timestamp <=
       _lastSlashing + cooldownTimes.slashingExitWindowSeconds;
 
-    if (!slashingGracePeriod) {
+    if (!isInSlashingGracePeriod) {
       require(
         (block.timestamp >
           cooldownStartTimestamp + cooldownTimes.cooldownSeconds),
