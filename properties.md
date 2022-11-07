@@ -11,20 +11,19 @@ There are currently two proxy contracts which utilize the stake token:
 
 Together with all the standard ERC20 functionalities, the current implementation includes extra logic for:
 
-- management & accounting of voting and proposition power
+- entering and exiting the safety module
 - management & accounting for safety module rewards
+- management & accounting of voting and proposition power
 
 With the new iteration the StakedTokenV3 adds mechanics for slashing in the case of shortfall events.
 
 ## Glossary
 
-**exchange rate** -> the rate to which you can redeem stkAAVE for AAVE
+**exchange rate** -> the rate to which you can redeem `stkToken` for `Token`
 
 **slashing amount** -> the amount being slashed
 
 ## General rules
-
-- Exchange rate should be 1 to 1, as long as no slashing event has occurred.
 
 - $Account1 \ne Account2$
 
@@ -63,8 +62,18 @@ $$
 redeemAmount_{t1} = {stkAmount_{t0} * exchangeRate_{t1}}
 $$
 
+## Airdrops
+
+The stkToken will only consider tokens staked via `stake` and injected via `returnFunds` for the exchangeRate. Tokens accidentally `airdropped` to the staking contract will not be mutualized and can in theory be rescued by governance.
+
 ### Governance
+
+The governance power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`.
+
+$$
+power_{t1} = {stkAmount_{t1} * exchangeRate_{t1}}
+$$
 
 ### Changed events
 
-- `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616
+- `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616 standard

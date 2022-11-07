@@ -25,6 +25,8 @@ interface IStakedTokenV3 is IStakedToken {
   event SlashingExitWindowDurationChanged(uint256 windowSeconds);
   event CooldownSecondsChanged(uint256 cooldownSeconds);
   event ExchangeRateChanged(uint128 exchangeRate);
+  event FundsReturned(uint256 amount);
+  event SlashingSettled();
 
   function exchangeRate() external view returns (uint128);
 

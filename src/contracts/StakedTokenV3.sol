@@ -347,26 +347,26 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     require(amount <= maxSlashable, 'INVALID_SLASHING_AMOUNT');
 
-    STAKED_TOKEN.safeTransfer(destination, amount);
-
     isPendingSlashing = true;
-
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
+
+    STAKED_TOKEN.safeTransfer(destination, amount);
 
     emit Slashed(destination, amount);
   }
 
   function returnFunds(uint256 amount) external override {
-    STAKED_TOKEN.safeTransfer(address(this), amount);
     uint256 currentShares = totalSupply();
     uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
     _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
 
-    // TODO: emit funds returned event
+    STAKED_TOKEN.safeTransfer(address(this), amount);
+    emit FundsReturned(amount);
   }
 
   function settleSlashing() external override {
     isPendingSlashing = false;
+    emit SlashingSettled();
   }
 
   /**
@@ -539,16 +539,16 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
       toCooldownTimestamp = 0;
     } else {
-      uint256 _fromCooldownTimestamp = (minimalValidCooldownTimestamp >
+      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
         fromCooldownTimestamp)
         ? block.timestamp
         : fromCooldownTimestamp;
 
-      if (_fromCooldownTimestamp < toCooldownTimestamp) {
+      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
         return toCooldownTimestamp;
       } else {
         toCooldownTimestamp =
-          ((amountToReceive * _fromCooldownTimestamp) +
+          ((amountToReceive * adjustedFromCooldownTimestamp) +
             (toBalance * toCooldownTimestamp)) /
           (amountToReceive + toBalance);
       }
