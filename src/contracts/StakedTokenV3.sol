@@ -173,7 +173,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     external
     override(IStakedToken, StakedTokenV2)
   {
-    _stake(msg.sender, to, amount, true);
+    _stake(msg.sender, to, amount);
   }
 
   /**
@@ -203,7 +203,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       r,
       s
     );
-    _stake(from, to, amount, true);
+    _stake(from, to, amount);
   }
 
   /**
@@ -488,8 +488,9 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       : amount;
 
     if (amountToClaim != 0) {
-      _stake(address(this), to, amountToClaim, false);
       _claimRewards(from, address(this), amountToClaim);
+      STAKED_TOKEN.approve(address(this), amountToClaim);
+      _stake(address(this), to, amountToClaim);
     }
 
     return amountToClaim;
@@ -498,8 +499,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   function _stake(
     address from,
     address to,
-    uint256 amount,
-    bool pullFunds
+    uint256 amount
   ) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
@@ -527,9 +527,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 sharesToMint = (amount * TOKEN_UNIT) / exchangeRate();
     _mint(to, sharesToMint);
 
-    if (pullFunds) {
-      STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
-    }
+    STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
 
     emit Staked(from, to, amount, sharesToMint);
   }

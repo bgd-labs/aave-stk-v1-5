@@ -112,6 +112,7 @@ contract ClaimRewardsValidation is BaseTest {
     uint256 balanceToClaim = STAKE_CONTRACT.getTotalRewardsBalance(
       address(this)
     );
+    require(balanceToClaim != 0);
     STAKE_CONTRACT.claimRewardsAndStake(address(this), balanceToClaim);
     uint256 balanceAfter = STAKE_CONTRACT.balanceOf(address(this));
     assertEq(balanceAfter, balanceBefore + balanceToClaim);
