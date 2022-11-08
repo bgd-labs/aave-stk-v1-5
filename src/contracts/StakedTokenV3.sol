@@ -429,7 +429,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       balanceOfUser
     );
 
-    uint256 sharesToMint = (amount * TOKEN_UNIT) / exchangeRate();
+    uint256 sharesToMint = (amount * TOKEN_UNIT) / _currentExchangeRate;
     _mint(to, sharesToMint);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
@@ -518,7 +518,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * exchangeRate()) / TOKEN_UNIT;
+    uint256 underlyingToRedeem = (amountToRedeem * _currentExchangeRate) /
+      TOKEN_UNIT;
 
     _burn(from, amountToRedeem);
 
