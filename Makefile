@@ -17,6 +17,7 @@ git-diff :
 
 
 diff-all :
+	forge flatten src/contracts/StakedAaveV3.sol --output src/flattened/StakedAaveV3Flattened.sol
 	make git-diff before=src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedTokenBptRev2_code_diff
 	make git-diff before=src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedTokenV2Rev3_code_diff
 	forge inspect StakedTokenV2Rev3 storage-layout --pretty > diffs/StakedTokenV2Rev3_layout.md

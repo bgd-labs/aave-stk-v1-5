@@ -3,15 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "lint": "prettier ./",
-    "lint:fix": "npm run lint -- --write",
-    "flatten": "forge flatten src/contracts/StakedAaveV3.sol --output src/flattened/StakedAaveV3Flattened.sol",
-    "layout:staked-token-v2": "forge inspect StakedTokenV2Rev3 storage-layout > diff/layout_current.json",
-    "layout:staked-token-v3": "forge inspect StakedAaveV3 storage-layout > diff/layout_next.json",
-    "layout:staked-token-v2:pretty": "forge inspect StakedTokenV2Rev3 storage-layout --pretty > diff/layout_current.md",
-    "layout:staked-token-v3:pretty": "forge inspect StakedAaveV3 storage-layout --pretty > diff/layout_next.md",
-    "diff:code": "yarn flatten && yarn lint:fix && sh diff.sh src/flattened/StakedTokenV2Rev3.sol src/flattened/StakedAaveV3Flattened.sol code-diff",
-    "diff:layout": "yarn layout:staked-token-v2 && yarn layout:staked-token-v3 && sh diff.sh diff/layout_current.json diff/layout_next.json layout-diff",
-    "diff": "yarn diff:code && yarn diff:layout"
+    "lint:fix": "npm run lint -- --write"
   },
   "repository": {
     "type": "git",
