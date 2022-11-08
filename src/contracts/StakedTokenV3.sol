@@ -161,6 +161,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
+  /// @inheritdoc IStakedTokenV3
+  function previewStake(uint256 assets) public view returns (uint256) {
+    return (assets * TOKEN_UNIT) / _currentExchangeRate;
+  }
+
   /// @inheritdoc IStakedToken
   function stake(address to, uint256 amount)
     external
@@ -265,8 +270,18 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /// @inheritdoc IStakedTokenV3
-  function exchangeRate() public view override returns (uint128) {
+  function getExchangeRate() public view override returns (uint128) {
     return _currentExchangeRate;
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function previewRedeem(uint256 shares)
+    public
+    view
+    override
+    returns (uint256)
+  {
+    return (_currentExchangeRate * shares) / TOKEN_UNIT;
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -274,14 +289,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     external
     override
     onlySlashingAdmin
+    returns (uint256)
   {
     require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentShares = totalSupply();
-    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
+    uint256 balance = previewRedeem(currentShares);
 
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
 
-    require(amount <= maxSlashable, 'INVALID_SLASHING_AMOUNT');
+    if (amount > maxSlashable) {
+      amount = maxSlashable;
+    }
 
     isPendingSlashing = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
@@ -289,13 +307,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     STAKED_TOKEN.safeTransfer(destination, amount);
 
     emit Slashed(destination, amount);
+    return amount;
   }
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
     uint256 currentShares = totalSupply();
-    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
-    _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
+    uint256 assets = previewRedeem(currentShares);
+    _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
     STAKED_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
     emit FundsReturned(amount);
@@ -429,7 +448,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       balanceOfUser
     );
 
-    uint256 sharesToMint = (amount * TOKEN_UNIT) / _currentExchangeRate;
+    uint256 sharesToMint = previewStake(amount);
     _mint(to, sharesToMint);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);

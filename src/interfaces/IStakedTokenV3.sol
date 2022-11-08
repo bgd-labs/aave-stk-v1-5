@@ -28,7 +28,7 @@ interface IStakedTokenV3 is IStakedToken {
    * @dev Returns the current exchange rate
    * @return exchangeRate as 18 decimal precision uint128
    **/
-  function exchangeRate() external view returns (uint128);
+  function getExchangeRate() external view returns (uint128);
 
   /**
    * @dev Executes a slashing of the underlying of a certain amount, transferring the seized funds
@@ -36,9 +36,13 @@ interface IStakedTokenV3 is IStakedToken {
    * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
    * As long as the slashing event is ongoing, stake and slash are deactivated.
    * @param destination the address where seized funds will be transferred
-   * @param amount the amount
+   * @param amount the amount to be slashed
+   * If the amount bigger than maximum allowed, the maximum will be slashed instead.
+   * @return amount the amount slashed
    **/
-  function slash(address destination, uint256 amount) external;
+  function slash(address destination, uint256 amount)
+    external
+    returns (uint256);
 
   /**
    * @dev Settles an ongoing slashing event
@@ -79,6 +83,13 @@ interface IStakedTokenV3 is IStakedToken {
   function setMaxSlashablePercentage(uint256 percentage) external;
 
   /**
+   * @dev returns the exact amount of shares that would be received for the provided number of assets
+   * @param assets the number of assets to stake
+   * @return shares the number of shares that would be received
+   */
+  function previewStake(uint256 assets) external view returns (uint256);
+
+  /**
    * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
    * @param to The address to receiving the shares
    * @param amount The amount to be staked
@@ -108,6 +119,13 @@ interface IStakedTokenV3 is IStakedToken {
     address to,
     uint256 amount
   ) external returns (uint256);
+
+  /**
+   * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
+   * @param shares the number of shares to redeem
+   * @return assets the number of assets that would be redeemed
+   */
+  function previewRedeem(uint256 shares) external view returns (uint256);
 
   /**
    * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function

@@ -31,7 +31,7 @@ contract SlashingValidation is BaseTest {
    * @dev Verifies that the initial exchange rate is 1:1
    */
   function testExchangeRate1To1() public {
-    assertEq(STAKE_CONTRACT.exchangeRate(), 1 ether);
+    assertEq(STAKE_CONTRACT.getExchangeRate(), 1 ether);
   }
 
   /**
@@ -46,7 +46,7 @@ contract SlashingValidation is BaseTest {
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
     STAKE_CONTRACT.stake(address(this), amount);
 
-    assertEq(STAKE_CONTRACT.exchangeRate(), 1 ether);
+    assertEq(STAKE_CONTRACT.getExchangeRate(), 1 ether);
   }
 
   function _slash20() internal {
@@ -75,7 +75,7 @@ contract SlashingValidation is BaseTest {
     vm.stopPrank();
 
     assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(receiver), amountToSlash);
-    assertEq(STAKE_CONTRACT.exchangeRate(), 0.8 ether);
+    assertEq(STAKE_CONTRACT.getExchangeRate(), 0.8 ether);
   }
 
   /**
@@ -206,14 +206,19 @@ contract SlashingValidation is BaseTest {
     assertEq(STAKE_CONTRACT.getMaxSlashablePercentage(), 1000);
   }
 
-  function testFailSlashMoreThanMax() public {
+  function testSlashMoreThanMax() public {
     address receiver = address(42);
-    uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * 4) / 10;
+
+    uint256 expectedAmount = (STAKE_CONTRACT.previewRedeem(
+      STAKE_CONTRACT.totalSupply()
+    ) * STAKE_CONTRACT.getMaxSlashablePercentage()) / 10000;
 
     // slash
     vm.startPrank(STAKE_CONTRACT.getAdmin(SLASHING_ADMIN));
-    STAKE_CONTRACT.slash(receiver, amountToSlash);
+    uint256 amount = STAKE_CONTRACT.slash(receiver, type(uint256).max);
     vm.stopPrank();
+
+    assertEq(amount, expectedAmount);
   }
 
   function test_refund() public {
