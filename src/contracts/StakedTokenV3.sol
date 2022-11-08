@@ -341,7 +341,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   function _setMaxSlashablePercentage(uint256 percentage) internal {
     require(
-      percentage <= PercentageMath.PERCENTAGE_FACTOR,
+      percentage < PercentageMath.PERCENTAGE_FACTOR,
       'INVALID_SLASHING_PERCENTAGE'
     );
 
