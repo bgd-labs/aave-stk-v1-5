@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '../interfaces/IERC20.sol';
-import {IStakedAave} from '../interfaces/IStakedAave.sol';
+import {IStakedToken} from '../interfaces/IStakedToken.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 import {ERC20WithSnapshot} from '../lib/ERC20WithSnapshot.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
@@ -16,7 +16,7 @@ import {AaveDistributionManager} from './AaveDistributionManager.sol';
  * @author Aave
  **/
 contract StakedToken is
-  IStakedAave,
+  IStakedToken,
   ERC20WithSnapshot,
   VersionedInitializable,
   AaveDistributionManager

@@ -16,6 +16,7 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
 import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
+import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
 
 /**
@@ -156,14 +157,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _setCooldownSeconds(cooldownSeconds);
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
 
+    // needed to claimRewardsAndStake works without a custom approval each time
     STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
-  /**
-   * @dev Allows a from to stake STAKED_TOKEN
-   * @param to Address of the from that will receive stake token shares
-   * @param amount The amount to be staked
-   **/
+  /// @inheritdoc IStakedToken
   function stake(address to, uint256 amount)
     external
     override(IStakedToken, StakedTokenV2)
@@ -171,15 +169,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _stake(msg.sender, to, amount);
   }
 
-  /**
-   * @dev Allows a from to stake STAKED_TOKEN with gasless approvals (permit)
-   * @param to Address of the from that will receive stake token shares
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
-   **/
+  /// @inheritdoc IStakedTokenV3
   function stakeWithPermit(
     address from,
     address to,
@@ -201,11 +191,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _stake(from, to, amount);
   }
 
-  /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
-   * @param amount Amount to redeem
-   **/
+  /// @inheritdoc IStakedToken
   function redeem(address to, uint256 amount)
     external
     override(IStakedToken, StakedTokenV2)
@@ -213,12 +199,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _redeem(msg.sender, to, amount);
   }
 
-  /**
-   * @dev Redeems staked tokens for a user. Only the claim helper contract is allowed to call this function
-   * @param from Address to redeem from
-   * @param to Address to redeem to
-   * @param amount Amount to redeem
-   **/
+  /// @inheritdoc IStakedTokenV3
   function redeemOnBehalf(
     address from,
     address to,
@@ -227,11 +208,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _redeem(from, to, amount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
-   * @param to Address to send the claimed rewards
-   * @param amount Amount to stake
-   **/
+  /// @inheritdoc IStakedToken
   function claimRewards(address to, uint256 amount)
     external
     override(IStakedToken, StakedTokenV2)
@@ -239,12 +216,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _claimRewards(msg.sender, to, amount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
-   * @param from The address of the user from to claim
-   * @param to Address to send the claimed rewards
-   * @param amount Amount to claim
-   **/
+  /// @inheritdoc IStakedTokenV3
   function claimRewardsOnBehalf(
     address from,
     address to,
@@ -253,11 +225,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _claimRewards(from, to, amount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   **/
+  /// @inheritdoc IStakedTokenV3
   function claimRewardsAndStake(address to, uint256 amount)
     external
     override
@@ -266,12 +234,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   **/
+  /// @inheritdoc IStakedTokenV3
   function claimRewardsAndStakeOnBehalf(
     address from,
     address to,
@@ -280,12 +243,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
-   * @param claimAmount Amount to claim
-   * @param redeemAmount Amount to redeem
-   * @param to Address to claim and unstake to
-   **/
+  /// @inheritdoc IStakedTokenV3
   function claimRewardsAndRedeem(
     address to,
     uint256 claimAmount,
@@ -295,13 +253,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _redeem(msg.sender, to, redeemAmount);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from
-   * @param to Address to claim and unstake to
-   * @param claimAmount Amount to claim
-   * @param redeemAmount Amount to redeem
-   **/
+  /// @inheritdoc IStakedTokenV3
   function claimRewardsAndRedeemOnBehalf(
     address from,
     address to,
@@ -312,29 +264,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _redeem(from, to, redeemAmount);
   }
 
-  /**
-   * @dev Calculates the exchange rate between the amount of STAKED_TOKEN and the the StakeToken total supply.
-   * Slashing will reduce the exchange rate. Supplying STAKED_TOKEN to the stake contract
-   * can replenish the slashed STAKED_TOKEN and bring the exchange rate back to 1
-   **/
+  /// @inheritdoc IStakedTokenV3
   function exchangeRate() public view override returns (uint128) {
     return _currentExchangeRate;
   }
 
-  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
-    internal
-    pure
-    returns (uint128)
-  {
-    return uint128((totalAssets * TOKEN_UNIT) / totalShares);
-  }
-
-  /**
-   * @dev Executes a slashing of the underlying of a certain amount, transferring the seized funds
-   * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate
-   * @param destination the address where seized funds will be transferred
-   * @param amount the amount
-   **/
+  /// @inheritdoc IStakedTokenV3
   function slash(address destination, uint256 amount)
     external
     override
@@ -356,6 +291,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit Slashed(destination, amount);
   }
 
+  /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
     uint256 currentShares = totalSupply();
     uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
@@ -365,21 +301,42 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit FundsReturned(amount);
   }
 
+  /// @inheritdoc IStakedTokenV3
   function settleSlashing() external override {
     isPendingSlashing = false;
     emit SlashingSettled();
   }
 
-  /**
-   * @dev sets the admin of the slashing pausing function
-   * @param percentage the new maximum slashable percentage
-   */
+  /// @inheritdoc IStakedTokenV3
   function setMaxSlashablePercentage(uint256 percentage)
     external
     override
     onlySlashingAdmin
   {
     _setMaxSlashablePercentage(percentage);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function getMaxSlashablePercentage()
+    external
+    view
+    override
+    returns (uint256)
+  {
+    return _maxSlashablePercentage;
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function setCooldownSeconds(uint256 cooldownSeconds)
+    external
+    onlyCooldownAdmin
+  {
+    _setCooldownSeconds(cooldownSeconds);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function getCooldownSeconds() external view returns (uint256) {
+    return _cooldownSeconds;
   }
 
   function _setMaxSlashablePercentage(uint256 percentage) internal {
@@ -392,36 +349,9 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit MaxSlashablePercentageChanged(percentage);
   }
 
-  /**
-   * @dev returns the current maximum slashable percentage of the stake
-   */
-  function getMaxSlashablePercentage()
-    external
-    view
-    override
-    returns (uint256)
-  {
-    return _maxSlashablePercentage;
-  }
-
-  /**
-   * @dev sets the cooldown duration whch needs to pass before the user can unstake
-   * @param cooldownSeconds the new cooldown duration
-   */
-  function setCooldownSeconds(uint256 cooldownSeconds)
-    external
-    onlyCooldownAdmin
-  {
-    _setCooldownSeconds(cooldownSeconds);
-  }
-
   function _setCooldownSeconds(uint256 cooldownSeconds) internal {
     _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
-  }
-
-  function getCooldownSeconds() external view returns (uint256) {
-    return _cooldownSeconds;
   }
 
   function _claimRewards(
@@ -558,6 +488,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /**
    * @dev Redeems staked tokens, and stop earning rewards
+   * @param from Address to redeem from
    * @param to Address to redeem to
    * @param amount Amount to redeem
    **/
@@ -600,6 +531,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit Redeem(from, to, underlyingToRedeem, amountToRedeem);
   }
 
+  /**
+   * @dev Updates the exchangeRate and emits events accordingly
+   * @param newExchangeRate the new exchange rate
+   */
   function _updateExchangeRate(uint128 newExchangeRate) internal {
     _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
       uint128(block.number),
@@ -611,7 +546,23 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /**
-   * @dev binary search to return closest exchangeRate
+   * @dev calculates the exchange rate based on totalAssets and totalShares
+   * @param totalAssets The total amount of assets staked
+   * @param totalShares The total amount of shares
+   * @return exchangeRate as 18 decimal precision uint128
+   */
+  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
+    internal
+    pure
+    returns (uint128)
+  {
+    return uint128((totalAssets * TOKEN_UNIT) / totalShares);
+  }
+
+  /**
+   * @dev searches a snapshot by block number. Uses binary search.
+   * @param blockNumber the block number being searched
+   * @return exchangeRate at block number
    */
   function _searchExchangeRateByBlockNumber(uint256 blockNumber)
     internal
@@ -646,9 +597,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _exchangeRateSnapshots[lower].value;
   }
 
-  /**
-   * @dev accounts for voting power adjustment based on exchangeRate
-   */
+  /// @dev Modified version accounting for exchange rate at block
+  /// @inheritdoc GovernancePowerDelegationERC20
   function _searchByBlockNumber(
     mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
     mapping(address => uint256) storage snapshotsCounts,

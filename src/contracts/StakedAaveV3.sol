@@ -7,7 +7,6 @@ import {Context} from '../lib/Context.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
 import {Address} from '../lib/Address.sol';
 import {ERC20} from '../lib/ERC20.sol';
-import {IStakedAave} from '../interfaces/IStakedAave.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
