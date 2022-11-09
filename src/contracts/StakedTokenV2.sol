@@ -434,7 +434,7 @@ contract StakedTokenV2 is
     address from,
     address to,
     uint256 amount
-  ) internal override {
+  ) internal virtual override {
     address votingFromDelegatee = _votingDelegates[from];
     address votingToDelegatee = _votingDelegates[to];
 

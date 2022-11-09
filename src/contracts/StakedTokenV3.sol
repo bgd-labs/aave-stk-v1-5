@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from '../interfaces/IERC20.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 import {IStakedToken} from '../interfaces/IStakedToken.sol';
+import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 
@@ -11,7 +12,6 @@ import {ERC20} from '../lib/ERC20.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
-import {StakedTokenV2} from './StakedTokenV2.sol';
 
 import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
@@ -35,11 +35,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant TOKEN_UNIT = 1e18;
 
-  //maximum percentage of the underlying that can be slashed in a single realization event
+  // slashing states
   uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
   bool public isPendingSlashing;
-
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint256 internal _exchangeRateSnapshotsCount;
   uint128 internal _currentExchangeRate;
