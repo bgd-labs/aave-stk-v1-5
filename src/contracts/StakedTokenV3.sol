@@ -77,8 +77,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration,
-    string memory name,
-    string memory symbol,
     address governance
   )
     StakedTokenV2(
@@ -88,8 +86,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       rewardsVault,
       emissionManager,
       distributionDuration,
-      name,
-      symbol,
       governance
     )
   {}

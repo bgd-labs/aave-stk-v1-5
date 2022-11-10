@@ -55,8 +55,6 @@ contract BaseTest is Test {
           STAKE_CONTRACT.REWARDS_VAULT(),
           STAKE_CONTRACT.EMISSION_MANAGER(),
           3155692600, // 100 years
-          STAKE_CONTRACT.name(),
-          STAKE_CONTRACT.symbol(),
           address(GovHelpers.GOV)
         )
       );

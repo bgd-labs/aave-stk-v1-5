@@ -61,15 +61,9 @@ contract StakedToken is
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    uint128 distributionDuration
   )
-    ERC20WithSnapshot(
-      name,
-      symbol /**, decimals*/
-    )
+    ERC20WithSnapshot()
     AaveDistributionManager(emissionManager, distributionDuration)
   {
     STAKED_TOKEN = stakedToken;

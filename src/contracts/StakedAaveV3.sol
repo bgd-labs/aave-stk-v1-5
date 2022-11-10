@@ -25,10 +25,6 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
  * @author Aave
  **/
 contract StakedAaveV3 is StakedTokenV3 {
-  string internal constant NAME = 'Staked Aave';
-  string internal constant SYMBOL = 'stkAAVE';
-  uint8 internal constant DECIMALS = 18;
-
   // GHO
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
@@ -53,8 +49,6 @@ contract StakedAaveV3 is StakedTokenV3 {
       rewardsVault,
       emissionManager,
       distributionDuration,
-      NAME,
-      SYMBOL,
       governance
     )
   {
