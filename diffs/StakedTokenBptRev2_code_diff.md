@@ -1,9 +1,9 @@
 ```diff
-diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index b49a690..e042fc6 100644
+diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
+index 37a034f..57c81b1 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
-+++ b/src/flattened/StakedAaveV3Flattened.sol
-@@ -1,37 +1,109 @@
++++ b/src/flattened/StakedTokenV3Flattened.sol
+@@ -1,37 +1,30 @@
 -// Sources flattened with hardhat v2.0.8 https://hardhat.org
 +// SPDX-License-Identifier: agpl-3.0
 +pragma solidity ^0.8.0;
@@ -14,86 +14,8 @@ index b49a690..e042fc6 100644
 -// SPDX-License-Identifier: MIT
 -pragma solidity ^0.7.5;
 -pragma experimental ABIEncoderV2;
-+interface IGovernancePowerDelegationToken {
-+  enum DelegationType {
-+    VOTING_POWER,
-+    PROPOSITION_POWER
-+  }
- 
+-
 -// File contracts/lib/Context.sol
-+  /**
-+   * @dev emitted when a user delegates to another
-+   * @param delegator the delegator
-+   * @param delegatee the delegatee
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  event DelegateChanged(
-+    address indexed delegator,
-+    address indexed delegatee,
-+    DelegationType delegationType
-+  );
-+
-+  /**
-+   * @dev emitted when an action changes the delegated power of a user
-+   * @param user the user which delegated power has changed
-+   * @param amount the amount of delegated power for the user
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  event DelegatedPowerChanged(
-+    address indexed user,
-+    uint256 amount,
-+    DelegationType delegationType
-+  );
-+
-+  /**
-+   * @dev delegates the specific power to a delegatee
-+   * @param delegatee the user which delegated power has changed
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  function delegateByType(address delegatee, DelegationType delegationType)
-+    external;
-+
-+  /**
-+   * @dev delegates all the powers to a specific user
-+   * @param delegatee the user to which the power will be delegated
-+   **/
-+  function delegate(address delegatee) external;
-+
-+  /**
-+   * @dev returns the delegatee of an user
-+   * @param delegator the address of the delegator
-+   **/
-+  function getDelegateeByType(address delegator, DelegationType delegationType)
-+    external
-+    view
-+    returns (address);
-+
-+  /**
-+   * @dev returns the current delegated power of a user. The current power is the
-+   * power delegated at the time of the last snapshot
-+   * @param user the user
-+   **/
-+  function getPowerCurrent(address user, DelegationType delegationType)
-+    external
-+    view
-+    returns (uint256);
-+
-+  /**
-+   * @dev returns the delegated power of a user at a certain block
-+   * @param user the user
-+   **/
-+  function getPowerAtBlock(
-+    address user,
-+    uint256 blockNumber,
-+    DelegationType delegationType
-+  ) external view returns (uint256);
-+
-+  /**
-+   * @dev returns the total supply at a certain block number
-+   **/
-+  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
-+}
-+
 +// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
  
  /**
@@ -111,19 +33,15 @@ index b49a690..e042fc6 100644
   */
  abstract contract Context {
 -  function _msgSender() internal view virtual returns (address payable) {
--    return msg.sender;
--  }
-+    function _msgSender() internal view virtual returns (address) {
-+        return msg.sender;
-+    }
++  function _msgSender() internal view virtual returns (address) {
+     return msg.sender;
+   }
  
 -  function _msgData() internal view virtual returns (bytes memory) {
 -    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
--    return msg.data;
--  }
-+    function _msgData() internal view virtual returns (bytes calldata) {
-+        return msg.data;
-+    }
++  function _msgData() internal view virtual returns (bytes calldata) {
+     return msg.data;
+   }
  }
  
 -// File contracts/interfaces/IERC20.sol
@@ -131,281 +49,11 @@ index b49a690..e042fc6 100644
  /**
   * @dev Interface of the ERC20 standard as defined in the EIP.
   * From https://github.com/OpenZeppelin/openzeppelin-contracts
-@@ -63,7 +135,10 @@ interface IERC20 {
-    *
-    * This value changes when {approve} or {transferFrom} are called.
-    */
--  function allowance(address owner, address spender) external view returns (uint256);
-+  function allowance(address owner, address spender)
-+    external
-+    view
-+    returns (uint256);
- 
-   /**
-    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-@@ -111,7 +186,289 @@ interface IERC20 {
+@@ -114,7 +107,31 @@ interface IERC20 {
    event Approval(address indexed owner, address indexed spender, uint256 value);
  }
  
 -// File @aave/aave-token/contracts/open-zeppelin/ERC20.sol@v1.0.4
-+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
-+
-+/**
-+ * @dev Collection of functions related to the address type
-+ * From https://github.com/OpenZeppelin/openzeppelin-contracts
-+ */
-+library Address {
-+    /**
-+     * @dev Returns true if `account` is a contract.
-+     *
-+     * [IMPORTANT]
-+     * ====
-+     * It is unsafe to assume that an address for which this function returns
-+     * false is an externally-owned account (EOA) and not a contract.
-+     *
-+     * Among others, `isContract` will return false for the following
-+     * types of addresses:
-+     *
-+     *  - an externally-owned account
-+     *  - a contract in construction
-+     *  - an address where a contract will be created
-+     *  - an address where a contract lived, but was destroyed
-+     * ====
-+     *
-+     * [IMPORTANT]
-+     * ====
-+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
-+     *
-+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
-+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
-+     * constructor.
-+     * ====
-+     */
-+    function isContract(address account) internal view returns (bool) {
-+        // This method relies on extcodesize/address.code.length, which returns 0
-+        // for contracts in construction, since the code is only stored at the end
-+        // of the constructor execution.
-+
-+        return account.code.length > 0;
-+    }
-+
-+    /**
-+     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
-+     * `recipient`, forwarding all available gas and reverting on errors.
-+     *
-+     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
-+     * of certain opcodes, possibly making contracts go over the 2300 gas limit
-+     * imposed by `transfer`, making them unable to receive funds via
-+     * `transfer`. {sendValue} removes this limitation.
-+     *
-+     * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
-+     *
-+     * IMPORTANT: because control is transferred to `recipient`, care must be
-+     * taken to not create reentrancy vulnerabilities. Consider using
-+     * {ReentrancyGuard} or the
-+     * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
-+     */
-+    function sendValue(address payable recipient, uint256 amount) internal {
-+        require(
-+            address(this).balance >= amount,
-+            "Address: insufficient balance"
-+        );
-+
-+        (bool success, ) = recipient.call{ value: amount }("");
-+        require(
-+            success,
-+            "Address: unable to send value, recipient may have reverted"
-+        );
-+    }
-+
-+    /**
-+     * @dev Performs a Solidity function call using a low level `call`. A
-+     * plain `call` is an unsafe replacement for a function call: use this
-+     * function instead.
-+     *
-+     * If `target` reverts with a revert reason, it is bubbled up by this
-+     * function (like regular Solidity function calls).
-+     *
-+     * Returns the raw returned data. To convert to the expected return value,
-+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
-+     *
-+     * Requirements:
-+     *
-+     * - `target` must be a contract.
-+     * - calling `target` with `data` must not revert.
-+     *
-+     * _Available since v3.1._
-+     */
-+    function functionCall(address target, bytes memory data)
-+        internal
-+        returns (bytes memory)
-+    {
-+        return functionCall(target, data, "Address: low-level call failed");
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
-+     * `errorMessage` as a fallback revert reason when `target` reverts.
-+     *
-+     * _Available since v3.1._
-+     */
-+    function functionCall(
-+        address target,
-+        bytes memory data,
-+        string memory errorMessage
-+    ) internal returns (bytes memory) {
-+        return functionCallWithValue(target, data, 0, errorMessage);
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-+     * but also transferring `value` wei to `target`.
-+     *
-+     * Requirements:
-+     *
-+     * - the calling contract must have an ETH balance of at least `value`.
-+     * - the called Solidity function must be `payable`.
-+     *
-+     * _Available since v3.1._
-+     */
-+    function functionCallWithValue(
-+        address target,
-+        bytes memory data,
-+        uint256 value
-+    ) internal returns (bytes memory) {
-+        return
-+            functionCallWithValue(
-+                target,
-+                data,
-+                value,
-+                "Address: low-level call with value failed"
-+            );
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
-+     * with `errorMessage` as a fallback revert reason when `target` reverts.
-+     *
-+     * _Available since v3.1._
-+     */
-+    function functionCallWithValue(
-+        address target,
-+        bytes memory data,
-+        uint256 value,
-+        string memory errorMessage
-+    ) internal returns (bytes memory) {
-+        require(
-+            address(this).balance >= value,
-+            "Address: insufficient balance for call"
-+        );
-+        require(isContract(target), "Address: call to non-contract");
-+
-+        (bool success, bytes memory returndata) = target.call{ value: value }(
-+            data
-+        );
-+        return verifyCallResult(success, returndata, errorMessage);
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-+     * but performing a static call.
-+     *
-+     * _Available since v3.3._
-+     */
-+    function functionStaticCall(address target, bytes memory data)
-+        internal
-+        view
-+        returns (bytes memory)
-+    {
-+        return
-+            functionStaticCall(
-+                target,
-+                data,
-+                "Address: low-level static call failed"
-+            );
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
-+     * but performing a static call.
-+     *
-+     * _Available since v3.3._
-+     */
-+    function functionStaticCall(
-+        address target,
-+        bytes memory data,
-+        string memory errorMessage
-+    ) internal view returns (bytes memory) {
-+        require(isContract(target), "Address: static call to non-contract");
-+
-+        (bool success, bytes memory returndata) = target.staticcall(data);
-+        return verifyCallResult(success, returndata, errorMessage);
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-+     * but performing a delegate call.
-+     *
-+     * _Available since v3.4._
-+     */
-+    function functionDelegateCall(address target, bytes memory data)
-+        internal
-+        returns (bytes memory)
-+    {
-+        return
-+            functionDelegateCall(
-+                target,
-+                data,
-+                "Address: low-level delegate call failed"
-+            );
-+    }
-+
-+    /**
-+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
-+     * but performing a delegate call.
-+     *
-+     * _Available since v3.4._
-+     */
-+    function functionDelegateCall(
-+        address target,
-+        bytes memory data,
-+        string memory errorMessage
-+    ) internal returns (bytes memory) {
-+        require(isContract(target), "Address: delegate call to non-contract");
-+
-+        (bool success, bytes memory returndata) = target.delegatecall(data);
-+        return verifyCallResult(success, returndata, errorMessage);
-+    }
-+
-+    /**
-+     * @dev Tool to verifies that a low level call was successful, and revert if it wasn't, either by bubbling the
-+     * revert reason using the provided one.
-+     *
-+     * _Available since v4.3._
-+     */
-+    function verifyCallResult(
-+        bool success,
-+        bytes memory returndata,
-+        string memory errorMessage
-+    ) internal pure returns (bytes memory) {
-+        if (success) {
-+            return returndata;
-+        } else {
-+            // Look for revert reason and bubble it up if present
-+            if (returndata.length > 0) {
-+                // The easiest way to bubble the revert reason is using memory via assembly
-+
-+                assembly {
-+                    let returndata_size := mload(returndata)
-+                    revert(add(32, returndata), returndata_size)
-+                }
-+            } else {
-+                revert(errorMessage);
-+            }
-+        }
-+    }
-+}
-+
 +// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/ERC20.sol)
 +
 +// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
@@ -434,7 +82,7 @@ index b49a690..e042fc6 100644
  
  /**
   * @dev Implementation of the {IERC20} interface.
-@@ -124,9 +481,10 @@ interface IERC20 {
+@@ -127,9 +144,10 @@ interface IERC20 {
   * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
   * to implement supply mechanisms].
   *
@@ -448,7 +96,7 @@ index b49a690..e042fc6 100644
   *
   * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
   * This allows applications to reconstruct the allowance for all accounts just
-@@ -137,332 +495,396 @@ interface IERC20 {
+@@ -140,39 +158,35 @@ interface IERC20 {
   * functions have been added to mitigate the well-known issues around setting
   * allowances. See {IERC20-approve}.
   */
@@ -457,176 +105,205 @@ index b49a690..e042fc6 100644
 -  using Address for address;
 -
 -  mapping(address => uint256) private _balances;
--
--  mapping(address => mapping(address => uint256)) private _allowances;
--
++contract ERC20 is Context, IERC20, IERC20Metadata {
++  mapping(address => uint256) internal _balances;
+ 
+   mapping(address => mapping(address => uint256)) private _allowances;
+ 
 -  uint256 private _totalSupply;
--
++  uint256 internal _totalSupply;
+ 
 -  string internal _name;
 -  string internal _symbol;
 -  uint8 private _decimals;
--
--  /**
++  string private _name;
++  string private _symbol;
++  uint8 private _decimals; // @deprecated
+ 
+   /**
 -   * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
 -   * a default value of 18.
--   *
++   * @dev Sets the values for {name} and {symbol}.
+    *
 -   * To select a different value for {decimals}, use {_setupDecimals}.
--   *
++   * The default value of {decimals} is 18. To select a different value for
++   * {decimals} you should overload it.
+    *
 -   * All three of these values are immutable: they can only be set once during
--   * construction.
--   */
++   * All two of these values are immutable: they can only be set once during
+    * construction.
+    */
 -  constructor(string memory name, string memory symbol) public {
 -    _name = name;
 -    _symbol = symbol;
 -    _decimals = 18;
--  }
--
--  /**
--   * @dev Returns the name of the token.
--   */
++  constructor(string memory name_, string memory symbol_) {
++    _name = name_;
++    _symbol = symbol_;
+   }
+ 
+   /**
+    * @dev Returns the name of the token.
+    */
 -  function name() public view returns (string memory) {
--    return _name;
--  }
--
--  /**
--   * @dev Returns the symbol of the token, usually a shorter version of the
--   * name.
--   */
++  function name() public view virtual override returns (string memory) {
+     return _name;
+   }
+ 
+@@ -180,38 +194,44 @@ contract ERC20 is Context, IERC20 {
+    * @dev Returns the symbol of the token, usually a shorter version of the
+    * name.
+    */
 -  function symbol() public view returns (string memory) {
--    return _symbol;
--  }
--
--  /**
--   * @dev Returns the number of decimals used to get its user representation.
--   * For example, if `decimals` equals `2`, a balance of `505` tokens should
++  function symbol() public view virtual override returns (string memory) {
+     return _symbol;
+   }
+ 
+   /**
+    * @dev Returns the number of decimals used to get its user representation.
+    * For example, if `decimals` equals `2`, a balance of `505` tokens should
 -   * be displayed to a user as `5,05` (`505 / 10 ** 2`).
--   *
--   * Tokens usually opt for a value of 18, imitating the relationship between
++   * be displayed to a user as `5.05` (`505 / 10 ** 2`).
+    *
+    * Tokens usually opt for a value of 18, imitating the relationship between
 -   * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
 -   * called.
--   *
--   * NOTE: This information is only used for _display_ purposes: it in
--   * no way affects any of the arithmetic of the contract, including
--   * {IERC20-balanceOf} and {IERC20-transfer}.
--   */
++   * Ether and Wei. This is the value {ERC20} uses, unless this function is
++   * overridden;
+    *
+    * NOTE: This information is only used for _display_ purposes: it in
+    * no way affects any of the arithmetic of the contract, including
+    * {IERC20-balanceOf} and {IERC20-transfer}.
+    */
 -  function decimals() public view returns (uint8) {
 -    return _decimals;
--  }
--
--  /**
--   * @dev See {IERC20-totalSupply}.
--   */
++  function decimals() public view virtual override returns (uint8) {
++    return 18;
+   }
+ 
+   /**
+    * @dev See {IERC20-totalSupply}.
+    */
 -  function totalSupply() public view override returns (uint256) {
--    return _totalSupply;
--  }
--
--  /**
--   * @dev See {IERC20-balanceOf}.
--   */
++  function totalSupply() public view virtual override returns (uint256) {
+     return _totalSupply;
+   }
+ 
+   /**
+    * @dev See {IERC20-balanceOf}.
+    */
 -  function balanceOf(address account) public view override returns (uint256) {
--    return _balances[account];
--  }
--
--  /**
--   * @dev See {IERC20-transfer}.
--   *
--   * Requirements:
--   *
++  function balanceOf(address account)
++    public
++    view
++    virtual
++    override
++    returns (uint256)
++  {
+     return _balances[account];
+   }
+ 
+@@ -220,16 +240,17 @@ contract ERC20 is Context, IERC20 {
+    *
+    * Requirements:
+    *
 -   * - `recipient` cannot be the zero address.
--   * - the caller must have a balance of at least `amount`.
--   */
--  function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
++   * - `to` cannot be the zero address.
+    * - the caller must have a balance of at least `amount`.
+    */
+-  function transfer(address recipient, uint256 amount)
++  function transfer(address to, uint256 amount)
+     public
+     virtual
+     override
+     returns (bool)
+   {
 -    _transfer(_msgSender(), recipient, amount);
--    return true;
--  }
--
--  /**
--   * @dev See {IERC20-allowance}.
--   */
--  function allowance(address owner, address spender)
--    public
--    view
--    virtual
--    override
--    returns (uint256)
--  {
--    return _allowances[owner][spender];
--  }
--
--  /**
--   * @dev See {IERC20-approve}.
--   *
--   * Requirements:
--   *
--   * - `spender` cannot be the zero address.
--   */
--  function approve(address spender, uint256 amount) public virtual override returns (bool) {
++    address owner = _msgSender();
++    _transfer(owner, to, amount);
+     return true;
+   }
+ 
+@@ -249,6 +270,9 @@ contract ERC20 is Context, IERC20 {
+   /**
+    * @dev See {IERC20-approve}.
+    *
++   * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
++   * `transferFrom`. This is semantically equivalent to an infinite approval.
++   *
+    * Requirements:
+    *
+    * - `spender` cannot be the zero address.
+@@ -259,7 +283,8 @@ contract ERC20 is Context, IERC20 {
+     override
+     returns (bool)
+   {
 -    _approve(_msgSender(), spender, amount);
--    return true;
--  }
--
--  /**
--   * @dev See {IERC20-transferFrom}.
--   *
--   * Emits an {Approval} event indicating the updated allowance. This is not
++    address owner = _msgSender();
++    _approve(owner, spender, amount);
+     return true;
+   }
+ 
+@@ -267,28 +292,26 @@ contract ERC20 is Context, IERC20 {
+    * @dev See {IERC20-transferFrom}.
+    *
+    * Emits an {Approval} event indicating the updated allowance. This is not
 -   * required by the EIP. See the note at the beginning of {ERC20};
--   *
--   * Requirements:
++   * required by the EIP. See the note at the beginning of {ERC20}.
++   *
++   * NOTE: Does not update the allowance if the current allowance
++   * is the maximum `uint256`.
+    *
+    * Requirements:
 -   * - `sender` and `recipient` cannot be the zero address.
 -   * - `sender` must have a balance of at least `amount`.
 -   * - the caller must have allowance for ``sender``'s tokens of at least
--   * `amount`.
--   */
--  function transferFrom(
++   *
++   * - `from` and `to` cannot be the zero address.
++   * - `from` must have a balance of at least `amount`.
++   * - the caller must have allowance for ``from``'s tokens of at least
+    * `amount`.
+    */
+   function transferFrom(
 -    address sender,
 -    address recipient,
--    uint256 amount
--  ) public virtual override returns (bool) {
++    address from,
++    address to,
+     uint256 amount
+   ) public virtual override returns (bool) {
 -    _transfer(sender, recipient, amount);
 -    _approve(
 -      sender,
 -      _msgSender(),
--      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
+-      _allowances[sender][_msgSender()].sub(
+-        amount,
+-        'ERC20: transfer amount exceeds allowance'
+-      )
 -    );
--    return true;
--  }
--
--  /**
--   * @dev Atomically increases the allowance granted to `spender` by the caller.
--   *
--   * This is an alternative to {approve} that can be used as a mitigation for
--   * problems described in {IERC20-approve}.
--   *
--   * Emits an {Approval} event indicating the updated allowance.
--   *
--   * Requirements:
--   *
--   * - `spender` cannot be the zero address.
--   */
--  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
--    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
--    return true;
--  }
--
--  /**
--   * @dev Atomically decreases the allowance granted to `spender` by the caller.
--   *
--   * This is an alternative to {approve} that can be used as a mitigation for
--   * problems described in {IERC20-approve}.
--   *
--   * Emits an {Approval} event indicating the updated allowance.
--   *
--   * Requirements:
--   *
--   * - `spender` cannot be the zero address.
--   * - `spender` must have allowance for the caller of at least
--   * `subtractedValue`.
--   */
--  function decreaseAllowance(address spender, uint256 subtractedValue)
--    public
--    virtual
--    returns (bool)
--  {
++    address spender = _msgSender();
++    _spendAllowance(from, spender, amount);
++    _transfer(from, to, amount);
+     return true;
+   }
+ 
+@@ -309,11 +332,8 @@ contract ERC20 is Context, IERC20 {
+     virtual
+     returns (bool)
+   {
+-    _approve(
+-      _msgSender(),
+-      spender,
+-      _allowances[_msgSender()][spender].add(addedValue)
+-    );
++    address owner = _msgSender();
++    _approve(owner, spender, allowance(owner, spender) + addedValue);
+     return true;
+   }
+ 
+@@ -336,47 +356,53 @@ contract ERC20 is Context, IERC20 {
+     virtual
+     returns (bool)
+   {
 -    _approve(
 -      _msgSender(),
 -      spender,
@@ -634,561 +311,232 @@ index b49a690..e042fc6 100644
 -        subtractedValue,
 -        'ERC20: decreased allowance below zero'
 -      )
--    );
--    return true;
--  }
--
--  /**
++    address owner = _msgSender();
++    uint256 currentAllowance = allowance(owner, spender);
++    require(
++      currentAllowance >= subtractedValue,
++      'ERC20: decreased allowance below zero'
+     );
++    unchecked {
++      _approve(owner, spender, currentAllowance - subtractedValue);
++    }
++
+     return true;
+   }
+ 
+   /**
 -   * @dev Moves tokens `amount` from `sender` to `recipient`.
--   *
++   * @dev Moves `amount` of tokens from `from` to `to`.
+    *
 -   * This is internal function is equivalent to {transfer}, and can be used to
--   * e.g. implement automatic token fees, slashing mechanisms, etc.
--   *
--   * Emits a {Transfer} event.
--   *
--   * Requirements:
--   *
++   * This internal function is equivalent to {transfer}, and can be used to
+    * e.g. implement automatic token fees, slashing mechanisms, etc.
+    *
+    * Emits a {Transfer} event.
+    *
+    * Requirements:
+    *
 -   * - `sender` cannot be the zero address.
 -   * - `recipient` cannot be the zero address.
 -   * - `sender` must have a balance of at least `amount`.
--   */
--  function _transfer(
++   * - `from` cannot be the zero address.
++   * - `to` cannot be the zero address.
++   * - `from` must have a balance of at least `amount`.
+    */
+   function _transfer(
 -    address sender,
 -    address recipient,
--    uint256 amount
--  ) internal virtual {
++    address from,
++    address to,
+     uint256 amount
+   ) internal virtual {
 -    require(sender != address(0), 'ERC20: transfer from the zero address');
 -    require(recipient != address(0), 'ERC20: transfer to the zero address');
--
++    require(from != address(0), 'ERC20: transfer from the zero address');
++    require(to != address(0), 'ERC20: transfer to the zero address');
+ 
 -    _beforeTokenTransfer(sender, recipient, amount);
--
--    _balances[sender] = _balances[sender].sub(amount, 'ERC20: transfer amount exceeds balance');
++    _beforeTokenTransfer(from, to, amount);
+ 
+-    _balances[sender] = _balances[sender].sub(
+-      amount,
+-      'ERC20: transfer amount exceeds balance'
+-    );
 -    _balances[recipient] = _balances[recipient].add(amount);
 -    emit Transfer(sender, recipient, amount);
--  }
--
--  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
--   * the total supply.
--   *
--   * Emits a {Transfer} event with `from` set to the zero address.
--   *
++    uint256 fromBalance = _balances[from];
++    require(fromBalance >= amount, 'ERC20: transfer amount exceeds balance');
++    unchecked {
++      _balances[from] = fromBalance - amount;
++    }
++    _balances[to] += amount;
++
++    emit Transfer(from, to, amount);
++
++    _afterTokenTransfer(from, to, amount);
+   }
+ 
+   /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+@@ -384,18 +410,20 @@ contract ERC20 is Context, IERC20 {
+    *
+    * Emits a {Transfer} event with `from` set to the zero address.
+    *
 -   * Requirements
--   *
++   * Requirements:
+    *
 -   * - `to` cannot be the zero address.
--   */
--  function _mint(address account, uint256 amount) internal virtual {
--    require(account != address(0), 'ERC20: mint to the zero address');
--
--    _beforeTokenTransfer(address(0), account, amount);
--
++   * - `account` cannot be the zero address.
+    */
+   function _mint(address account, uint256 amount) internal virtual {
+     require(account != address(0), 'ERC20: mint to the zero address');
+ 
+     _beforeTokenTransfer(address(0), account, amount);
+ 
 -    _totalSupply = _totalSupply.add(amount);
 -    _balances[account] = _balances[account].add(amount);
--    emit Transfer(address(0), account, amount);
--  }
--
--  /**
--   * @dev Destroys `amount` tokens from `account`, reducing the
--   * total supply.
--   *
--   * Emits a {Transfer} event with `to` set to the zero address.
--   *
++    _totalSupply += amount;
++    _balances[account] += amount;
+     emit Transfer(address(0), account, amount);
++
++    _afterTokenTransfer(address(0), account, amount);
+   }
+ 
+   /**
+@@ -404,7 +432,7 @@ contract ERC20 is Context, IERC20 {
+    *
+    * Emits a {Transfer} event with `to` set to the zero address.
+    *
 -   * Requirements
--   *
--   * - `account` cannot be the zero address.
--   * - `account` must have at least `amount` tokens.
--   */
--  function _burn(address account, uint256 amount) internal virtual {
--    require(account != address(0), 'ERC20: burn from the zero address');
--
--    _beforeTokenTransfer(account, address(0), amount);
--
--    _balances[account] = _balances[account].sub(amount, 'ERC20: burn amount exceeds balance');
++   * Requirements:
+    *
+    * - `account` cannot be the zero address.
+    * - `account` must have at least `amount` tokens.
+@@ -414,18 +442,22 @@ contract ERC20 is Context, IERC20 {
+ 
+     _beforeTokenTransfer(account, address(0), amount);
+ 
+-    _balances[account] = _balances[account].sub(
+-      amount,
+-      'ERC20: burn amount exceeds balance'
+-    );
 -    _totalSupply = _totalSupply.sub(amount);
--    emit Transfer(account, address(0), amount);
--  }
--
--  /**
++    uint256 accountBalance = _balances[account];
++    require(accountBalance >= amount, 'ERC20: burn amount exceeds balance');
++    unchecked {
++      _balances[account] = accountBalance - amount;
++    }
++    _totalSupply -= amount;
++
+     emit Transfer(account, address(0), amount);
++
++    _afterTokenTransfer(account, address(0), amount);
+   }
+ 
+   /**
 -   * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
--   *
++   * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+    *
 -   * This is internal function is equivalent to `approve`, and can be used to
--   * e.g. set automatic allowances for certain subsystems, etc.
--   *
--   * Emits an {Approval} event.
--   *
--   * Requirements:
--   *
--   * - `owner` cannot be the zero address.
--   * - `spender` cannot be the zero address.
--   */
--  function _approve(
--    address owner,
--    address spender,
--    uint256 amount
--  ) internal virtual {
--    require(owner != address(0), 'ERC20: approve from the zero address');
--    require(spender != address(0), 'ERC20: approve to the zero address');
--
--    _allowances[owner][spender] = amount;
--    emit Approval(owner, spender, amount);
--  }
--
--  /**
++   * This internal function is equivalent to `approve`, and can be used to
+    * e.g. set automatic allowances for certain subsystems, etc.
+    *
+    * Emits an {Approval} event.
+@@ -448,14 +480,25 @@ contract ERC20 is Context, IERC20 {
+   }
+ 
+   /**
 -   * @dev Sets {decimals} to a value other than the default one of 18.
--   *
++   * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
+    *
 -   * WARNING: This function should only be called from the constructor. Most
 -   * applications that interact with token contracts will not expect
 -   * {decimals} to ever change, and may work incorrectly if it does.
--   */
++   * Does not update the allowance amount in case of infinite allowance.
++   * Revert if not enough allowance is available.
++   *
++   * Might emit an {Approval} event.
+    */
 -  function _setupDecimals(uint8 decimals_) internal {
 -    _decimals = decimals_;
--  }
--
--  /**
--   * @dev Hook that is called before any transfer of tokens. This includes
--   * minting and burning.
--   *
--   * Calling conditions:
--   *
--   * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
--   * will be to transferred to `to`.
--   * - when `from` is zero, `amount` tokens will be minted for `to`.
--   * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
--   * - `from` and `to` are never both zero.
--   *
--   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
--   */
--  function _beforeTokenTransfer(
--    address from,
--    address to,
--    uint256 amount
--  ) internal virtual {}
-+contract ERC20 is Context, IERC20, IERC20Metadata {
-+    mapping(address => uint256) internal _balances;
-+
-+    mapping(address => mapping(address => uint256)) private _allowances;
-+
-+    uint256 internal _totalSupply;
-+
-+    string private _name;
-+    string private _symbol;
-+    uint8 private _decimals; // @deprecated
-+
-+    /**
-+     * @dev Sets the values for {name} and {symbol}.
-+     *
-+     * The default value of {decimals} is 18. To select a different value for
-+     * {decimals} you should overload it.
-+     *
-+     * All two of these values are immutable: they can only be set once during
-+     * construction.
-+     */
-+    constructor(string memory name_, string memory symbol_) {
-+        _name = name_;
-+        _symbol = symbol_;
++  function _spendAllowance(
++    address owner,
++    address spender,
++    uint256 amount
++  ) internal virtual {
++    uint256 currentAllowance = allowance(owner, spender);
++    if (currentAllowance != type(uint256).max) {
++      require(currentAllowance >= amount, 'ERC20: insufficient allowance');
++      unchecked {
++        _approve(owner, spender, currentAllowance - amount);
++      }
 +    }
-+
-+    /**
-+     * @dev Returns the name of the token.
-+     */
-+    function name() public view virtual override returns (string memory) {
-+        return _name;
-+    }
-+
-+    /**
-+     * @dev Returns the symbol of the token, usually a shorter version of the
-+     * name.
-+     */
-+    function symbol() public view virtual override returns (string memory) {
-+        return _symbol;
-+    }
-+
-+    /**
-+     * @dev Returns the number of decimals used to get its user representation.
-+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-+     * be displayed to a user as `5.05` (`505 / 10 ** 2`).
-+     *
-+     * Tokens usually opt for a value of 18, imitating the relationship between
-+     * Ether and Wei. This is the value {ERC20} uses, unless this function is
-+     * overridden;
-+     *
-+     * NOTE: This information is only used for _display_ purposes: it in
-+     * no way affects any of the arithmetic of the contract, including
-+     * {IERC20-balanceOf} and {IERC20-transfer}.
-+     */
-+    function decimals() public view virtual override returns (uint8) {
-+        return 18;
-+    }
-+
-+    /**
-+     * @dev See {IERC20-totalSupply}.
-+     */
-+    function totalSupply() public view virtual override returns (uint256) {
-+        return _totalSupply;
-+    }
-+
-+    /**
-+     * @dev See {IERC20-balanceOf}.
-+     */
-+    function balanceOf(address account)
-+        public
-+        view
-+        virtual
-+        override
-+        returns (uint256)
-+    {
-+        return _balances[account];
-+    }
-+
-+    /**
-+     * @dev See {IERC20-transfer}.
-+     *
-+     * Requirements:
-+     *
-+     * - `to` cannot be the zero address.
-+     * - the caller must have a balance of at least `amount`.
-+     */
-+    function transfer(address to, uint256 amount)
-+        public
-+        virtual
-+        override
-+        returns (bool)
-+    {
-+        address owner = _msgSender();
-+        _transfer(owner, to, amount);
-+        return true;
-+    }
-+
-+    /**
-+     * @dev See {IERC20-allowance}.
-+     */
-+    function allowance(address owner, address spender)
-+        public
-+        view
-+        virtual
-+        override
-+        returns (uint256)
-+    {
-+        return _allowances[owner][spender];
-+    }
-+
-+    /**
-+     * @dev See {IERC20-approve}.
-+     *
-+     * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
-+     * `transferFrom`. This is semantically equivalent to an infinite approval.
-+     *
-+     * Requirements:
-+     *
-+     * - `spender` cannot be the zero address.
-+     */
-+    function approve(address spender, uint256 amount)
-+        public
-+        virtual
-+        override
-+        returns (bool)
-+    {
-+        address owner = _msgSender();
-+        _approve(owner, spender, amount);
-+        return true;
-+    }
-+
-+    /**
-+     * @dev See {IERC20-transferFrom}.
-+     *
-+     * Emits an {Approval} event indicating the updated allowance. This is not
-+     * required by the EIP. See the note at the beginning of {ERC20}.
-+     *
-+     * NOTE: Does not update the allowance if the current allowance
-+     * is the maximum `uint256`.
-+     *
-+     * Requirements:
-+     *
-+     * - `from` and `to` cannot be the zero address.
-+     * - `from` must have a balance of at least `amount`.
-+     * - the caller must have allowance for ``from``'s tokens of at least
-+     * `amount`.
-+     */
-+    function transferFrom(
-+        address from,
-+        address to,
-+        uint256 amount
-+    ) public virtual override returns (bool) {
-+        address spender = _msgSender();
-+        _spendAllowance(from, spender, amount);
-+        _transfer(from, to, amount);
-+        return true;
-+    }
-+
-+    /**
-+     * @dev Atomically increases the allowance granted to `spender` by the caller.
-+     *
-+     * This is an alternative to {approve} that can be used as a mitigation for
-+     * problems described in {IERC20-approve}.
-+     *
-+     * Emits an {Approval} event indicating the updated allowance.
-+     *
-+     * Requirements:
-+     *
-+     * - `spender` cannot be the zero address.
-+     */
-+    function increaseAllowance(address spender, uint256 addedValue)
-+        public
-+        virtual
-+        returns (bool)
-+    {
-+        address owner = _msgSender();
-+        _approve(owner, spender, allowance(owner, spender) + addedValue);
-+        return true;
-+    }
-+
-+    /**
-+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
-+     *
-+     * This is an alternative to {approve} that can be used as a mitigation for
-+     * problems described in {IERC20-approve}.
-+     *
-+     * Emits an {Approval} event indicating the updated allowance.
-+     *
-+     * Requirements:
-+     *
-+     * - `spender` cannot be the zero address.
-+     * - `spender` must have allowance for the caller of at least
-+     * `subtractedValue`.
-+     */
-+    function decreaseAllowance(address spender, uint256 subtractedValue)
-+        public
-+        virtual
-+        returns (bool)
-+    {
-+        address owner = _msgSender();
-+        uint256 currentAllowance = allowance(owner, spender);
-+        require(
-+            currentAllowance >= subtractedValue,
-+            "ERC20: decreased allowance below zero"
-+        );
-+        unchecked {
-+            _approve(owner, spender, currentAllowance - subtractedValue);
-+        }
-+
-+        return true;
-+    }
-+
-+    /**
-+     * @dev Moves `amount` of tokens from `from` to `to`.
-+     *
-+     * This internal function is equivalent to {transfer}, and can be used to
-+     * e.g. implement automatic token fees, slashing mechanisms, etc.
-+     *
-+     * Emits a {Transfer} event.
-+     *
-+     * Requirements:
-+     *
-+     * - `from` cannot be the zero address.
-+     * - `to` cannot be the zero address.
-+     * - `from` must have a balance of at least `amount`.
-+     */
-+    function _transfer(
-+        address from,
-+        address to,
-+        uint256 amount
-+    ) internal virtual {
-+        require(from != address(0), "ERC20: transfer from the zero address");
-+        require(to != address(0), "ERC20: transfer to the zero address");
-+
-+        _beforeTokenTransfer(from, to, amount);
-+
-+        uint256 fromBalance = _balances[from];
-+        require(
-+            fromBalance >= amount,
-+            "ERC20: transfer amount exceeds balance"
-+        );
-+        unchecked {
-+            _balances[from] = fromBalance - amount;
-+        }
-+        _balances[to] += amount;
-+
-+        emit Transfer(from, to, amount);
-+
-+        _afterTokenTransfer(from, to, amount);
-+    }
-+
-+    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-+     * the total supply.
-+     *
-+     * Emits a {Transfer} event with `from` set to the zero address.
-+     *
-+     * Requirements:
-+     *
-+     * - `account` cannot be the zero address.
-+     */
-+    function _mint(address account, uint256 amount) internal virtual {
-+        require(account != address(0), "ERC20: mint to the zero address");
-+
-+        _beforeTokenTransfer(address(0), account, amount);
-+
-+        _totalSupply += amount;
-+        _balances[account] += amount;
-+        emit Transfer(address(0), account, amount);
-+
-+        _afterTokenTransfer(address(0), account, amount);
-+    }
-+
-+    /**
-+     * @dev Destroys `amount` tokens from `account`, reducing the
-+     * total supply.
-+     *
-+     * Emits a {Transfer} event with `to` set to the zero address.
-+     *
-+     * Requirements:
-+     *
-+     * - `account` cannot be the zero address.
-+     * - `account` must have at least `amount` tokens.
-+     */
-+    function _burn(address account, uint256 amount) internal virtual {
-+        require(account != address(0), "ERC20: burn from the zero address");
-+
-+        _beforeTokenTransfer(account, address(0), amount);
-+
-+        uint256 accountBalance = _balances[account];
-+        require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-+        unchecked {
-+            _balances[account] = accountBalance - amount;
-+        }
-+        _totalSupply -= amount;
-+
-+        emit Transfer(account, address(0), amount);
-+
-+        _afterTokenTransfer(account, address(0), amount);
-+    }
-+
-+    /**
-+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
-+     *
-+     * This internal function is equivalent to `approve`, and can be used to
-+     * e.g. set automatic allowances for certain subsystems, etc.
-+     *
-+     * Emits an {Approval} event.
-+     *
-+     * Requirements:
-+     *
-+     * - `owner` cannot be the zero address.
-+     * - `spender` cannot be the zero address.
-+     */
-+    function _approve(
-+        address owner,
-+        address spender,
-+        uint256 amount
-+    ) internal virtual {
-+        require(owner != address(0), "ERC20: approve from the zero address");
-+        require(spender != address(0), "ERC20: approve to the zero address");
-+
-+        _allowances[owner][spender] = amount;
-+        emit Approval(owner, spender, amount);
-+    }
-+
-+    /**
-+     * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
-+     *
-+     * Does not update the allowance amount in case of infinite allowance.
-+     * Revert if not enough allowance is available.
-+     *
-+     * Might emit an {Approval} event.
-+     */
-+    function _spendAllowance(
-+        address owner,
-+        address spender,
-+        uint256 amount
-+    ) internal virtual {
-+        uint256 currentAllowance = allowance(owner, spender);
-+        if (currentAllowance != type(uint256).max) {
-+            require(
-+                currentAllowance >= amount,
-+                "ERC20: insufficient allowance"
-+            );
-+            unchecked {
-+                _approve(owner, spender, currentAllowance - amount);
-+            }
-+        }
-+    }
-+
-+    /**
-+     * @dev Hook that is called before any transfer of tokens. This includes
-+     * minting and burning.
-+     *
-+     * Calling conditions:
-+     *
-+     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-+     * will be transferred to `to`.
-+     * - when `from` is zero, `amount` tokens will be minted for `to`.
-+     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
-+     * - `from` and `to` are never both zero.
-+     *
-+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-+     */
-+    function _beforeTokenTransfer(
-+        address from,
-+        address to,
-+        uint256 amount
-+    ) internal virtual {}
-+
-+    /**
-+     * @dev Hook that is called after any transfer of tokens. This includes
-+     * minting and burning.
-+     *
-+     * Calling conditions:
-+     *
-+     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-+     * has been transferred to `to`.
-+     * - when `from` is zero, `amount` tokens have been minted for `to`.
-+     * - when `to` is zero, `amount` of ``from``'s tokens have been burned.
-+     * - `from` and `to` are never both zero.
-+     *
-+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-+     */
-+    function _afterTokenTransfer(
-+        address from,
-+        address to,
-+        uint256 amount
-+    ) internal virtual {}
- }
+   }
  
+   /**
+@@ -465,7 +508,7 @@ contract ERC20 is Context, IERC20 {
+    * Calling conditions:
+    *
+    * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+-   * will be to transferred to `to`.
++   * will be transferred to `to`.
+    * - when `from` is zero, `amount` tokens will be minted for `to`.
+    * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
+    * - `from` and `to` are never both zero.
+@@ -477,22 +520,28 @@ contract ERC20 is Context, IERC20 {
+     address to,
+     uint256 amount
+   ) internal virtual {}
+-}
+-
 -// File contracts/interfaces/IStakedAave.sol
 -
 -interface IStakedAave {
 -  function stake(address to, uint256 amount) external;
--
+ 
 -  function redeem(address to, uint256 amount) external;
 -
 -  function cooldown() external;
 -
 -  function claimRewards(address to, uint256 amount) external;
--}
--
++  /**
++   * @dev Hook that is called after any transfer of tokens. This includes
++   * minting and burning.
++   *
++   * Calling conditions:
++   *
++   * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
++   * has been transferred to `to`.
++   * - when `from` is zero, `amount` tokens have been minted for `to`.
++   * - when `to` is zero, `amount` of ``from``'s tokens have been burned.
++   * - `from` and `to` are never both zero.
++   *
++   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
++   */
++  function _afterTokenTransfer(
++    address from,
++    address to,
++    uint256 amount
++  ) internal virtual {}
+ }
+ 
 -// File contracts/interfaces/ITransferHook.sol
 -
  interface ITransferHook {
    function onTransfer(
      address from,
-@@ -471,254 +893,25 @@ interface ITransferHook {
+@@ -501,8 +550,6 @@ interface ITransferHook {
    ) external;
  }
  
 -// File contracts/lib/DistributionTypes.sol
 -
  library DistributionTypes {
--  struct AssetConfigInput {
--    uint128 emissionPerSecond;
--    uint256 totalStaked;
--    address underlyingAsset;
--  }
--
--  struct UserStakeInput {
--    address underlyingAsset;
--    uint256 stakedByUser;
--    uint256 totalStaked;
--  }
--}
--
+   struct AssetConfigInput {
+     uint128 emissionPerSecond;
+@@ -517,171 +564,7 @@ library DistributionTypes {
+   }
+ }
+ 
 -// File contracts/lib/SafeMath.sol
 -
 -/**
@@ -1270,12 +618,8 @@ index b49a690..e042fc6 100644
 -    // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
 -    if (a == 0) {
 -      return 0;
-+    struct AssetConfigInput {
-+        uint128 emissionPerSecond;
-+        uint256 totalStaked;
-+        address underlyingAsset;
-     }
- 
+-    }
+-
 -    uint256 c = a * b;
 -    require(c / a == b, 'SafeMath: multiplication overflow');
 -
@@ -1358,30 +702,25 @@ index b49a690..e042fc6 100644
 -}
 -
 -// File contracts/lib/Address.sol
--
--/**
-- * @dev Collection of functions related to the address type
-- * From https://github.com/OpenZeppelin/openzeppelin-contracts
-- */
--library Address {
--  /**
--   * @dev Returns true if `account` is a contract.
--   *
--   * [IMPORTANT]
--   * ====
--   * It is unsafe to assume that an address for which this function returns
--   * false is an externally-owned account (EOA) and not a contract.
--   *
--   * Among others, `isContract` will return false for the following
--   * types of addresses:
--   *
--   *  - an externally-owned account
--   *  - a contract in construction
--   *  - an address where a contract will be created
--   *  - an address where a contract lived, but was destroyed
--   * ====
--   */
--  function isContract(address account) internal view returns (bool) {
++// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
+ 
+ /**
+  * @dev Collection of functions related to the address type
+@@ -704,18 +587,22 @@ library Address {
+    *  - an address where a contract will be created
+    *  - an address where a contract lived, but was destroyed
+    * ====
++   *
++   * [IMPORTANT]
++   * ====
++   * You shouldn't rely on `isContract` to protect against flash loan attacks!
++   *
++   * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
++   * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
++   * constructor.
++   * ====
+    */
+   function isContract(address account) internal view returns (bool) {
 -    // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
 -    // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
 -    // for accounts without code, i.e. `keccak256('')`
@@ -1390,37 +729,208 @@ index b49a690..e042fc6 100644
 -    // solhint-disable-next-line no-inline-assembly
 -    assembly {
 -      codehash := extcodehash(account)
-+    struct UserStakeInput {
-+        address underlyingAsset;
-+        uint256 stakedByUser;
-+        uint256 totalStaked;
-     }
+-    }
 -    return (codehash != accountHash && codehash != 0x0);
--  }
--
--  /**
--   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
--   * `recipient`, forwarding all available gas and reverting on errors.
--   *
--   * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
--   * of certain opcodes, possibly making contracts go over the 2300 gas limit
--   * imposed by `transfer`, making them unable to receive funds via
--   * `transfer`. {sendValue} removes this limitation.
--   *
--   * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
--   *
--   * IMPORTANT: because control is transferred to `recipient`, care must be
--   * taken to not create reentrancy vulnerabilities. Consider using
--   * {ReentrancyGuard} or the
--   * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
--   */
--  function sendValue(address payable recipient, uint256 amount) internal {
--    require(address(this).balance >= amount, 'Address: insufficient balance');
--
++    // This method relies on extcodesize/address.code.length, which returns 0
++    // for contracts in construction, since the code is only stored at the end
++    // of the constructor execution.
++
++    return account.code.length > 0;
+   }
+ 
+   /**
+@@ -737,21 +624,200 @@ library Address {
+   function sendValue(address payable recipient, uint256 amount) internal {
+     require(address(this).balance >= amount, 'Address: insufficient balance');
+ 
 -    // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
--    (bool success, ) = recipient.call{value: amount}('');
--    require(success, 'Address: unable to send value, recipient may have reverted');
--  }
+     (bool success, ) = recipient.call{value: amount}('');
+     require(
+       success,
+       'Address: unable to send value, recipient may have reverted'
+     );
+   }
++
++  /**
++   * @dev Performs a Solidity function call using a low level `call`. A
++   * plain `call` is an unsafe replacement for a function call: use this
++   * function instead.
++   *
++   * If `target` reverts with a revert reason, it is bubbled up by this
++   * function (like regular Solidity function calls).
++   *
++   * Returns the raw returned data. To convert to the expected return value,
++   * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
++   *
++   * Requirements:
++   *
++   * - `target` must be a contract.
++   * - calling `target` with `data` must not revert.
++   *
++   * _Available since v3.1._
++   */
++  function functionCall(address target, bytes memory data)
++    internal
++    returns (bytes memory)
++  {
++    return functionCall(target, data, 'Address: low-level call failed');
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
++   * `errorMessage` as a fallback revert reason when `target` reverts.
++   *
++   * _Available since v3.1._
++   */
++  function functionCall(
++    address target,
++    bytes memory data,
++    string memory errorMessage
++  ) internal returns (bytes memory) {
++    return functionCallWithValue(target, data, 0, errorMessage);
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
++   * but also transferring `value` wei to `target`.
++   *
++   * Requirements:
++   *
++   * - the calling contract must have an ETH balance of at least `value`.
++   * - the called Solidity function must be `payable`.
++   *
++   * _Available since v3.1._
++   */
++  function functionCallWithValue(
++    address target,
++    bytes memory data,
++    uint256 value
++  ) internal returns (bytes memory) {
++    return
++      functionCallWithValue(
++        target,
++        data,
++        value,
++        'Address: low-level call with value failed'
++      );
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
++   * with `errorMessage` as a fallback revert reason when `target` reverts.
++   *
++   * _Available since v3.1._
++   */
++  function functionCallWithValue(
++    address target,
++    bytes memory data,
++    uint256 value,
++    string memory errorMessage
++  ) internal returns (bytes memory) {
++    require(
++      address(this).balance >= value,
++      'Address: insufficient balance for call'
++    );
++    require(isContract(target), 'Address: call to non-contract');
++
++    (bool success, bytes memory returndata) = target.call{value: value}(data);
++    return verifyCallResult(success, returndata, errorMessage);
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
++   * but performing a static call.
++   *
++   * _Available since v3.3._
++   */
++  function functionStaticCall(address target, bytes memory data)
++    internal
++    view
++    returns (bytes memory)
++  {
++    return
++      functionStaticCall(target, data, 'Address: low-level static call failed');
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
++   * but performing a static call.
++   *
++   * _Available since v3.3._
++   */
++  function functionStaticCall(
++    address target,
++    bytes memory data,
++    string memory errorMessage
++  ) internal view returns (bytes memory) {
++    require(isContract(target), 'Address: static call to non-contract');
++
++    (bool success, bytes memory returndata) = target.staticcall(data);
++    return verifyCallResult(success, returndata, errorMessage);
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
++   * but performing a delegate call.
++   *
++   * _Available since v3.4._
++   */
++  function functionDelegateCall(address target, bytes memory data)
++    internal
++    returns (bytes memory)
++  {
++    return
++      functionDelegateCall(
++        target,
++        data,
++        'Address: low-level delegate call failed'
++      );
++  }
++
++  /**
++   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
++   * but performing a delegate call.
++   *
++   * _Available since v3.4._
++   */
++  function functionDelegateCall(
++    address target,
++    bytes memory data,
++    string memory errorMessage
++  ) internal returns (bytes memory) {
++    require(isContract(target), 'Address: delegate call to non-contract');
++
++    (bool success, bytes memory returndata) = target.delegatecall(data);
++    return verifyCallResult(success, returndata, errorMessage);
++  }
++
++  /**
++   * @dev Tool to verifies that a low level call was successful, and revert if it wasn't, either by bubbling the
++   * revert reason using the provided one.
++   *
++   * _Available since v4.3._
++   */
++  function verifyCallResult(
++    bool success,
++    bytes memory returndata,
++    string memory errorMessage
++  ) internal pure returns (bytes memory) {
++    if (success) {
++      return returndata;
++    } else {
++      // Look for revert reason and bubble it up if present
++      if (returndata.length > 0) {
++        // The easiest way to bubble the revert reason is using memory via assembly
++
++        assembly {
++          let returndata_size := mload(returndata)
++          revert(add(32, returndata), returndata_size)
++        }
++      } else {
++        revert(errorMessage);
++      }
++    }
++  }
  }
  
 -// File contracts/lib/SafeERC20.sol
@@ -1434,160 +944,119 @@ index b49a690..e042fc6 100644
   * contract returns false). Tokens that return no value (and instead revert or
   * throw on failure) are also supported, non-reverting calls are assumed to be
   * successful.
-@@ -726,55 +919,120 @@ library Address {
+@@ -759,7 +825,6 @@ library Address {
   * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
   */
  library SafeERC20 {
 -  using SafeMath for uint256;
--  using Address for address;
-+    using Address for address;
+   using Address for address;
  
--  function safeTransfer(
--    IERC20 token,
--    address to,
--    uint256 value
--  ) internal {
--    callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
--  }
-+    function safeTransfer(
-+        IERC20 token,
-+        address to,
-+        uint256 value
-+    ) internal {
-+        _callOptionalReturn(
-+            token,
-+            abi.encodeWithSelector(token.transfer.selector, to, value)
-+        );
-+    }
-+
-+    function safeTransferFrom(
-+        IERC20 token,
-+        address from,
-+        address to,
-+        uint256 value
-+    ) internal {
-+        _callOptionalReturn(
-+            token,
-+            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-+        );
-+    }
+   function safeTransfer(
+@@ -767,7 +832,7 @@ library SafeERC20 {
+     address to,
+     uint256 value
+   ) internal {
+-    callOptionalReturn(
++    _callOptionalReturn(
+       token,
+       abi.encodeWithSelector(token.transfer.selector, to, value)
+     );
+@@ -779,37 +844,85 @@ library SafeERC20 {
+     address to,
+     uint256 value
+   ) internal {
+-    callOptionalReturn(
++    _callOptionalReturn(
+       token,
+       abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+     );
+   }
  
--  function safeTransferFrom(
--    IERC20 token,
--    address from,
--    address to,
--    uint256 value
--  ) internal {
--    callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
--  }
-+    /**
-+     * @dev Deprecated. This function has issues similar to the ones found in
-+     * {IERC20-approve}, and its usage is discouraged.
-+     *
-+     * Whenever possible, use {safeIncreaseAllowance} and
-+     * {safeDecreaseAllowance} instead.
-+     */
-+    function safeApprove(
-+        IERC20 token,
-+        address spender,
-+        uint256 value
-+    ) internal {
-+        // safeApprove should only be called when setting an initial allowance,
-+        // or when resetting it to zero. To increase and decrease it, use
-+        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
-+        require(
-+            (value == 0) || (token.allowance(address(this), spender) == 0),
-+            "SafeERC20: approve from non-zero to non-zero allowance"
-+        );
-+        _callOptionalReturn(
-+            token,
-+            abi.encodeWithSelector(token.approve.selector, spender, value)
-+        );
-+    }
- 
--  function safeApprove(
--    IERC20 token,
--    address spender,
--    uint256 value
--  ) internal {
--    require(
--      (value == 0) || (token.allowance(address(this), spender) == 0),
--      'SafeERC20: approve from non-zero to non-zero allowance'
--    );
--    callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
--  }
-+    function safeIncreaseAllowance(
-+        IERC20 token,
-+        address spender,
-+        uint256 value
-+    ) internal {
-+        uint256 newAllowance = token.allowance(address(this), spender) + value;
-+        _callOptionalReturn(
-+            token,
-+            abi.encodeWithSelector(
-+                token.approve.selector,
-+                spender,
-+                newAllowance
-+            )
-+        );
-+    }
++  /**
++   * @dev Deprecated. This function has issues similar to the ones found in
++   * {IERC20-approve}, and its usage is discouraged.
++   *
++   * Whenever possible, use {safeIncreaseAllowance} and
++   * {safeDecreaseAllowance} instead.
++   */
+   function safeApprove(
+     IERC20 token,
+     address spender,
+     uint256 value
+   ) internal {
++    // safeApprove should only be called when setting an initial allowance,
++    // or when resetting it to zero. To increase and decrease it, use
++    // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
+     require(
+       (value == 0) || (token.allowance(address(this), spender) == 0),
+       'SafeERC20: approve from non-zero to non-zero allowance'
+     );
+-    callOptionalReturn(
++    _callOptionalReturn(
+       token,
+       abi.encodeWithSelector(token.approve.selector, spender, value)
+     );
+   }
  
 -  function callOptionalReturn(IERC20 token, bytes memory data) private {
 -    require(address(token).isContract(), 'SafeERC20: call to non-contract');
-+    function safeDecreaseAllowance(
-+        IERC20 token,
-+        address spender,
-+        uint256 value
-+    ) internal {
-+        unchecked {
-+            uint256 oldAllowance = token.allowance(address(this), spender);
-+            require(
-+                oldAllowance >= value,
-+                "SafeERC20: decreased allowance below zero"
-+            );
-+            uint256 newAllowance = oldAllowance - value;
-+            _callOptionalReturn(
-+                token,
-+                abi.encodeWithSelector(
-+                    token.approve.selector,
-+                    spender,
-+                    newAllowance
-+                )
-+            );
-+        }
-+    }
++  function safeIncreaseAllowance(
++    IERC20 token,
++    address spender,
++    uint256 value
++  ) internal {
++    uint256 newAllowance = token.allowance(address(this), spender) + value;
++    _callOptionalReturn(
++      token,
++      abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
++    );
++  }
  
 -    // solhint-disable-next-line avoid-low-level-calls
 -    (bool success, bytes memory returndata) = address(token).call(data);
 -    require(success, 'SafeERC20: low-level call failed');
-+    /**
-+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
-+     * on the return value: the return value is optional (but if data is returned, it must not be false).
-+     * @param token The token targeted by the call.
-+     * @param data The call data (encoded using abi.encode or one of its variants).
-+     */
-+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
-+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
-+        // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
-+        // the target address contains contract code and also asserts for success in the low-level call.
++  function safeDecreaseAllowance(
++    IERC20 token,
++    address spender,
++    uint256 value
++  ) internal {
++    unchecked {
++      uint256 oldAllowance = token.allowance(address(this), spender);
++      require(
++        oldAllowance >= value,
++        'SafeERC20: decreased allowance below zero'
++      );
++      uint256 newAllowance = oldAllowance - value;
++      _callOptionalReturn(
++        token,
++        abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
++      );
++    }
++  }
  
--    if (returndata.length > 0) {
--      // Return data is optional
++  /**
++   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
++   * on the return value: the return value is optional (but if data is returned, it must not be false).
++   * @param token The token targeted by the call.
++   * @param data The call data (encoded using abi.encode or one of its variants).
++   */
++  function _callOptionalReturn(IERC20 token, bytes memory data) private {
++    // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
++    // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
++    // the target address contains contract code and also asserts for success in the low-level call.
++
++    bytes memory returndata = address(token).functionCall(
++      data,
++      'SafeERC20: low-level call failed'
++    );
+     if (returndata.length > 0) {
+       // Return data is optional
 -      // solhint-disable-next-line max-line-length
--      require(abi.decode(returndata, (bool)), 'SafeERC20: ERC20 operation did not succeed');
-+        bytes memory returndata = address(token).functionCall(
-+            data,
-+            "SafeERC20: low-level call failed"
-+        );
-+        if (returndata.length > 0) {
-+            // Return data is optional
-+            require(
-+                abi.decode(returndata, (bool)),
-+                "SafeERC20: ERC20 operation did not succeed"
-+            );
-+        }
-     }
--  }
+       require(
+         abi.decode(returndata, (bool)),
+         'SafeERC20: ERC20 operation did not succeed'
+@@ -818,8 +931,6 @@ library SafeERC20 {
+   }
  }
  
 -// File contracts/utils/VersionedInitializable.sol
@@ -1595,30 +1064,16 @@ index b49a690..e042fc6 100644
  /**
   * @title VersionedInitializable
   *
-@@ -800,7 +1058,10 @@ abstract contract VersionedInitializable {
-    */
-   modifier initializer() {
-     uint256 revision = getRevision();
--    require(revision > lastInitializedRevision, 'Contract instance has already been initialized');
-+    require(
-+      revision > lastInitializedRevision,
-+      'Contract instance has already been initialized'
-+    );
- 
-     lastInitializedRevision = revision;
- 
-@@ -815,23 +1076,18 @@ abstract contract VersionedInitializable {
+@@ -863,24 +974,18 @@ abstract contract VersionedInitializable {
    uint256[50] private ______gap;
  }
  
 -// File contracts/interfaces/IAaveDistributionManager.sol
 -
  interface IAaveDistributionManager {
--  function configureAssets(DistributionTypes.AssetConfigInput[] calldata assetsConfigInput)
--    external;
-+  function configureAssets(
-+    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-+  ) external;
+   function configureAssets(
+     DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+   ) external;
  }
  
 -// File contracts/stake/AaveDistributionManager.sol
@@ -1634,16 +1089,9 @@ index b49a690..e042fc6 100644
    struct AssetData {
      uint128 emissionPerSecond;
      uint128 lastUpdateTimestamp;
-@@ -849,10 +1105,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
- 
-   event AssetConfigUpdated(address indexed asset, uint256 emission);
-   event AssetIndexUpdated(address indexed asset, uint256 index);
--  event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
-+  event UserIndexUpdated(
-+    address indexed user,
-+    address indexed asset,
-+    uint256 index
-+  );
+@@ -904,8 +1009,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 index
+   );
  
 -  constructor(address emissionManager, uint256 distributionDuration) public {
 -    DISTRIBUTION_END = block.timestamp.add(distributionDuration);
@@ -1652,54 +1100,7 @@ index b49a690..e042fc6 100644
      EMISSION_MANAGER = emissionManager;
    }
  
-@@ -860,14 +1120,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @dev Configures the distribution of rewards for a list of assets
-    * @param assetsConfigInput The list of configurations to apply
-    **/
--  function configureAssets(DistributionTypes.AssetConfigInput[] calldata assetsConfigInput)
--    external
--    override
--  {
-+  function configureAssets(
-+    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-+  ) external override {
-     require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
- 
-     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
--      AssetData storage assetConfig = assets[assetsConfigInput[i].underlyingAsset];
-+      AssetData storage assetConfig = assets[
-+        assetsConfigInput[i].underlyingAsset
-+      ];
- 
-       _updateAssetStateInternal(
-         assetsConfigInput[i].underlyingAsset,
-@@ -903,8 +1164,12 @@ contract AaveDistributionManager is IAaveDistributionManager {
-       return oldIndex;
-     }
- 
--    uint256 newIndex =
--      _getAssetIndex(oldIndex, assetConfig.emissionPerSecond, lastUpdateTimestamp, totalStaked);
-+    uint256 newIndex = _getAssetIndex(
-+      oldIndex,
-+      assetConfig.emissionPerSecond,
-+      lastUpdateTimestamp,
-+      totalStaked
-+    );
- 
-     if (newIndex != oldIndex) {
-       assetConfig.index = newIndex;
-@@ -954,21 +1219,21 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param stakes List of structs of the user data related with his stake
-    * @return The accrued rewards for the user until the moment
-    **/
--  function _claimRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
--    internal
--    returns (uint256)
--  {
-+  function _claimRewards(
-+    address user,
-+    DistributionTypes.UserStakeInput[] memory stakes
-+  ) internal returns (uint256) {
+@@ -1019,14 +1124,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 accruedRewards = 0;
  
      for (uint256 i = 0; i < stakes.length; i++) {
@@ -1717,40 +1118,13 @@ index b49a690..e042fc6 100644
      }
  
      return accruedRewards;
-@@ -980,26 +1245,28 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param stakes List of structs of the user data related with his stake
-    * @return The accrued rewards for the user until the moment
-    **/
--  function _getUnclaimedRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
--    internal
--    view
--    returns (uint256)
--  {
-+  function _getUnclaimedRewards(
-+    address user,
-+    DistributionTypes.UserStakeInput[] memory stakes
-+  ) internal view returns (uint256) {
-     uint256 accruedRewards = 0;
+@@ -1053,9 +1158,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+         stakes[i].totalStaked
+       );
  
-     for (uint256 i = 0; i < stakes.length; i++) {
-       AssetData storage assetConfig = assets[stakes[i].underlyingAsset];
--      uint256 assetIndex =
--        _getAssetIndex(
--          assetConfig.index,
--          assetConfig.emissionPerSecond,
--          assetConfig.lastUpdateTimestamp,
--          stakes[i].totalStaked
--        );
--
 -      accruedRewards = accruedRewards.add(
 -        _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user])
-+      uint256 assetIndex = _getAssetIndex(
-+        assetConfig.index,
-+        assetConfig.emissionPerSecond,
-+        assetConfig.lastUpdateTimestamp,
-+        stakes[i].totalStaked
-       );
-+
+-      );
 +      accruedRewards =
 +        accruedRewards +
 +        _getRewards(
@@ -1761,48 +1135,36 @@ index b49a690..e042fc6 100644
      }
      return accruedRewards;
    }
-@@ -1016,7 +1283,9 @@ contract AaveDistributionManager is IAaveDistributionManager {
-     uint256 reserveIndex,
+@@ -1073,9 +1182,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 userIndex
    ) internal pure returns (uint256) {
--    return principalUserBalance.mul(reserveIndex.sub(userIndex)).div(10**uint256(PRECISION));
-+    return
+     return
+-      principalUserBalance.mul(reserveIndex.sub(userIndex)).div(
+-        10**uint256(PRECISION)
+-      );
 +      (principalUserBalance * (reserveIndex - userIndex)) /
 +      (10**uint256(PRECISION));
    }
  
    /**
-@@ -1042,13 +1311,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
-       return currentIndex;
-     }
- 
--    uint256 currentTimestamp =
--      block.timestamp > DISTRIBUTION_END ? DISTRIBUTION_END : block.timestamp;
+@@ -1104,13 +1212,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
+       ? DISTRIBUTION_END
+       : block.timestamp;
 -    uint256 timeDelta = currentTimestamp.sub(lastUpdateTimestamp);
-+    uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
-+      ? DISTRIBUTION_END
-+      : block.timestamp;
 +    uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
      return
--      emissionPerSecond.mul(timeDelta).mul(10**uint256(PRECISION)).div(totalBalance).add(
--        currentIndex
--      );
+-      emissionPerSecond
+-        .mul(timeDelta)
+-        .mul(10**uint256(PRECISION))
+-        .div(totalBalance)
+-        .add(currentIndex);
 +      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
 +        totalBalance) + currentIndex;
    }
  
    /**
-@@ -1057,113 +1326,28 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param asset The address of the reference asset of the distribution
-    * @return The new index
-    **/
--  function getUserAssetData(address user, address asset) public view returns (uint256) {
-+  function getUserAssetData(address user, address asset)
-+    public
-+    view
-+    returns (uint256)
-+  {
-     return assets[asset].users[user];
+@@ -1128,21 +1233,6 @@ contract AaveDistributionManager is IAaveDistributionManager {
    }
  }
  
@@ -1821,141 +1183,88 @@ index b49a690..e042fc6 100644
 -
 -// File @aave/aave-token/contracts/interfaces/IGovernancePowerDelegationToken.sol@v1.0.4
 -
--interface IGovernancePowerDelegationToken {
--  enum DelegationType {VOTING_POWER, PROPOSITION_POWER}
--
--  /**
--   * @dev emitted when a user delegates to another
--   * @param delegator the delegator
--   * @param delegatee the delegatee
--   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
--   **/
--  event DelegateChanged(
--    address indexed delegator,
--    address indexed delegatee,
--    DelegationType delegationType
--  );
--
--  /**
--   * @dev emitted when an action changes the delegated power of a user
--   * @param user the user which delegated power has changed
--   * @param amount the amount of delegated power for the user
--   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
--   **/
--  event DelegatedPowerChanged(address indexed user, uint256 amount, DelegationType delegationType);
--
--  /**
--   * @dev delegates the specific power to a delegatee
--   * @param delegatee the user which delegated power has changed
--   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
--   **/
--  function delegateByType(address delegatee, DelegationType delegationType) external virtual;
--
--  /**
--   * @dev delegates all the powers to a specific user
--   * @param delegatee the user to which the power will be delegated
--   **/
--  function delegate(address delegatee) external virtual;
--
--  /**
--   * @dev returns the delegatee of an user
--   * @param delegator the address of the delegator
--   **/
--  function getDelegateeByType(address delegator, DelegationType delegationType)
+ interface IGovernancePowerDelegationToken {
+   enum DelegationType {
+     VOTING_POWER,
+@@ -1179,14 +1269,13 @@ interface IGovernancePowerDelegationToken {
+    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+    **/
+   function delegateByType(address delegatee, DelegationType delegationType)
 -    external
--    view
+-    virtual;
++    external;
+ 
+   /**
+    * @dev delegates all the powers to a specific user
+    * @param delegatee the user to which the power will be delegated
+    **/
+-  function delegate(address delegatee) external virtual;
++  function delegate(address delegatee) external;
+ 
+   /**
+    * @dev returns the delegatee of an user
+@@ -1195,7 +1284,6 @@ interface IGovernancePowerDelegationToken {
+   function getDelegateeByType(address delegator, DelegationType delegationType)
+     external
+     view
 -    virtual
--    returns (address);
--
--  /**
--   * @dev returns the current delegated power of a user. The current power is the
--   * power delegated at the time of the last snapshot
--   * @param user the user
--   **/
--  function getPowerCurrent(address user, DelegationType delegationType)
+     returns (address);
+ 
+   /**
+@@ -1206,7 +1294,6 @@ interface IGovernancePowerDelegationToken {
+   function getPowerCurrent(address user, DelegationType delegationType)
+     external
+     view
+-    virtual
+     returns (uint256);
+ 
+   /**
+@@ -1217,20 +1304,14 @@ interface IGovernancePowerDelegationToken {
+     address user,
+     uint256 blockNumber,
+     DelegationType delegationType
+-  ) external view virtual returns (uint256);
++  ) external view returns (uint256);
+ 
+   /**
+    * @dev returns the total supply at a certain block number
+    **/
+-  function totalSupplyAt(uint256 blockNumber)
 -    external
 -    view
 -    virtual
 -    returns (uint256);
--
--  /**
--   * @dev returns the delegated power of a user at a certain block
--   * @param user the user
--   **/
--  function getPowerAtBlock(
--    address user,
--    uint256 blockNumber,
--    DelegationType delegationType
--  ) external view virtual returns (uint256);
--
--  /**
--   * @dev returns the total supply at a certain block number
--   **/
--  function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
--}
--
++  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
+ }
+ 
 -// File @aave/aave-token/contracts/token/base/GovernancePowerDelegationERC20.sol@v1.0.4
 -
  /**
   * @notice implementation of the AAVE token contract
   * @author Aave
-  */
- abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDelegationToken {
+@@ -1239,7 +1320,6 @@ abstract contract GovernancePowerDelegationERC20 is
+   ERC20,
+   IGovernancePowerDelegationToken
+ {
 -  using SafeMath for uint256;
    /// @notice The EIP-712 typehash for the delegation struct used by the contract
--  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
--    keccak256('DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)');
-+  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH = keccak256(
-+    'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
-+  );
- 
--  bytes32 public constant DELEGATE_TYPEHASH =
--    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
-+  bytes32 public constant DELEGATE_TYPEHASH = keccak256(
-+    'Delegate(address delegatee,uint256 nonce,uint256 expiry)'
-+  );
- 
-   /// @dev snapshot of a value on a specific block, used for votes
-   struct Snapshot {
-@@ -1195,8 +1379,8 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
-    **/
-   function getDelegateeByType(address delegator, DelegationType delegationType)
-     external
--    view
-     override
-+    view
-     returns (address)
-   {
-     (, , mapping(address => address) storage delegates) = _getDelegationDataByType(delegationType);
-@@ -1211,8 +1395,8 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
-    **/
-   function getPowerCurrent(address user, DelegationType delegationType)
-     external
--    view
-     override
-+    view
-     returns (uint256)
-   {
-     (
-@@ -1232,7 +1416,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
-     address user,
-     uint256 blockNumber,
-     DelegationType delegationType
--  ) external view override returns (uint256) {
-+  ) external override view returns (uint256) {
-     (
-       mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-       mapping(address => uint256) storage snapshotsCounts,
-@@ -1248,7 +1432,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+   bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
+     keccak256(
+@@ -1339,12 +1419,7 @@ abstract contract GovernancePowerDelegationERC20 is
     * In this initial implementation with no AAVE minting, simply returns the current supply
     * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
     **/
--  function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
-+  function totalSupplyAt(uint256) external override view returns (uint256) {
+-  function totalSupplyAt(uint256 blockNumber)
+-    external
+-    view
+-    override
+-    returns (uint256)
+-  {
++  function totalSupplyAt(uint256) external view override returns (uint256) {
      return super.totalSupply();
    }
  
-@@ -1314,10 +1498,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+@@ -1419,10 +1494,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          from,
          uint128(previous),
@@ -1968,7 +1277,7 @@ index b49a690..e042fc6 100644
      }
      if (to != address(0)) {
        uint256 previous = 0;
-@@ -1333,10 +1517,10 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+@@ -1438,10 +1513,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          to,
          uint128(previous),
@@ -1981,26 +1290,16 @@ index b49a690..e042fc6 100644
      }
    }
  
-@@ -1352,7 +1536,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+@@ -1457,7 +1532,7 @@ abstract contract GovernancePowerDelegationERC20 is
      mapping(address => uint256) storage snapshotsCounts,
      address user,
      uint256 blockNumber
 -  ) internal view returns (uint256) {
-+  ) internal virtual view returns (uint256) {
++  ) internal view virtual returns (uint256) {
      require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
  
      uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1396,8 +1580,8 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
-    **/
-   function _getDelegationDataByType(DelegationType delegationType)
-     internal
--    view
-     virtual
-+    view
-     returns (
-       mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-       mapping(address => uint256) storage, //snapshots count
-@@ -1455,16 +1639,12 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
+@@ -1559,8 +1634,6 @@ abstract contract GovernancePowerDelegationERC20 is
    }
  }
  
@@ -2009,15 +1308,16 @@ index b49a690..e042fc6 100644
  /**
   * @title ERC20WithSnapshot
   * @notice ERC20 including snapshots of balances on transfer-related actions
-  * @author Aave
-  **/
- abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20 {
+@@ -1569,8 +1642,6 @@ abstract contract GovernancePowerDelegationERC20 is
+ abstract contract GovernancePowerWithSnapshot is
+   GovernancePowerDelegationERC20
+ {
 -  using SafeMath for uint256;
 -
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1477,31 +1657,63 @@ abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20
+@@ -1583,35 +1654,66 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -2073,7 +1373,7 @@ index b49a690..e042fc6 100644
   **/
 -contract StakedTokenBptRev2 is
 -  IStakedAave,
-+contract StakedTokenV2 is
++abstract contract StakedTokenV2 is
 +  IStakedToken,
    GovernancePowerWithSnapshot,
    VersionedInitializable,
@@ -2090,65 +1390,31 @@ index b49a690..e042fc6 100644
  
    IERC20 public immutable STAKED_TOKEN;
    IERC20 public immutable REWARD_TOKEN;
-@@ -1521,25 +1733,38 @@ contract StakedTokenBptRev2 is
-   /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
-   mapping(address => address) internal _votingDelegates;
+-  uint256 public immutable COOLDOWN_SECONDS;
  
--  mapping(address => mapping(uint256 => Snapshot)) internal _propositionPowerSnapshots;
-+  mapping(address => mapping(uint256 => Snapshot))
-+    internal _propositionPowerSnapshots;
-   mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
-   mapping(address => address) internal _propositionPowerDelegates;
- 
-   bytes32 public DOMAIN_SEPARATOR;
-   bytes public constant EIP712_REVISION = bytes('1');
-   bytes32 internal constant EIP712_DOMAIN =
--    keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
-+    keccak256(
-+      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
-+    );
-   bytes32 public constant PERMIT_TYPEHASH =
--    keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
-+    keccak256(
-+      'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-+    );
- 
-   /// @dev owner => next valid nonce to submit with permit()
-   mapping(address => uint256) public _nonces;
- 
--  event Staked(address indexed from, address indexed onBehalfOf, uint256 amount);
-+  event Staked(
-+    address indexed from,
-+    address indexed onBehalfOf,
-+    uint256 amount
-+  );
-   event Redeem(address indexed from, address indexed to, uint256 amount);
- 
-   event RewardsAccrued(address user, uint256 amount);
--  event RewardsClaimed(address indexed from, address indexed to, uint256 amount);
-+  event RewardsClaimed(
-+    address indexed from,
-+    address indexed to,
-+    uint256 amount
-+  );
- 
-   event Cooldown(address indexed user);
- 
-@@ -1553,26 +1778,24 @@ contract StakedTokenBptRev2 is
+   /// @notice Seconds available to redeem once the cooldown period is fullfilled
+   uint256 public immutable UNSTAKE_WINDOW;
+@@ -1665,37 +1767,28 @@ contract StakedTokenBptRev2 is
+   constructor(
+     IERC20 stakedToken,
+     IERC20 rewardToken,
+-    uint256 cooldownSeconds,
+     uint256 unstakeWindow,
+     address rewardsVault,
+     address emissionManager,
      uint128 distributionDuration,
      string memory name,
      string memory symbol,
 -    uint8 decimals,
      address governance
--  ) public ERC20(name, symbol) AaveDistributionManager(emissionManager, distributionDuration) {
-+  )
-+    public
-+    ERC20(name, symbol)
-+    AaveDistributionManager(emissionManager, distributionDuration)
-+  {
+   )
+-    public
+     ERC20(name, symbol)
+     AaveDistributionManager(emissionManager, distributionDuration)
+   {
      STAKED_TOKEN = stakedToken;
      REWARD_TOKEN = rewardToken;
-     COOLDOWN_SECONDS = cooldownSeconds;
+-    COOLDOWN_SECONDS = cooldownSeconds;
      UNSTAKE_WINDOW = unstakeWindow;
      REWARDS_VAULT = rewardsVault;
      _aaveGovernance = ITransferHook(governance);
@@ -2167,7 +1433,7 @@ index b49a690..e042fc6 100644
      uint256 chainId;
  
      //solium-disable-next-line
-@@ -1583,31 +1806,37 @@ contract StakedTokenBptRev2 is
+@@ -1706,20 +1799,15 @@ contract StakedTokenBptRev2 is
      DOMAIN_SEPARATOR = keccak256(
        abi.encode(
          EIP712_DOMAIN,
@@ -2190,173 +1456,134 @@ index b49a690..e042fc6 100644
      require(amount != 0, 'INVALID_ZERO_AMOUNT');
      uint256 balanceOfUser = balanceOf(onBehalfOf);
  
--    uint256 accruedRewards =
--      _updateUserAssetInternal(onBehalfOf, address(this), balanceOfUser, totalSupply());
-+    uint256 accruedRewards = _updateUserAssetInternal(
-+      onBehalfOf,
-+      address(this),
-+      balanceOfUser,
-+      totalSupply()
-+    );
+@@ -1731,9 +1819,9 @@ contract StakedTokenBptRev2 is
+     );
      if (accruedRewards != 0) {
        emit RewardsAccrued(onBehalfOf, accruedRewards);
--      stakerRewardsToClaim[onBehalfOf] = stakerRewardsToClaim[onBehalfOf].add(accruedRewards);
+-      stakerRewardsToClaim[onBehalfOf] = stakerRewardsToClaim[onBehalfOf].add(
+-        accruedRewards
+-      );
 +      stakerRewardsToClaim[onBehalfOf] =
 +        stakerRewardsToClaim[onBehalfOf] +
 +        accruedRewards;
      }
  
--    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(0, amount, onBehalfOf, balanceOfUser);
-+    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-+      0,
-+      amount,
-+      onBehalfOf,
-+      balanceOfUser
-+    );
- 
-     _mint(onBehalfOf, amount);
-     IERC20(STAKED_TOKEN).safeTransferFrom(msg.sender, address(this), amount);
-@@ -1620,27 +1849,30 @@ contract StakedTokenBptRev2 is
+     stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
+@@ -1754,37 +1842,7 @@ contract StakedTokenBptRev2 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     **/
 -  function redeem(address to, uint256 amount) external override {
-+  function redeem(address to, uint256 amount) external virtual override {
-     require(amount != 0, 'INVALID_ZERO_AMOUNT');
-     //solium-disable-next-line
-     uint256 cooldownStartTimestamp = stakersCooldowns[msg.sender];
-     require(
+-    require(amount != 0, 'INVALID_ZERO_AMOUNT');
+-    //solium-disable-next-line
+-    uint256 cooldownStartTimestamp = stakersCooldowns[msg.sender];
+-    require(
 -      block.timestamp > cooldownStartTimestamp.add(COOLDOWN_SECONDS),
-+      block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
-       'INSUFFICIENT_COOLDOWN'
-     );
-     require(
--      block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <= UNSTAKE_WINDOW,
-+      block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-+        UNSTAKE_WINDOW,
-       'UNSTAKE_WINDOW_FINISHED'
-     );
-     uint256 balanceOfMessageSender = balanceOf(msg.sender);
- 
--    uint256 amountToRedeem = (amount > balanceOfMessageSender) ? balanceOfMessageSender : amount;
-+    uint256 amountToRedeem = (amount > balanceOfMessageSender)
-+      ? balanceOfMessageSender
-+      : amount;
- 
-     _updateCurrentUnclaimedRewards(msg.sender, balanceOfMessageSender, true);
- 
-     _burn(msg.sender, amountToRedeem);
- 
+-      'INSUFFICIENT_COOLDOWN'
+-    );
+-    require(
+-      block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <=
+-        UNSTAKE_WINDOW,
+-      'UNSTAKE_WINDOW_FINISHED'
+-    );
+-    uint256 balanceOfMessageSender = balanceOf(msg.sender);
+-
+-    uint256 amountToRedeem = (amount > balanceOfMessageSender)
+-      ? balanceOfMessageSender
+-      : amount;
+-
+-    _updateCurrentUnclaimedRewards(msg.sender, balanceOfMessageSender, true);
+-
+-    _burn(msg.sender, amountToRedeem);
+-
 -    if (balanceOfMessageSender.sub(amountToRedeem) == 0) {
-+    if (balanceOfMessageSender - amountToRedeem == 0) {
-       stakersCooldowns[msg.sender] = 0;
-     }
+-      stakersCooldowns[msg.sender] = 0;
+-    }
+-
+-    IERC20(STAKED_TOKEN).safeTransfer(to, amountToRedeem);
+-
+-    emit Redeem(msg.sender, to, amountToRedeem);
+-  }
++  function redeem(address to, uint256 amount) external virtual override;
  
-@@ -1666,12 +1898,17 @@ contract StakedTokenBptRev2 is
+   /**
+    * @dev Activates the cooldown period to unstake
+@@ -1803,7 +1861,7 @@ contract StakedTokenBptRev2 is
     * @param to Address to stake for
     * @param amount Amount to stake
     **/
 -  function claimRewards(address to, uint256 amount) external override {
--    uint256 newTotalRewards =
--      _updateCurrentUnclaimedRewards(msg.sender, balanceOf(msg.sender), false);
--    uint256 amountToClaim = (amount == type(uint256).max) ? newTotalRewards : amount;
 +  function claimRewards(address to, uint256 amount) external virtual override {
-+    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
-+      msg.sender,
-+      balanceOf(msg.sender),
-+      false
-+    );
-+    uint256 amountToClaim = (amount == type(uint256).max)
-+      ? newTotalRewards
-+      : amount;
+     uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
+       msg.sender,
+       balanceOf(msg.sender),
+@@ -1813,10 +1871,7 @@ contract StakedTokenBptRev2 is
+       ? newTotalRewards
+       : amount;
  
--    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(amountToClaim, 'INVALID_AMOUNT');
+-    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(
+-      amountToClaim,
+-      'INVALID_AMOUNT'
+-    );
 +    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
  
      REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
  
-@@ -1726,9 +1963,13 @@ contract StakedTokenBptRev2 is
-     uint256 userBalance,
-     bool updateStorage
-   ) internal returns (uint256) {
--    uint256 accruedRewards =
--      _updateUserAssetInternal(user, address(this), userBalance, totalSupply());
+@@ -1877,7 +1932,7 @@ contract StakedTokenBptRev2 is
+       userBalance,
+       totalSupply()
+     );
 -    uint256 unclaimedRewards = stakerRewardsToClaim[user].add(accruedRewards);
-+    uint256 accruedRewards = _updateUserAssetInternal(
-+      user,
-+      address(this),
-+      userBalance,
-+      totalSupply()
-+    );
 +    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1759,30 +2000,31 @@ contract StakedTokenBptRev2 is
+@@ -1908,37 +1963,7 @@ contract StakedTokenBptRev2 is
      uint256 amountToReceive,
      address toAddress,
      uint256 toBalance
 -  ) public view returns (uint256) {
-+  ) public view virtual returns (uint256) {
-     uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-     if (toCooldownTimestamp == 0) {
-       return 0;
-     }
- 
--    uint256 minimalValidCooldownTimestamp =
--      block.timestamp.sub(COOLDOWN_SECONDS).sub(UNSTAKE_WINDOW);
-+    uint256 minimalValidCooldownTimestamp = block.timestamp -
-+      COOLDOWN_SECONDS -
-+      UNSTAKE_WINDOW;
- 
-     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-       toCooldownTimestamp = 0;
-     } else {
--      uint256 fromCooldownTimestamp =
--        (minimalValidCooldownTimestamp > fromCooldownTimestamp)
--          ? block.timestamp
--          : fromCooldownTimestamp;
-+      uint256 nextCooldownTimestamp = (minimalValidCooldownTimestamp >
-+        fromCooldownTimestamp)
-+        ? block.timestamp
-+        : fromCooldownTimestamp;
- 
+-    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
+-    if (toCooldownTimestamp == 0) {
+-      return 0;
+-    }
+-
+-    uint256 minimalValidCooldownTimestamp = block
+-      .timestamp
+-      .sub(COOLDOWN_SECONDS)
+-      .sub(UNSTAKE_WINDOW);
+-
+-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
+-      toCooldownTimestamp = 0;
+-    } else {
+-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
+-        fromCooldownTimestamp)
+-        ? block.timestamp
+-        : fromCooldownTimestamp;
+-
 -      if (fromCooldownTimestamp < toCooldownTimestamp) {
-+      if (nextCooldownTimestamp < toCooldownTimestamp) {
-         return toCooldownTimestamp;
-       } else {
+-        return toCooldownTimestamp;
+-      } else {
 -        toCooldownTimestamp = (
--          amountToReceive.mul(fromCooldownTimestamp).add(toBalance.mul(toCooldownTimestamp))
--        )
--          .div(amountToReceive.add(toBalance));
-+        toCooldownTimestamp =
-+          ((amountToReceive * nextCooldownTimestamp) +
-+            (toBalance * toCooldownTimestamp)) /
-+          (amountToReceive + toBalance);
-       }
-     }
-     return toCooldownTimestamp;
-@@ -1793,23 +2035,29 @@ contract StakedTokenBptRev2 is
-    * @param staker The staker address
-    * @return The rewards
-    */
--  function getTotalRewardsBalance(address staker) external view returns (uint256) {
--    DistributionTypes.UserStakeInput[] memory userStakeInputs =
--      new DistributionTypes.UserStakeInput[](1);
-+  function getTotalRewardsBalance(address staker)
-+    external
-+    view
-+    returns (uint256)
-+  {
-+    DistributionTypes.UserStakeInput[]
-+      memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
-     userStakeInputs[0] = DistributionTypes.UserStakeInput({
-       underlyingAsset: address(this),
-       stakedByUser: balanceOf(staker),
+-          amountToReceive.mul(fromCooldownTimestamp).add(
+-            toBalance.mul(toCooldownTimestamp)
+-          )
+-        ).div(amountToReceive.add(toBalance));
+-      }
+-    }
+-    return toCooldownTimestamp;
+-  }
++  ) public view virtual returns (uint256);
+ 
+   /**
+    * @dev Return the total rewards pending to claim by an staker
+@@ -1958,17 +1983,16 @@ contract StakedTokenBptRev2 is
        totalStaked: totalSupply()
      });
--    return stakerRewardsToClaim[staker].add(_getUnclaimedRewards(staker, userStakeInputs));
-+    return
+     return
+-      stakerRewardsToClaim[staker].add(
+-        _getUnclaimedRewards(staker, userStakeInputs)
+-      );
 +      stakerRewardsToClaim[staker] +
 +      _getUnclaimedRewards(staker, userStakeInputs);
    }
@@ -2372,33 +1599,8 @@ index b49a690..e042fc6 100644
    }
  
    /**
-@@ -1836,17 +2084,25 @@ contract StakedTokenBptRev2 is
-     //solium-disable-next-line
-     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
-     uint256 currentValidNonce = _nonces[owner];
--    bytes32 digest =
--      keccak256(
--        abi.encodePacked(
--          '\x19\x01',
--          DOMAIN_SEPARATOR,
--          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
-+    bytes32 digest = keccak256(
-+      abi.encodePacked(
-+        '\x19\x01',
-+        DOMAIN_SEPARATOR,
-+        keccak256(
-+          abi.encode(
-+            PERMIT_TYPEHASH,
-+            owner,
-+            spender,
-+            value,
-+            currentValidNonce,
-+            deadline
-+          )
-         )
--      );
-+      )
-+    );
+@@ -2013,7 +2037,7 @@ contract StakedTokenBptRev2 is
+     );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 -    _nonces[owner] = currentValidNonce.add(1);
@@ -2406,7 +1608,7 @@ index b49a690..e042fc6 100644
      _approve(owner, spender, value);
    }
  
-@@ -1863,7 +2119,7 @@ contract StakedTokenBptRev2 is
+@@ -2030,7 +2054,7 @@ contract StakedTokenBptRev2 is
      address from,
      address to,
      uint256 amount
@@ -2415,7 +1617,7 @@ index b49a690..e042fc6 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -1900,7 +2156,7 @@ contract StakedTokenBptRev2 is
+@@ -2067,7 +2091,7 @@ contract StakedTokenBptRev2 is
  
      // caching the aave governance address to avoid multiple state loads
      ITransferHook aaveGovernance = _aaveGovernance;
@@ -2424,46 +1626,7 @@ index b49a690..e042fc6 100644
        aaveGovernance.onTransfer(from, to, amount);
      }
    }
-@@ -1945,11 +2201,18 @@ contract StakedTokenBptRev2 is
-     bytes32 r,
-     bytes32 s
-   ) public {
--    bytes32 structHash =
--      keccak256(
--        abi.encode(DELEGATE_BY_TYPE_TYPEHASH, delegatee, uint256(delegationType), nonce, expiry)
--      );
--    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash));
-+    bytes32 structHash = keccak256(
-+      abi.encode(
-+        DELEGATE_BY_TYPE_TYPEHASH,
-+        delegatee,
-+        uint256(delegationType),
-+        nonce,
-+        expiry
-+      )
-+    );
-+    bytes32 digest = keccak256(
-+      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
-+    );
-     address signatory = ecrecover(digest, v, r, s);
-     require(signatory != address(0), 'INVALID_SIGNATURE');
-     require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
-@@ -1974,8 +2237,12 @@ contract StakedTokenBptRev2 is
-     bytes32 r,
-     bytes32 s
-   ) public {
--    bytes32 structHash = keccak256(abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry));
--    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash));
-+    bytes32 structHash = keccak256(
-+      abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry)
-+    );
-+    bytes32 digest = keccak256(
-+      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
-+    );
-     address signatory = ecrecover(digest, v, r, s);
-     require(signatory != address(0), 'INVALID_SIGNATURE');
-     require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
-@@ -1984,3 +2251,1060 @@ contract StakedTokenBptRev2 is
+@@ -2162,3 +2186,939 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -2661,52 +1824,52 @@ index b49a690..e042fc6 100644
 + **/
 +
 +library PercentageMath {
-+    uint256 constant PERCENTAGE_FACTOR = 1e4; //percentage plus two decimals
-+    uint256 constant HALF_PERCENT = PERCENTAGE_FACTOR / 2;
++  uint256 constant PERCENTAGE_FACTOR = 1e4; //percentage plus two decimals
++  uint256 constant HALF_PERCENT = PERCENTAGE_FACTOR / 2;
 +
-+    /**
-+     * @dev Executes a percentage multiplication
-+     * @param value The value of which the percentage needs to be calculated
-+     * @param percentage The percentage of the value to be calculated
-+     * @return The percentage of value
-+     **/
-+    function percentMul(uint256 value, uint256 percentage)
-+        internal
-+        pure
-+        returns (uint256)
-+    {
-+        if (value == 0 || percentage == 0) {
-+            return 0;
-+        }
-+
-+        require(
-+            value <= (type(uint256).max) / percentage,
-+            "MATH_MULTIPLICATION_OVERFLOW"
-+        );
-+
-+        return (value * percentage) / PERCENTAGE_FACTOR;
++  /**
++   * @dev Executes a percentage multiplication
++   * @param value The value of which the percentage needs to be calculated
++   * @param percentage The percentage of the value to be calculated
++   * @return The percentage of value
++   **/
++  function percentMul(uint256 value, uint256 percentage)
++    internal
++    pure
++    returns (uint256)
++  {
++    if (value == 0 || percentage == 0) {
++      return 0;
 +    }
 +
-+    /**
-+     * @dev Executes a percentage division
-+     * @param value The value of which the percentage needs to be calculated
-+     * @param percentage The percentage of the value to be calculated
-+     * @return The value divided the percentage
-+     **/
-+    function percentDiv(uint256 value, uint256 percentage)
-+        internal
-+        pure
-+        returns (uint256)
-+    {
-+        require(percentage != 0, "MATH_DIVISION_BY_ZERO");
++    require(
++      value <= (type(uint256).max) / percentage,
++      'MATH_MULTIPLICATION_OVERFLOW'
++    );
 +
-+        require(
-+            value <= type(uint256).max / PERCENTAGE_FACTOR,
-+            "MATH_MULTIPLICATION_OVERFLOW"
-+        );
++    return (value * percentage) / PERCENTAGE_FACTOR;
++  }
 +
-+        return (value * PERCENTAGE_FACTOR) / percentage;
-+    }
++  /**
++   * @dev Executes a percentage division
++   * @param value The value of which the percentage needs to be calculated
++   * @param percentage The percentage of the value to be calculated
++   * @return The value divided the percentage
++   **/
++  function percentDiv(uint256 value, uint256 percentage)
++    internal
++    pure
++    returns (uint256)
++  {
++    require(percentage != 0, 'MATH_DIVISION_BY_ZERO');
++
++    require(
++      value <= type(uint256).max / PERCENTAGE_FACTOR,
++      'MATH_MULTIPLICATION_OVERFLOW'
++    );
++
++    return (value * PERCENTAGE_FACTOR) / percentage;
++  }
 +}
 +
 +/**
@@ -2842,7 +2005,6 @@ index b49a690..e042fc6 100644
 +  constructor(
 +    IERC20 stakedToken,
 +    IERC20 rewardToken,
-+    uint256 cooldownSeconds,
 +    uint256 unstakeWindow,
 +    address rewardsVault,
 +    address emissionManager,
@@ -2854,7 +2016,6 @@ index b49a690..e042fc6 100644
 +    StakedTokenV2(
 +      stakedToken,
 +      rewardToken,
-+      cooldownSeconds,
 +      unstakeWindow,
 +      rewardsVault,
 +      emissionManager,
@@ -3403,125 +2564,6 @@ index b49a690..e042fc6 100644
 +        user,
 +        blockNumber
 +      ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
-+  }
-+}
-+
-+interface IGhoVariableDebtToken {
-+  /**
-+   * @dev updates the discount when discount token is transferred
-+   * @dev Only callable by discount token
-+   * @param sender address of sender
-+   * @param recipient address of recipient
-+   * @param senderDiscountTokenBalance sender discount token balance
-+   * @param recipientDiscountTokenBalance recipient discount token balance
-+   * @param amount amount of discount token being transferred
-+   **/
-+  function updateDiscountDistribution(
-+    address sender,
-+    address recipient,
-+    uint256 senderDiscountTokenBalance,
-+    uint256 recipientDiscountTokenBalance,
-+    uint256 amount
-+  ) external;
-+}
-+
-+/**
-+ * @title StakedAaveV3
-+ * @notice StakedTokenV3 with AAVE token as staked token
-+ * @author Aave
-+ **/
-+contract StakedAaveV3 is StakedTokenV3 {
-+  string internal constant NAME = 'Staked Aave';
-+  string internal constant SYMBOL = 'stkAAVE';
-+  uint8 internal constant DECIMALS = 18;
-+
-+  // GHO
-+  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
-+
-+  constructor(
-+    IERC20 stakedToken,
-+    IERC20 rewardToken,
-+    uint256 cooldownSeconds,
-+    uint256 unstakeWindow,
-+    address rewardsVault,
-+    address emissionManager,
-+    uint128 distributionDuration,
-+    address governance,
-+    address ghoDebtToken
-+  )
-+    public
-+    StakedTokenV3(
-+      stakedToken,
-+      rewardToken,
-+      cooldownSeconds,
-+      unstakeWindow,
-+      rewardsVault,
-+      emissionManager,
-+      distributionDuration,
-+      NAME,
-+      SYMBOL,
-+      governance
-+    )
-+  {
-+    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
-+  }
-+
-+  /// @dev Modified version including GHO hook
-+  /// @inheritdoc StakedTokenV2
-+  function _beforeTokenTransfer(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) internal override {
-+    if (Address.isContract(address(GHO_DEBT_TOKEN))) {
-+      GHO_DEBT_TOKEN.updateDiscountDistribution(
-+        from,
-+        to,
-+        balanceOf(from),
-+        balanceOf(to),
-+        amount
-+      );
-+    }
-+
-+    address votingFromDelegatee = _votingDelegates[from];
-+    address votingToDelegatee = _votingDelegates[to];
-+
-+    if (votingFromDelegatee == address(0)) {
-+      votingFromDelegatee = from;
-+    }
-+    if (votingToDelegatee == address(0)) {
-+      votingToDelegatee = to;
-+    }
-+
-+    _moveDelegatesByType(
-+      votingFromDelegatee,
-+      votingToDelegatee,
-+      amount,
-+      DelegationType.VOTING_POWER
-+    );
-+
-+    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-+    address propPowerToDelegatee = _propositionPowerDelegates[to];
-+
-+    if (propPowerFromDelegatee == address(0)) {
-+      propPowerFromDelegatee = from;
-+    }
-+    if (propPowerToDelegatee == address(0)) {
-+      propPowerToDelegatee = to;
-+    }
-+
-+    _moveDelegatesByType(
-+      propPowerFromDelegatee,
-+      propPowerToDelegatee,
-+      amount,
-+      DelegationType.PROPOSITION_POWER
-+    );
-+
-+    // caching the aave governance address to avoid multiple state loads
-+    ITransferHook aaveGovernance = _aaveGovernance;
-+    if (address(aaveGovernance) != address(0)) {
-+      aaveGovernance.onTransfer(from, to, amount);
-+    }
 +  }
 +}
 ```

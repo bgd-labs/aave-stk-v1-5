@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import 'forge-std/Test.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
+import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 
 contract BaseTest is Test {
@@ -17,13 +18,27 @@ contract BaseTest is Test {
   address cooldownAdmin = address(5);
   address claimHelper = address(6);
 
-  function _deployImplementation() internal returns (address) {
+  function _deployImplementation(bool stkAAVE) internal returns (address) {
+    if (stkAAVE) {
+      return
+        address(
+          new StakedAaveV3(
+            STAKE_CONTRACT.STAKED_TOKEN(),
+            STAKE_CONTRACT.REWARD_TOKEN(),
+            3000,
+            STAKE_CONTRACT.REWARDS_VAULT(),
+            STAKE_CONTRACT.EMISSION_MANAGER(),
+            3155692600, // 100 years
+            address(GovHelpers.GOV),
+            address(0)
+          )
+        );
+    }
     return
       address(
         new StakedTokenV3(
           STAKE_CONTRACT.STAKED_TOKEN(),
           STAKE_CONTRACT.REWARD_TOKEN(),
-          172800,
           3000,
           STAKE_CONTRACT.REWARDS_VAULT(),
           STAKE_CONTRACT.EMISSION_MANAGER(),
@@ -35,10 +50,20 @@ contract BaseTest is Test {
       );
   }
 
-  function _setUp(address stake, address admin) internal {
+  function _setUp(bool stkAAVE) internal {
     vm.createSelectFork(vm.rpcUrl('ethereum'), 15896416);
+
+    address admin = address(0);
+    address stake = address(0);
+    if (stkAAVE) {
+      admin = GovHelpers.LONG_EXECUTOR;
+      stake = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
+    } else {
+      admin = GovHelpers.SHORT_EXECUTOR;
+      stake = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
+    }
     STAKE_CONTRACT = StakedTokenV3(stake);
-    address stkImpl = _deployImplementation();
+    address stkImpl = _deployImplementation(true);
     vm.startPrank(admin);
     IInitializableAdminUpgradeabilityProxy stkProxy = IInitializableAdminUpgradeabilityProxy(
         address(STAKE_CONTRACT)

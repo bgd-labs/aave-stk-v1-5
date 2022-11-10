@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
+// most imports are only here to force import order for better (i.e smaller) diff on flattening
+import {Context} from '../lib/Context.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
+import {ERC20} from '../lib/ERC20.sol';
+import {ITransferHook} from '../interfaces/ITransferHook.sol';
+import {DistributionTypes} from '../lib/DistributionTypes.sol';
+import {Address} from '../lib/Address.sol';
+import {SafeERC20} from '../lib/SafeERC20.sol';
+import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
+import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
+import {AaveDistributionManager} from './AaveDistributionManager.sol';
+import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
+import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
+import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 import {IStakedToken} from '../interfaces/IStakedToken.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
-import {ITransferHook} from '../interfaces/ITransferHook.sol';
-
-import {ERC20} from '../lib/ERC20.sol';
-import {DistributionTypes} from '../lib/DistributionTypes.sol';
-import {SafeERC20} from '../lib/SafeERC20.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
-
-import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
-import {AaveDistributionManager} from './AaveDistributionManager.sol';
-import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
-import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
 
 /**
@@ -70,7 +73,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
-    uint256 cooldownSeconds,
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
@@ -82,7 +84,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     StakedTokenV2(
       stakedToken,
       rewardToken,
-      cooldownSeconds,
       unstakeWindow,
       rewardsVault,
       emissionManager,
@@ -94,7 +95,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   {}
 
   function REVISION() public pure virtual override returns (uint256) {
-    return 4;
+    return 3;
   }
 
   /**

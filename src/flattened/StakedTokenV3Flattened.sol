@@ -1658,8 +1658,6 @@ abstract contract GovernancePowerWithSnapshot is
   ITransferHook public _aaveGovernance;
 }
 
-// most imports are only here to force import order for better (i.e smaller) diff on flattening
-
 interface IERC20WithPermit is IERC20 {
   function permit(
     address owner,
@@ -3122,115 +3120,5 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         user,
         blockNumber
       ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
-  }
-}
-
-interface IGhoVariableDebtToken {
-  /**
-   * @dev updates the discount when discount token is transferred
-   * @dev Only callable by discount token
-   * @param sender address of sender
-   * @param recipient address of recipient
-   * @param senderDiscountTokenBalance sender discount token balance
-   * @param recipientDiscountTokenBalance recipient discount token balance
-   * @param amount amount of discount token being transferred
-   **/
-  function updateDiscountDistribution(
-    address sender,
-    address recipient,
-    uint256 senderDiscountTokenBalance,
-    uint256 recipientDiscountTokenBalance,
-    uint256 amount
-  ) external;
-}
-
-/**
- * @title StakedAaveV3
- * @notice StakedTokenV3 with AAVE token as staked token
- * @author Aave
- **/
-contract StakedAaveV3 is StakedTokenV3 {
-  string internal constant NAME = 'Staked Aave';
-  string internal constant SYMBOL = 'stkAAVE';
-  uint8 internal constant DECIMALS = 18;
-
-  // GHO
-  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
-
-  constructor(
-    IERC20 stakedToken,
-    IERC20 rewardToken,
-    uint256 unstakeWindow,
-    address rewardsVault,
-    address emissionManager,
-    uint128 distributionDuration,
-    address governance,
-    address ghoDebtToken
-  )
-    StakedTokenV3(
-      stakedToken,
-      rewardToken,
-      unstakeWindow,
-      rewardsVault,
-      emissionManager,
-      distributionDuration,
-      NAME,
-      SYMBOL,
-      governance
-    )
-  {
-    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
-  }
-
-  /// @dev Modified version including GHO hook
-  /// @inheritdoc StakedTokenV2
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    if (Address.isContract(address(GHO_DEBT_TOKEN))) {
-      GHO_DEBT_TOKEN.updateDiscountDistribution(
-        from,
-        to,
-        balanceOf(from),
-        balanceOf(to),
-        amount
-      );
-    }
-
-    address votingFromDelegatee = _votingDelegates[from];
-    address votingToDelegatee = _votingDelegates[to];
-
-    if (votingFromDelegatee == address(0)) {
-      votingFromDelegatee = from;
-    }
-    if (votingToDelegatee == address(0)) {
-      votingToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      votingFromDelegatee,
-      votingToDelegatee,
-      amount,
-      DelegationType.VOTING_POWER
-    );
-
-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-    address propPowerToDelegatee = _propositionPowerDelegates[to];
-
-    if (propPowerFromDelegatee == address(0)) {
-      propPowerFromDelegatee = from;
-    }
-    if (propPowerToDelegatee == address(0)) {
-      propPowerToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      propPowerFromDelegatee,
-      propPowerToDelegatee,
-      amount,
-      DelegationType.PROPOSITION_POWER
-    );
   }
 }

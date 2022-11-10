@@ -10,10 +10,7 @@ import {BaseTest} from './BaseTest.sol';
 
 contract GovernanceValidation is BaseTest {
   function setUp() public {
-    _setUp(
-      0x4da27a545c0c5B758a6BA100e3a049001de870f5,
-      GovHelpers.LONG_EXECUTOR
-    );
+    _setUp(true);
   }
 
   function _createDummyProposal() internal returns (uint256) {

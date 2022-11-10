@@ -9,10 +9,7 @@ import {BaseTest} from './BaseTest.sol';
 
 contract SlashingValidation is BaseTest {
   function setUp() public {
-    _setUp(
-      0xa1116930326D21fB917d5A27F1E9943A9595fb47,
-      GovHelpers.SHORT_EXECUTOR
-    );
+    _setUp(false);
   }
 
   function testInitializer() public {

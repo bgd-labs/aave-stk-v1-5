@@ -2,17 +2,17 @@
 pragma solidity ^0.8.0;
 
 // most imports are only here to force import order for better (i.e smaller) diff on flattening
-import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {Context} from '../lib/Context.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
-import {Address} from '../lib/Address.sol';
 import {ERC20} from '../lib/ERC20.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
+import {Address} from '../lib/Address.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
 import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
 import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
+import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
@@ -32,10 +32,13 @@ contract StakedAaveV3 is StakedTokenV3 {
   // GHO
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
+  function REVISION() public pure virtual override returns (uint256) {
+    return 4;
+  }
+
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
-    uint256 cooldownSeconds,
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
@@ -43,11 +46,9 @@ contract StakedAaveV3 is StakedTokenV3 {
     address governance,
     address ghoDebtToken
   )
-    public
     StakedTokenV3(
       stakedToken,
       rewardToken,
-      cooldownSeconds,
       unstakeWindow,
       rewardsVault,
       emissionManager,
@@ -110,11 +111,5 @@ contract StakedAaveV3 is StakedTokenV3 {
       amount,
       DelegationType.PROPOSITION_POWER
     );
-
-    // caching the aave governance address to avoid multiple state loads
-    ITransferHook aaveGovernance = _aaveGovernance;
-    if (address(aaveGovernance) != address(0)) {
-      aaveGovernance.onTransfer(from, to, amount);
-    }
   }
 }
