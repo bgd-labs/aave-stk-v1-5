@@ -39,14 +39,13 @@ interface IGovernancePowerDelegationToken {
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
   function delegateByType(address delegatee, DelegationType delegationType)
-    external
-    virtual;
+    external;
 
   /**
    * @dev delegates all the powers to a specific user
    * @param delegatee the user to which the power will be delegated
    **/
-  function delegate(address delegatee) external virtual;
+  function delegate(address delegatee) external;
 
   /**
    * @dev returns the delegatee of an user
@@ -55,7 +54,6 @@ interface IGovernancePowerDelegationToken {
   function getDelegateeByType(address delegator, DelegationType delegationType)
     external
     view
-    virtual
     returns (address);
 
   /**
@@ -66,7 +64,6 @@ interface IGovernancePowerDelegationToken {
   function getPowerCurrent(address user, DelegationType delegationType)
     external
     view
-    virtual
     returns (uint256);
 
   /**
@@ -77,16 +74,12 @@ interface IGovernancePowerDelegationToken {
     address user,
     uint256 blockNumber,
     DelegationType delegationType
-  ) external view virtual returns (uint256);
+  ) external view returns (uint256);
 
   /**
    * @dev returns the total supply at a certain block number
    **/
-  function totalSupplyAt(uint256 blockNumber)
-    external
-    view
-    virtual
-    returns (uint256);
+  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
 }
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -1118,7 +1111,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     uint256 index
   );
 
-  constructor(address emissionManager, uint256 distributionDuration) public {
+  constructor(address emissionManager, uint256 distributionDuration) {
     DISTRIBUTION_END = block.timestamp + distributionDuration;
     EMISSION_MANAGER = emissionManager;
   }
@@ -1439,7 +1432,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
    * In this initial implementation with no AAVE minting, simply returns the current supply
    * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
    **/
-  function totalSupplyAt(uint256 blockNumber) external override view returns (uint256) {
+  function totalSupplyAt(uint256) external override view returns (uint256) {
     return super.totalSupply();
   }
 
@@ -1703,230 +1696,6 @@ interface IStakedToken {
    * @param amount Amount to stake
    **/
   function claimRewards(address to, uint256 amount) external;
-}
-
-interface IStakedTokenV3 is IStakedToken {
-  event Staked(
-    address indexed from,
-    address indexed to,
-    uint256 assets,
-    uint256 shares
-  );
-  event Redeem(
-    address indexed from,
-    address indexed to,
-    uint256 assets,
-    uint256 shares
-  );
-  event MaxSlashablePercentageChanged(uint256 newPercentage);
-  event Slashed(address indexed destination, uint256 amount);
-  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
-  event CooldownSecondsChanged(uint256 cooldownSeconds);
-  event ExchangeRateChanged(uint128 exchangeRate);
-  event FundsReturned(uint256 amount);
-  event SlashingSettled();
-
-  /**
-   * @dev Returns the current exchange rate
-   * @return exchangeRate as 18 decimal precision uint128
-   **/
-  function exchangeRate() external view returns (uint128);
-
-  /**
-   * @dev Executes a slashing of the underlying of a certain amount, transferring the seized funds
-   * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
-   * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
-   * As long as the slashing event is ongoing, stake and slash are deactivated.
-   * @param destination the address where seized funds will be transferred
-   * @param amount the amount
-   **/
-  function slash(address destination, uint256 amount) external;
-
-  /**
-   * @dev Settles an ongoing slashing event
-   */
-  function settleSlashing() external;
-
-  /**
-   * @dev Pulls STAKE_TOKEN and distributes them amonst current stakers by altering the exchange rate.
-   * This method is permissionless and intendet to be used after a slashing event to return potential excess funds.
-   * @param amount amount of STAKE_TOKEN to pull.
-   */
-  function returnFunds(uint256 amount) external;
-
-  /**
-   * @dev Getter of the cooldown seconds
-   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
-   */
-  function getCooldownSeconds() external view returns (uint256);
-
-  /**
-   * @dev Setter of cooldown seconds
-   * Can only be called by the cooldown admin
-   * @param cooldownSeconds the new amount of seconds you have to wait between starting the cooldown and being able to redeem
-   */
-  function setCooldownSeconds(uint256 cooldownSeconds) external;
-
-  /**
-   * @dev Getter of the max slashable percentage of the total staked amount.
-   * @return percentage the maximum slashable percentage
-   */
-  function getMaxSlashablePercentage() external view returns (uint256);
-
-  /**
-   * @dev Setter of max slashable percentage of the total staked amount.
-   * Can only be called by the slashing admin
-   * @param percentage the new maximum slashable percentage
-   */
-  function setMaxSlashablePercentage(uint256 percentage) external;
-
-  /**
-   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-   * @param to The address to receiving the shares
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
-   **/
-  function stakeWithPermit(
-    address from,
-    address to,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
-   * @param from The address of the user from to claim
-   * @param to Address to send the claimed rewards
-   * @param amount Amount to claim
-   **/
-  function claimRewardsOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
-
-  /**
-   * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function
-   * @param from Address to redeem from
-   * @param to Address to redeem to
-   * @param amount Amount of shares to redeem
-   **/
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   **/
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
-   * @param claimAmount Amount to claim
-   * @param redeemAmount Amount to redeem
-   * @param to Address to claim and unstake to
-   **/
-  function claimRewardsAndRedeem(
-    address to,
-    uint256 claimAmount,
-    uint256 redeemAmount
-  ) external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   **/
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from
-   * @param to Address to claim and unstake to
-   * @param claimAmount Amount to claim
-   * @param redeemAmount Amount to redeem
-   **/
-  function claimRewardsAndRedeemOnBehalf(
-    address from,
-    address to,
-    uint256 claimAmount,
-    uint256 redeemAmount
-  ) external;
-}
-
-/**
- * @title PercentageMath library
- * @author Aave
- * @notice Provides functions to perform percentage calculations
- * @dev Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
- * @dev Operations are rounded half up
- **/
-
-library PercentageMath {
-    uint256 constant PERCENTAGE_FACTOR = 1e4; //percentage plus two decimals
-    uint256 constant HALF_PERCENT = PERCENTAGE_FACTOR / 2;
-
-    /**
-     * @dev Executes a percentage multiplication
-     * @param value The value of which the percentage needs to be calculated
-     * @param percentage The percentage of the value to be calculated
-     * @return The percentage of value
-     **/
-    function percentMul(uint256 value, uint256 percentage)
-        internal
-        pure
-        returns (uint256)
-    {
-        if (value == 0 || percentage == 0) {
-            return 0;
-        }
-
-        require(
-            value <= (type(uint256).max - HALF_PERCENT) / percentage,
-            "MATH_MULTIPLICATION_OVERFLOW"
-        );
-
-        return (value * percentage + HALF_PERCENT) / PERCENTAGE_FACTOR;
-    }
-
-    /**
-     * @dev Executes a percentage division
-     * @param value The value of which the percentage needs to be calculated
-     * @param percentage The percentage of the value to be calculated
-     * @return The value divided the percentage
-     **/
-    function percentDiv(uint256 value, uint256 percentage)
-        internal
-        pure
-        returns (uint256)
-    {
-        require(percentage != 0, "MATH_DIVISION_BY_ZERO");
-        uint256 halfPercentage = percentage / 2;
-
-        require(
-            value <= (type(uint256).max - halfPercentage) / PERCENTAGE_FACTOR,
-            "MATH_MULTIPLICATION_OVERFLOW"
-        );
-
-        return (value * PERCENTAGE_FACTOR + halfPercentage) / percentage;
-    }
 }
 
 /**
@@ -2244,16 +2013,16 @@ contract StakedTokenV2 is
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
       toCooldownTimestamp = 0;
     } else {
-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
+      uint256 nextCooldownTimestamp = (minimalValidCooldownTimestamp >
         fromCooldownTimestamp)
         ? block.timestamp
         : fromCooldownTimestamp;
 
-      if (fromCooldownTimestamp < toCooldownTimestamp) {
+      if (nextCooldownTimestamp < toCooldownTimestamp) {
         return toCooldownTimestamp;
       } else {
         toCooldownTimestamp =
-          ((amountToReceive * fromCooldownTimestamp) +
+          ((amountToReceive * nextCooldownTimestamp) +
             (toBalance * toCooldownTimestamp)) /
           (amountToReceive + toBalance);
       }
@@ -2350,7 +2119,7 @@ contract StakedTokenV2 is
     address from,
     address to,
     uint256 amount
-  ) internal override {
+  ) internal virtual override {
     address votingFromDelegatee = _votingDelegates[from];
     address votingToDelegatee = _votingDelegates[to];
 
@@ -2483,6 +2252,247 @@ contract StakedTokenV2 is
   }
 }
 
+interface IStakedTokenV3 is IStakedToken {
+  event Staked(
+    address indexed from,
+    address indexed to,
+    uint256 assets,
+    uint256 shares
+  );
+  event Redeem(
+    address indexed from,
+    address indexed to,
+    uint256 assets,
+    uint256 shares
+  );
+  event MaxSlashablePercentageChanged(uint256 newPercentage);
+  event Slashed(address indexed destination, uint256 amount);
+  event SlashingExitWindowDurationChanged(uint256 windowSeconds);
+  event CooldownSecondsChanged(uint256 cooldownSeconds);
+  event ExchangeRateChanged(uint128 exchangeRate);
+  event FundsReturned(uint256 amount);
+  event SlashingSettled();
+
+  /**
+   * @dev Returns the current exchange rate
+   * @return exchangeRate as 18 decimal precision uint128
+   **/
+  function getExchangeRate() external view returns (uint128);
+
+  /**
+   * @dev Executes a slashing of the underlying of a certain amount, transferring the seized funds
+   * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
+   * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
+   * As long as the slashing event is ongoing, stake and slash are deactivated.
+   * @param destination the address where seized funds will be transferred
+   * @param amount the amount to be slashed
+   * If the amount bigger than maximum allowed, the maximum will be slashed instead.
+   * @return amount the amount slashed
+   **/
+  function slash(address destination, uint256 amount)
+    external
+    returns (uint256);
+
+  /**
+   * @dev Settles an ongoing slashing event
+   */
+  function settleSlashing() external;
+
+  /**
+   * @dev Pulls STAKE_TOKEN and distributes them amonst current stakers by altering the exchange rate.
+   * This method is permissionless and intendet to be used after a slashing event to return potential excess funds.
+   * @param amount amount of STAKE_TOKEN to pull.
+   */
+  function returnFunds(uint256 amount) external;
+
+  /**
+   * @dev Getter of the cooldown seconds
+   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
+   */
+  function getCooldownSeconds() external view returns (uint256);
+
+  /**
+   * @dev Setter of cooldown seconds
+   * Can only be called by the cooldown admin
+   * @param cooldownSeconds the new amount of seconds you have to wait between starting the cooldown and being able to redeem
+   */
+  function setCooldownSeconds(uint256 cooldownSeconds) external;
+
+  /**
+   * @dev Getter of the max slashable percentage of the total staked amount.
+   * @return percentage the maximum slashable percentage
+   */
+  function getMaxSlashablePercentage() external view returns (uint256);
+
+  /**
+   * @dev Setter of max slashable percentage of the total staked amount.
+   * Can only be called by the slashing admin
+   * @param percentage the new maximum slashable percentage
+   */
+  function setMaxSlashablePercentage(uint256 percentage) external;
+
+  /**
+   * @dev returns the exact amount of shares that would be received for the provided number of assets
+   * @param assets the number of assets to stake
+   * @return shares the number of shares that would be received
+   */
+  function previewStake(uint256 assets) external view returns (uint256);
+
+  /**
+   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
+   * @param to The address to receiving the shares
+   * @param amount The amount to be staked
+   * @param deadline The permit execution deadline
+   * @param v The v component of the signed message
+   * @param r The r component of the signed message
+   * @param s The s component of the signed message
+   **/
+  function stakeWithPermit(
+    address from,
+    address to,
+    uint256 amount,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external;
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
+   * @param from The address of the user from to claim
+   * @param to Address to send the claimed rewards
+   * @param amount Amount to claim
+   **/
+  function claimRewardsOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) external returns (uint256);
+
+  /**
+   * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
+   * @param shares the number of shares to redeem
+   * @return assets the number of assets that would be redeemed
+   */
+  function previewRedeem(uint256 shares) external view returns (uint256);
+
+  /**
+   * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function
+   * @param from Address to redeem from
+   * @param to Address to redeem to
+   * @param amount Amount of shares to redeem
+   **/
+  function redeemOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) external;
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
+   * @param to Address to stake to
+   * @param amount Amount to claim
+   **/
+  function claimRewardsAndStake(address to, uint256 amount)
+    external
+    returns (uint256);
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
+   * @param claimAmount Amount to claim
+   * @param redeemAmount Amount to redeem
+   * @param to Address to claim and unstake to
+   **/
+  function claimRewardsAndRedeem(
+    address to,
+    uint256 claimAmount,
+    uint256 redeemAmount
+  ) external;
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @param from The address of the from from which to claim
+   * @param to Address to stake to
+   * @param amount Amount to claim
+   **/
+  function claimRewardsAndStakeOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) external returns (uint256);
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
+   * @param from The address of the from
+   * @param to Address to claim and unstake to
+   * @param claimAmount Amount to claim
+   * @param redeemAmount Amount to redeem
+   **/
+  function claimRewardsAndRedeemOnBehalf(
+    address from,
+    address to,
+    uint256 claimAmount,
+    uint256 redeemAmount
+  ) external;
+}
+
+/**
+ * @title PercentageMath library
+ * @author Aave
+ * @notice Provides functions to perform percentage calculations
+ * @dev Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
+ * @dev Operations are rounded half up
+ **/
+
+library PercentageMath {
+    uint256 constant PERCENTAGE_FACTOR = 1e4; //percentage plus two decimals
+    uint256 constant HALF_PERCENT = PERCENTAGE_FACTOR / 2;
+
+    /**
+     * @dev Executes a percentage multiplication
+     * @param value The value of which the percentage needs to be calculated
+     * @param percentage The percentage of the value to be calculated
+     * @return The percentage of value
+     **/
+    function percentMul(uint256 value, uint256 percentage)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (value == 0 || percentage == 0) {
+            return 0;
+        }
+
+        require(
+            value <= (type(uint256).max) / percentage,
+            "MATH_MULTIPLICATION_OVERFLOW"
+        );
+
+        return (value * percentage) / PERCENTAGE_FACTOR;
+    }
+
+    /**
+     * @dev Executes a percentage division
+     * @param value The value of which the percentage needs to be calculated
+     * @param percentage The percentage of the value to be calculated
+     * @return The value divided the percentage
+     **/
+    function percentDiv(uint256 value, uint256 percentage)
+        internal
+        pure
+        returns (uint256)
+    {
+        require(percentage != 0, "MATH_DIVISION_BY_ZERO");
+
+        require(
+            value <= type(uint256).max / PERCENTAGE_FACTOR,
+            "MATH_MULTIPLICATION_OVERFLOW"
+        );
+
+        return (value * PERCENTAGE_FACTOR) / percentage;
+    }
+}
+
 /**
  * @title RoleManager
  * @notice Generic role manager to manage slashing and cooldown admin in StakedAaveV3.
@@ -2581,11 +2591,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant TOKEN_UNIT = 1e18;
 
-  //maximum percentage of the underlying that can be slashed in a single realization event
+  // slashing states
   uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
   bool public isPendingSlashing;
-
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint256 internal _exchangeRateSnapshotsCount;
   uint128 internal _currentExchangeRate;
@@ -2626,7 +2635,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     string memory symbol,
     address governance
   )
-    public
     StakedTokenV2(
       stakedToken,
       rewardToken,
@@ -2705,6 +2713,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     // needed to claimRewardsAndStake works without a custom approval each time
     STAKED_TOKEN.approve(address(this), type(uint256).max);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function previewStake(uint256 assets) public view returns (uint256) {
+    return (assets * _currentExchangeRate) / TOKEN_UNIT;
   }
 
   /// @inheritdoc IStakedToken
@@ -2811,8 +2824,18 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /// @inheritdoc IStakedTokenV3
-  function exchangeRate() public view override returns (uint128) {
+  function getExchangeRate() public view override returns (uint128) {
     return _currentExchangeRate;
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function previewRedeem(uint256 shares)
+    public
+    view
+    override
+    returns (uint256)
+  {
+    return (TOKEN_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -2820,14 +2843,17 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     external
     override
     onlySlashingAdmin
+    returns (uint256)
   {
     require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentShares = totalSupply();
-    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
+    uint256 balance = previewRedeem(currentShares);
 
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
 
-    require(amount <= maxSlashable, 'INVALID_SLASHING_AMOUNT');
+    if (amount > maxSlashable) {
+      amount = maxSlashable;
+    }
 
     isPendingSlashing = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
@@ -2835,13 +2861,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     STAKED_TOKEN.safeTransfer(destination, amount);
 
     emit Slashed(destination, amount);
+    return amount;
   }
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
     uint256 currentShares = totalSupply();
-    uint256 balance = (_currentExchangeRate * currentShares) / TOKEN_UNIT;
-    _updateExchangeRate(_getExchangeRate(balance + amount, currentShares));
+    uint256 assets = previewRedeem(currentShares);
+    _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
     STAKED_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
     emit FundsReturned(amount);
@@ -2887,7 +2914,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   function _setMaxSlashablePercentage(uint256 percentage) internal {
     require(
-      percentage <= PercentageMath.PERCENTAGE_FACTOR,
+      percentage < PercentageMath.PERCENTAGE_FACTOR,
       'INVALID_SLASHING_PERCENTAGE'
     );
 
@@ -2975,7 +3002,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       balanceOfUser
     );
 
-    uint256 sharesToMint = (amount * TOKEN_UNIT) / exchangeRate();
+    uint256 sharesToMint = previewStake(amount);
     _mint(to, sharesToMint);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
@@ -3064,7 +3091,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * exchangeRate()) / TOKEN_UNIT;
+    uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
+      _currentExchangeRate;
 
     _burn(from, amountToRedeem);
 
@@ -3093,6 +3121,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /**
    * @dev calculates the exchange rate based on totalAssets and totalShares
+   * @dev always rounds up to ensure 100% backing of shares by rounding in favor of the contract
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
@@ -3102,7 +3131,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     pure
     returns (uint128)
   {
-    return uint128((totalAssets * TOKEN_UNIT) / totalShares);
+    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
   }
 
   /**
@@ -3157,8 +3186,27 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         snapshotsCounts,
         user,
         blockNumber
-      ) * _searchExchangeRateByBlockNumber(blockNumber)) / TOKEN_UNIT;
+      ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
   }
+}
+
+interface IGhoVariableDebtToken {
+  /**
+   * @dev updates the discount when discount token is transferred
+   * @dev Only callable by discount token
+   * @param sender address of sender
+   * @param recipient address of recipient
+   * @param senderDiscountTokenBalance sender discount token balance
+   * @param recipientDiscountTokenBalance recipient discount token balance
+   * @param amount amount of discount token being transferred
+   **/
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) external;
 }
 
 /**
@@ -3171,6 +3219,9 @@ contract StakedAaveV3 is StakedTokenV3 {
   string internal constant SYMBOL = 'stkAAVE';
   uint8 internal constant DECIMALS = 18;
 
+  // GHO
+  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
+
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
@@ -3179,7 +3230,8 @@ contract StakedAaveV3 is StakedTokenV3 {
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration,
-    address governance
+    address governance,
+    address ghoDebtToken
   )
     public
     StakedTokenV3(
@@ -3194,5 +3246,65 @@ contract StakedAaveV3 is StakedTokenV3 {
       SYMBOL,
       governance
     )
-  {}
+  {
+    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
+  }
+
+  /// @dev Modified version including GHO hook
+  /// @inheritdoc StakedTokenV2
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
+    if (Address.isContract(address(GHO_DEBT_TOKEN))) {
+      GHO_DEBT_TOKEN.updateDiscountDistribution(
+        from,
+        to,
+        balanceOf(from),
+        balanceOf(to),
+        amount
+      );
+    }
+
+    address votingFromDelegatee = _votingDelegates[from];
+    address votingToDelegatee = _votingDelegates[to];
+
+    if (votingFromDelegatee == address(0)) {
+      votingFromDelegatee = from;
+    }
+    if (votingToDelegatee == address(0)) {
+      votingToDelegatee = to;
+    }
+
+    _moveDelegatesByType(
+      votingFromDelegatee,
+      votingToDelegatee,
+      amount,
+      DelegationType.VOTING_POWER
+    );
+
+    address propPowerFromDelegatee = _propositionPowerDelegates[from];
+    address propPowerToDelegatee = _propositionPowerDelegates[to];
+
+    if (propPowerFromDelegatee == address(0)) {
+      propPowerFromDelegatee = from;
+    }
+    if (propPowerToDelegatee == address(0)) {
+      propPowerToDelegatee = to;
+    }
+
+    _moveDelegatesByType(
+      propPowerFromDelegatee,
+      propPowerToDelegatee,
+      amount,
+      DelegationType.PROPOSITION_POWER
+    );
+
+    // caching the aave governance address to avoid multiple state loads
+    ITransferHook aaveGovernance = _aaveGovernance;
+    if (address(aaveGovernance) != address(0)) {
+      aaveGovernance.onTransfer(from, to, amount);
+    }
+  }
 }
