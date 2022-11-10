@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: agpl-3.0
+pragma solidity ^0.8.0;
+
 import 'forge-std/Test.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
@@ -11,20 +14,6 @@ contract ClaimRewardsValidation is BaseTest {
       0x4da27a545c0c5B758a6BA100e3a049001de870f5,
       GovHelpers.LONG_EXECUTOR
     );
-  }
-
-  function _stake(uint256 amount) internal {
-    uint256 totalBalanceBefore = STAKE_CONTRACT.STAKED_TOKEN().balanceOf(
-      address(STAKE_CONTRACT)
-    );
-    STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
-    STAKE_CONTRACT.stake(address(this), amount);
-
-    // assertEq(STAKE_CONTRACT.balanceOf(address(this)), amount);
-    // assertEq(
-    //   STAKE_CONTRACT.STAKED_TOKEN().balanceOf(address(STAKE_CONTRACT)),
-    //   totalBalanceBefore + amount
-    // );
   }
 
   /**

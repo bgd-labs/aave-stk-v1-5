@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: agpl-3.0
+pragma solidity ^0.8.0;
+
 import 'forge-std/Test.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
@@ -53,5 +56,10 @@ contract BaseTest is Test {
     );
     vm.stopPrank();
     deal(address(STAKE_CONTRACT.STAKED_TOKEN()), address(this), 10 ether);
+  }
+
+  function _stake(uint256 amount) internal {
+    STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
+    STAKE_CONTRACT.stake(address(this), amount);
   }
 }

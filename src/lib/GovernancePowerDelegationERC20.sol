@@ -103,7 +103,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
    * In this initial implementation with no AAVE minting, simply returns the current supply
    * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
    **/
-  function totalSupplyAt(uint256 blockNumber) external override view returns (uint256) {
+  function totalSupplyAt(uint256) external override view returns (uint256) {
     return super.totalSupply();
   }
 

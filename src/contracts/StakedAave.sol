@@ -23,7 +23,6 @@ contract StakedAave is StakedToken {
     address emissionManager,
     uint128 distributionDuration
   )
-    public
     StakedToken(
       stakedToken,
       rewardToken,

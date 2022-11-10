@@ -27,7 +27,6 @@ contract ERC20WithSnapshot is ERC20 {
     event SnapshotDone(address owner, uint128 oldValue, uint128 newValue);
 
     constructor(string memory name, string memory symbol)
-        public
         ERC20(name, symbol)
     {}
 

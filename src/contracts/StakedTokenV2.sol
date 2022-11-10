@@ -328,16 +328,16 @@ contract StakedTokenV2 is
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
       toCooldownTimestamp = 0;
     } else {
-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
+      uint256 nextCooldownTimestamp = (minimalValidCooldownTimestamp >
         fromCooldownTimestamp)
         ? block.timestamp
         : fromCooldownTimestamp;
 
-      if (fromCooldownTimestamp < toCooldownTimestamp) {
+      if (nextCooldownTimestamp < toCooldownTimestamp) {
         return toCooldownTimestamp;
       } else {
         toCooldownTimestamp =
-          ((amountToReceive * fromCooldownTimestamp) +
+          ((amountToReceive * nextCooldownTimestamp) +
             (toBalance * toCooldownTimestamp)) /
           (amountToReceive + toBalance);
       }

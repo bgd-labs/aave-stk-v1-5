@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: agpl-3.0
+pragma solidity ^0.8.0;
+
 import 'forge-std/Test.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
@@ -40,9 +43,6 @@ contract SlashingValidation is BaseTest {
   function testEchangeRateStill1To1() public {
     uint256 amount = 10 ether;
 
-    uint256 totalBalanceBefore = STAKE_CONTRACT.STAKED_TOKEN().balanceOf(
-      address(STAKE_CONTRACT)
-    );
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
     STAKE_CONTRACT.stake(address(this), amount);
 
@@ -51,7 +51,9 @@ contract SlashingValidation is BaseTest {
 
   function _slash20() internal {
     address receiver = address(42);
-    uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * 2) / 10;
+    uint256 amountToSlash = (STAKE_CONTRACT.previewRedeem(
+      STAKE_CONTRACT.totalSupply()
+    ) * 2) / 10;
 
     // slash
     vm.startPrank(STAKE_CONTRACT.getAdmin(SLASHING_ADMIN));
@@ -89,6 +91,7 @@ contract SlashingValidation is BaseTest {
 
     _slash20();
     // redeem
+
     STAKE_CONTRACT.redeem(address(this), amount);
     assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(address(this)), 8 ether);
   }
@@ -99,9 +102,6 @@ contract SlashingValidation is BaseTest {
   function testFailSlash20RedeemToLate() public {
     uint256 amount = 10 ether;
 
-    uint256 totalBalanceBefore = STAKE_CONTRACT.STAKED_TOKEN().balanceOf(
-      address(STAKE_CONTRACT)
-    );
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
     STAKE_CONTRACT.stake(address(this), amount);
 

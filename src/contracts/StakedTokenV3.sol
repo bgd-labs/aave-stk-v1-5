@@ -79,7 +79,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     string memory symbol,
     address governance
   )
-    public
     StakedTokenV2(
       stakedToken,
       rewardToken,
@@ -162,7 +161,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV3
   function previewStake(uint256 assets) public view returns (uint256) {
-    return (assets * TOKEN_UNIT) / _currentExchangeRate;
+    return (assets * _currentExchangeRate) / TOKEN_UNIT;
   }
 
   /// @inheritdoc IStakedToken
@@ -280,7 +279,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     returns (uint256)
   {
-    return (_currentExchangeRate * shares) / TOKEN_UNIT;
+    return (TOKEN_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -536,8 +535,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * _currentExchangeRate) /
-      TOKEN_UNIT;
+    uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
+      _currentExchangeRate;
 
     _burn(from, amountToRedeem);
 
@@ -566,6 +565,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /**
    * @dev calculates the exchange rate based on totalAssets and totalShares
+   * @dev always rounds up to ensure 100% backing of shares by rounding in favor of the contract
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
@@ -575,7 +575,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     pure
     returns (uint128)
   {
-    return uint128((totalAssets * TOKEN_UNIT) / totalShares);
+    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
   }
 
   /**
@@ -630,6 +630,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         snapshotsCounts,
         user,
         blockNumber
-      ) * _searchExchangeRateByBlockNumber(blockNumber)) / TOKEN_UNIT;
+      ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
   }
 }
