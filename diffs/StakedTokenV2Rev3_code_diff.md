@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..3380717 100644
+index 83f9691..6cc6ba0 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,115 +1,26 @@
@@ -12,14 +12,14 @@ index 83f9691..3380717 100644
 -pragma solidity 0.7.5;
 -pragma experimental ABIEncoderV2;
 +pragma solidity ^0.8.0;
-
+ 
 -interface IGovernancePowerDelegationToken {
 -  enum DelegationType {
 -    VOTING_POWER,
 -    PROPOSITION_POWER
 -  }
 +// most imports are only here to force import order for better (i.e smaller) diff on flattening
-
+ 
 -  /**
 -   * @dev emitted when a user delegates to another
 -   * @param delegator the delegator
@@ -100,7 +100,7 @@ index 83f9691..3380717 100644
 -    returns (uint256);
 -}
 +// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
-
+ 
  /**
 - * @dev From https://github.com/OpenZeppelin/openzeppelin-contracts
 - * Provides information about the current execution context, including the
@@ -119,7 +119,7 @@ index 83f9691..3380717 100644
 +  function _msgSender() internal view virtual returns (address) {
      return msg.sender;
    }
-
+ 
 -  function _msgData() internal view virtual returns (bytes memory) {
 -    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
 +  function _msgData() internal view virtual returns (bytes calldata) {
@@ -129,7 +129,7 @@ index 83f9691..3380717 100644
 @@ -196,229 +107,30 @@ interface IERC20 {
    event Approval(address indexed owner, address indexed spender, uint256 value);
  }
-
+ 
 +// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/ERC20.sol)
 +
 +// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
@@ -300,7 +300,7 @@ index 83f9691..3380717 100644
 -  }
 -}
 +  function name() external view returns (string memory);
-
+ 
 -/**
 - * @dev Collection of functions related to the address type
 - * From https://github.com/OpenZeppelin/openzeppelin-contracts
@@ -337,7 +337,7 @@ index 83f9691..3380717 100644
 -    return (codehash != accountHash && codehash != 0x0);
 -  }
 +  function symbol() external view returns (string memory);
-
+ 
    /**
 -   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
 -   * `recipient`, forwarding all available gas and reverting on errors.
@@ -367,7 +367,7 @@ index 83f9691..3380717 100644
 -  }
 +  function decimals() external view returns (uint8);
  }
-
+ 
  /**
 @@ -432,9 +144,10 @@ library Address {
   * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
@@ -383,7 +383,7 @@ index 83f9691..3380717 100644
   *
   * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
   * This allows applications to reconstruct the allowance for all accounts just
-@@ -445,39 +158,35 @@ library Address {
+@@ -445,39 +158,33 @@ library Address {
   * functions have been added to mitigate the well-known issues around setting
   * allowances. See {IERC20-approve}.
   */
@@ -394,22 +394,23 @@ index 83f9691..3380717 100644
 -  mapping(address => uint256) private _balances;
 +contract ERC20 is Context, IERC20, IERC20Metadata {
 +  mapping(address => uint256) internal _balances;
-
+ 
    mapping(address => mapping(address => uint256)) private _allowances;
-
+ 
 -  uint256 private _totalSupply;
 +  uint256 internal _totalSupply;
-
+ 
 -  string internal _name;
 -  string internal _symbol;
 -  uint8 private _decimals;
 +  string private _name;
 +  string private _symbol;
 +  uint8 private _decimals; // @deprecated
-
+ 
    /**
 -   * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
 -   * a default value of 18.
++   * @dev Altered constructor as name and symbol are already initialized.
 +   * @dev Sets the values for {name} and {symbol}.
     *
 -   * To select a different value for {decimals}, use {_setupDecimals}.
@@ -424,11 +425,9 @@ index 83f9691..3380717 100644
 -    _name = name;
 -    _symbol = symbol;
 -    _decimals = 18;
-+  constructor(string memory name_, string memory symbol_) {
-+    _name = name_;
-+    _symbol = symbol_;
-   }
-
+-  }
++  constructor() {}
+ 
    /**
     * @dev Returns the name of the token.
     */
@@ -436,8 +435,8 @@ index 83f9691..3380717 100644
 +  function name() public view virtual override returns (string memory) {
      return _name;
    }
-
-@@ -485,38 +194,44 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -485,38 +192,44 @@ contract ERC20 is Context, IERC20 {
     * @dev Returns the symbol of the token, usually a shorter version of the
     * name.
     */
@@ -445,7 +444,7 @@ index 83f9691..3380717 100644
 +  function symbol() public view virtual override returns (string memory) {
      return _symbol;
    }
-
+ 
    /**
     * @dev Returns the number of decimals used to get its user representation.
     * For example, if `decimals` equals `2`, a balance of `505` tokens should
@@ -467,7 +466,7 @@ index 83f9691..3380717 100644
 +  function decimals() public view virtual override returns (uint8) {
 +    return 18;
    }
-
+ 
    /**
     * @dev See {IERC20-totalSupply}.
     */
@@ -475,7 +474,7 @@ index 83f9691..3380717 100644
 +  function totalSupply() public view virtual override returns (uint256) {
      return _totalSupply;
    }
-
+ 
    /**
     * @dev See {IERC20-balanceOf}.
     */
@@ -489,8 +488,8 @@ index 83f9691..3380717 100644
 +  {
      return _balances[account];
    }
-
-@@ -525,16 +240,17 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -525,16 +238,17 @@ contract ERC20 is Context, IERC20 {
     *
     * Requirements:
     *
@@ -510,8 +509,8 @@ index 83f9691..3380717 100644
 +    _transfer(owner, to, amount);
      return true;
    }
-
-@@ -554,6 +270,9 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -554,6 +268,9 @@ contract ERC20 is Context, IERC20 {
    /**
     * @dev See {IERC20-approve}.
     *
@@ -521,7 +520,7 @@ index 83f9691..3380717 100644
     * Requirements:
     *
     * - `spender` cannot be the zero address.
-@@ -564,7 +283,8 @@ contract ERC20 is Context, IERC20 {
+@@ -564,7 +281,8 @@ contract ERC20 is Context, IERC20 {
      override
      returns (bool)
    {
@@ -530,8 +529,8 @@ index 83f9691..3380717 100644
 +    _approve(owner, spender, amount);
      return true;
    }
-
-@@ -572,28 +292,26 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -572,28 +290,26 @@ contract ERC20 is Context, IERC20 {
     * @dev See {IERC20-transferFrom}.
     *
     * Emits an {Approval} event indicating the updated allowance. This is not
@@ -572,8 +571,8 @@ index 83f9691..3380717 100644
 +    _transfer(from, to, amount);
      return true;
    }
-
-@@ -614,11 +332,8 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -614,11 +330,8 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -586,8 +585,8 @@ index 83f9691..3380717 100644
 +    _approve(owner, spender, allowance(owner, spender) + addedValue);
      return true;
    }
-
-@@ -641,47 +356,53 @@ contract ERC20 is Context, IERC20 {
+ 
+@@ -641,47 +354,53 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -610,7 +609,7 @@ index 83f9691..3380717 100644
 +
      return true;
    }
-
+ 
    /**
 -   * @dev Moves tokens `amount` from `sender` to `recipient`.
 +   * @dev Moves `amount` of tokens from `from` to `to`.
@@ -641,10 +640,10 @@ index 83f9691..3380717 100644
 -    require(recipient != address(0), 'ERC20: transfer to the zero address');
 +    require(from != address(0), 'ERC20: transfer from the zero address');
 +    require(to != address(0), 'ERC20: transfer to the zero address');
-
+ 
 -    _beforeTokenTransfer(sender, recipient, amount);
 +    _beforeTokenTransfer(from, to, amount);
-
+ 
 -    _balances[sender] = _balances[sender].sub(
 -      amount,
 -      'ERC20: transfer amount exceeds balance'
@@ -662,9 +661,9 @@ index 83f9691..3380717 100644
 +
 +    _afterTokenTransfer(from, to, amount);
    }
-
+ 
    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-@@ -689,18 +410,20 @@ contract ERC20 is Context, IERC20 {
+@@ -689,18 +408,20 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `from` set to the zero address.
     *
@@ -676,9 +675,9 @@ index 83f9691..3380717 100644
     */
    function _mint(address account, uint256 amount) internal virtual {
      require(account != address(0), 'ERC20: mint to the zero address');
-
+ 
      _beforeTokenTransfer(address(0), account, amount);
-
+ 
 -    _totalSupply = _totalSupply.add(amount);
 -    _balances[account] = _balances[account].add(amount);
 +    _totalSupply += amount;
@@ -687,9 +686,9 @@ index 83f9691..3380717 100644
 +
 +    _afterTokenTransfer(address(0), account, amount);
    }
-
+ 
    /**
-@@ -709,7 +432,7 @@ contract ERC20 is Context, IERC20 {
+@@ -709,7 +430,7 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `to` set to the zero address.
     *
@@ -698,10 +697,10 @@ index 83f9691..3380717 100644
     *
     * - `account` cannot be the zero address.
     * - `account` must have at least `amount` tokens.
-@@ -719,18 +442,22 @@ contract ERC20 is Context, IERC20 {
-
+@@ -719,18 +440,22 @@ contract ERC20 is Context, IERC20 {
+ 
      _beforeTokenTransfer(account, address(0), amount);
-
+ 
 -    _balances[account] = _balances[account].sub(
 -      amount,
 -      'ERC20: burn amount exceeds balance'
@@ -718,7 +717,7 @@ index 83f9691..3380717 100644
 +
 +    _afterTokenTransfer(account, address(0), amount);
    }
-
+ 
    /**
 -   * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
 +   * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
@@ -728,9 +727,9 @@ index 83f9691..3380717 100644
     * e.g. set automatic allowances for certain subsystems, etc.
     *
     * Emits an {Approval} event.
-@@ -753,14 +480,25 @@ contract ERC20 is Context, IERC20 {
+@@ -753,14 +478,25 @@ contract ERC20 is Context, IERC20 {
    }
-
+ 
    /**
 -   * @dev Sets {decimals} to a value other than the default one of 18.
 +   * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
@@ -758,9 +757,9 @@ index 83f9691..3380717 100644
 +      }
 +    }
    }
-
+ 
    /**
-@@ -770,7 +508,7 @@ contract ERC20 is Context, IERC20 {
+@@ -770,7 +506,7 @@ contract ERC20 is Context, IERC20 {
     * Calling conditions:
     *
     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
@@ -769,12 +768,12 @@ index 83f9691..3380717 100644
     * - when `from` is zero, `amount` tokens will be minted for `to`.
     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
     * - `from` and `to` are never both zero.
-@@ -782,16 +520,26 @@ contract ERC20 is Context, IERC20 {
+@@ -782,16 +518,26 @@ contract ERC20 is Context, IERC20 {
      address to,
      uint256 amount
    ) internal virtual {}
 -}
-
+ 
 -interface IStakedAave {
 -  function stake(address to, uint256 amount) external;
 -
@@ -803,12 +802,12 @@ index 83f9691..3380717 100644
 +    uint256 amount
 +  ) internal virtual {}
  }
-
+ 
  interface ITransferHook {
-@@ -816,10 +564,260 @@ library DistributionTypes {
+@@ -816,10 +562,260 @@ library DistributionTypes {
    }
  }
-
+ 
 +// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 +
 +/**
@@ -1068,15 +1067,15 @@ index 83f9691..3380717 100644
   * contract returns false). Tokens that return no value (and instead revert or
   * throw on failure) are also supported, non-reverting calls are assumed to be
   * successful.
-@@ -827,7 +825,6 @@ library DistributionTypes {
+@@ -827,7 +823,6 @@ library DistributionTypes {
   * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
   */
  library SafeERC20 {
 -  using SafeMath for uint256;
    using Address for address;
-
+ 
    function safeTransfer(
-@@ -835,7 +832,7 @@ library SafeERC20 {
+@@ -835,7 +830,7 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
@@ -1085,7 +1084,7 @@ index 83f9691..3380717 100644
        token,
        abi.encodeWithSelector(token.transfer.selector, to, value)
      );
-@@ -847,37 +844,85 @@ library SafeERC20 {
+@@ -847,37 +842,85 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
@@ -1095,7 +1094,7 @@ index 83f9691..3380717 100644
        abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
      );
    }
-
+ 
 +  /**
 +   * @dev Deprecated. This function has issues similar to the ones found in
 +   * {IERC20-approve}, and its usage is discouraged.
@@ -1121,7 +1120,7 @@ index 83f9691..3380717 100644
        abi.encodeWithSelector(token.approve.selector, spender, value)
      );
    }
-
+ 
 -  function callOptionalReturn(IERC20 token, bytes memory data) private {
 -    require(address(token).isContract(), 'SafeERC20: call to non-contract');
 +  function safeIncreaseAllowance(
@@ -1135,7 +1134,7 @@ index 83f9691..3380717 100644
 +      abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
 +    );
 +  }
-
+ 
 -    // solhint-disable-next-line avoid-low-level-calls
 -    (bool success, bytes memory returndata) = address(token).call(data);
 -    require(success, 'SafeERC20: low-level call failed');
@@ -1157,7 +1156,7 @@ index 83f9691..3380717 100644
 +      );
 +    }
 +  }
-
+ 
 +  /**
 +   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
 +   * on the return value: the return value is optional (but if data is returned, it must not be false).
@@ -1179,7 +1178,7 @@ index 83f9691..3380717 100644
        require(
          abi.decode(returndata, (bool)),
          'SafeERC20: ERC20 operation did not succeed'
-@@ -941,8 +986,6 @@ interface IAaveDistributionManager {
+@@ -941,8 +984,6 @@ interface IAaveDistributionManager {
   * @author Aave
   **/
  contract AaveDistributionManager is IAaveDistributionManager {
@@ -1188,20 +1187,20 @@ index 83f9691..3380717 100644
    struct AssetData {
      uint128 emissionPerSecond;
      uint128 lastUpdateTimestamp;
-@@ -966,8 +1009,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -966,8 +1007,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 index
    );
-
+ 
 -  constructor(address emissionManager, uint256 distributionDuration) public {
 -    DISTRIBUTION_END = block.timestamp.add(distributionDuration);
 +  constructor(address emissionManager, uint256 distributionDuration) {
 +    DISTRIBUTION_END = block.timestamp + distributionDuration;
      EMISSION_MANAGER = emissionManager;
    }
-
-@@ -1081,14 +1124,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+ 
+@@ -1081,14 +1122,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 accruedRewards = 0;
-
+ 
      for (uint256 i = 0; i < stakes.length; i++) {
 -      accruedRewards = accruedRewards.add(
 +      accruedRewards =
@@ -1215,12 +1214,12 @@ index 83f9691..3380717 100644
 -      );
 +        );
      }
-
+ 
      return accruedRewards;
-@@ -1115,9 +1158,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1115,9 +1156,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
          stakes[i].totalStaked
        );
-
+ 
 -      accruedRewards = accruedRewards.add(
 -        _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user])
 -      );
@@ -1234,7 +1233,7 @@ index 83f9691..3380717 100644
      }
      return accruedRewards;
    }
-@@ -1135,9 +1182,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1135,9 +1180,8 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 userIndex
    ) internal pure returns (uint256) {
      return
@@ -1244,9 +1243,9 @@ index 83f9691..3380717 100644
 +      (principalUserBalance * (reserveIndex - userIndex)) /
 +      (10**uint256(PRECISION));
    }
-
+ 
    /**
-@@ -1166,13 +1212,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1166,13 +1210,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
        ? DISTRIBUTION_END
        : block.timestamp;
@@ -1261,12 +1260,12 @@ index 83f9691..3380717 100644
 +      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
 +        totalBalance) + currentIndex;
    }
-
+ 
    /**
-@@ -1190,6 +1233,85 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1190,6 +1231,85 @@ contract AaveDistributionManager is IAaveDistributionManager {
    }
  }
-
+ 
 +interface IGovernancePowerDelegationToken {
 +  enum DelegationType {
 +    VOTING_POWER,
@@ -1349,7 +1348,7 @@ index 83f9691..3380717 100644
  /**
   * @notice implementation of the AAVE token contract
   * @author Aave
-@@ -1198,7 +1320,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1198,7 +1318,6 @@ abstract contract GovernancePowerDelegationERC20 is
    ERC20,
    IGovernancePowerDelegationToken
  {
@@ -1357,7 +1356,7 @@ index 83f9691..3380717 100644
    /// @notice The EIP-712 typehash for the delegation struct used by the contract
    bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
      keccak256(
-@@ -1298,12 +1419,7 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1298,12 +1417,7 @@ abstract contract GovernancePowerDelegationERC20 is
     * In this initial implementation with no AAVE minting, simply returns the current supply
     * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
     **/
@@ -1370,43 +1369,43 @@ index 83f9691..3380717 100644
 +  function totalSupplyAt(uint256) external view override returns (uint256) {
      return super.totalSupply();
    }
-
-@@ -1378,10 +1494,10 @@ abstract contract GovernancePowerDelegationERC20 is
+ 
+@@ -1378,10 +1492,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          from,
          uint128(previous),
 -        uint128(previous.sub(amount))
 +        uint128(previous - amount)
        );
-
+ 
 -      emit DelegatedPowerChanged(from, previous.sub(amount), delegationType);
 +      emit DelegatedPowerChanged(from, previous - amount, delegationType);
      }
      if (to != address(0)) {
        uint256 previous = 0;
-@@ -1397,10 +1513,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1397,10 +1511,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          to,
          uint128(previous),
 -        uint128(previous.add(amount))
 +        uint128(previous + amount)
        );
-
+ 
 -      emit DelegatedPowerChanged(to, previous.add(amount), delegationType);
 +      emit DelegatedPowerChanged(to, previous + amount, delegationType);
      }
    }
-
-@@ -1416,7 +1532,7 @@ abstract contract GovernancePowerDelegationERC20 is
+ 
+@@ -1416,7 +1530,7 @@ abstract contract GovernancePowerDelegationERC20 is
      mapping(address => uint256) storage snapshotsCounts,
      address user,
      uint256 blockNumber
 -  ) internal view returns (uint256) {
 +  ) internal view virtual returns (uint256) {
      require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
-
+ 
      uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1526,8 +1642,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1526,8 +1640,6 @@ abstract contract GovernancePowerDelegationERC20 is
  abstract contract GovernancePowerWithSnapshot is
    GovernancePowerDelegationERC20
  {
@@ -1415,14 +1414,14 @@ index 83f9691..3380717 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1540,11 +1654,47 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1540,11 +1652,47 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
 +  /// @dev DEPRECATED
    ITransferHook public _aaveGovernance;
 +}
-
+ 
 -  function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
 -    _aaveGovernance = aaveGovernance;
 -  }
@@ -1464,9 +1463,9 @@ index 83f9691..3380717 100644
 +   **/
 +  function claimRewards(address to, uint256 amount) external;
  }
-
+ 
  /**
-@@ -1552,21 +1702,20 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1552,21 +1700,20 @@ abstract contract GovernancePowerWithSnapshot is
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
   * @author Aave
   **/
@@ -1480,20 +1479,20 @@ index 83f9691..3380717 100644
  {
 -  using SafeMath for uint256;
    using SafeERC20 for IERC20;
-
+ 
 -  /// @dev Start of Storage layout from StakedToken v1
 -  uint256 public constant REVISION = 3;
 +  function REVISION() public pure virtual returns (uint256) {
 +    return 2;
 +  }
-
+ 
    IERC20 public immutable STAKED_TOKEN;
    IERC20 public immutable REWARD_TOKEN;
 -  uint256 public immutable COOLDOWN_SECONDS;
-
+ 
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,33 +1769,28 @@ contract StakedTokenV2Rev3 is
+@@ -1620,33 +1767,23 @@ contract StakedTokenV2Rev3 is
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1502,15 +1501,16 @@ index 83f9691..3380717 100644
      address rewardsVault,
      address emissionManager,
      uint128 distributionDuration,
-     string memory name,
-     string memory symbol,
+-    string memory name,
+-    string memory symbol,
 -    uint8 decimals,
      address governance
-   )
+-  )
 -    public
-     ERC20(name, symbol)
-     AaveDistributionManager(emissionManager, distributionDuration)
-   {
+-    ERC20(name, symbol)
+-    AaveDistributionManager(emissionManager, distributionDuration)
+-  {
++  ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
      STAKED_TOKEN = stakedToken;
      REWARD_TOKEN = rewardToken;
 -    COOLDOWN_SECONDS = cooldownSeconds;
@@ -1519,16 +1519,16 @@ index 83f9691..3380717 100644
      _aaveGovernance = ITransferHook(governance);
 -    ERC20._setupDecimals(decimals);
    }
-
+ 
    /**
     * @dev Called by the proxy contract
     **/
 -  function initialize() external initializer {
 +  function initialize() external virtual initializer {
      uint256 chainId;
-
+ 
      //solium-disable-next-line
-@@ -1663,13 +1807,9 @@ contract StakedTokenV2Rev3 is
+@@ -1663,13 +1800,9 @@ contract StakedTokenV2Rev3 is
          address(this)
        )
      );
@@ -1537,13 +1537,13 @@ index 83f9691..3380717 100644
 -    AssetData storage assetData = assets[address(this)];
 -    assetData.lastUpdateTimestamp = 1620594720;
    }
-
+ 
 -  function stake(address onBehalfOf, uint256 amount) external override {
 +  function stake(address onBehalfOf, uint256 amount) external virtual override {
      require(amount != 0, 'INVALID_ZERO_AMOUNT');
      uint256 balanceOfUser = balanceOf(onBehalfOf);
-
-@@ -1681,9 +1821,9 @@ contract StakedTokenV2Rev3 is
+ 
+@@ -1681,9 +1814,9 @@ contract StakedTokenV2Rev3 is
      );
      if (accruedRewards != 0) {
        emit RewardsAccrued(onBehalfOf, accruedRewards);
@@ -1554,9 +1554,9 @@ index 83f9691..3380717 100644
 +        stakerRewardsToClaim[onBehalfOf] +
 +        accruedRewards;
      }
-
+ 
      stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-@@ -1704,37 +1844,7 @@ contract StakedTokenV2Rev3 is
+@@ -1704,37 +1837,7 @@ contract StakedTokenV2Rev3 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     **/
@@ -1592,10 +1592,10 @@ index 83f9691..3380717 100644
 -    emit Redeem(msg.sender, to, amountToRedeem);
 -  }
 +  function redeem(address to, uint256 amount) external virtual override;
-
+ 
    /**
     * @dev Activates the cooldown period to unstake
-@@ -1753,7 +1863,7 @@ contract StakedTokenV2Rev3 is
+@@ -1753,7 +1856,7 @@ contract StakedTokenV2Rev3 is
     * @param to Address to stake for
     * @param amount Amount to stake
     **/
@@ -1604,28 +1604,28 @@ index 83f9691..3380717 100644
      uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
        msg.sender,
        balanceOf(msg.sender),
-@@ -1763,10 +1873,7 @@ contract StakedTokenV2Rev3 is
+@@ -1763,10 +1866,7 @@ contract StakedTokenV2Rev3 is
        ? newTotalRewards
        : amount;
-
+ 
 -    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(
 -      amountToClaim,
 -      'INVALID_AMOUNT'
 -    );
 +    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
-
+ 
      REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
-
-@@ -1827,7 +1934,7 @@ contract StakedTokenV2Rev3 is
+ 
+@@ -1827,7 +1927,7 @@ contract StakedTokenV2Rev3 is
        userBalance,
        totalSupply()
      );
 -    uint256 unclaimedRewards = stakerRewardsToClaim[user].add(accruedRewards);
 +    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
-
+ 
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1858,37 +1965,7 @@ contract StakedTokenV2Rev3 is
+@@ -1858,37 +1958,7 @@ contract StakedTokenV2Rev3 is
      uint256 amountToReceive,
      address toAddress,
      uint256 toBalance
@@ -1661,10 +1661,10 @@ index 83f9691..3380717 100644
 -    return toCooldownTimestamp;
 -  }
 +  ) public view virtual returns (uint256);
-
+ 
    /**
     * @dev Return the total rewards pending to claim by an staker
-@@ -1908,17 +1985,16 @@ contract StakedTokenV2Rev3 is
+@@ -1908,17 +1978,16 @@ contract StakedTokenV2Rev3 is
        totalStaked: totalSupply()
      });
      return
@@ -1674,7 +1674,7 @@ index 83f9691..3380717 100644
 +      stakerRewardsToClaim[staker] +
 +      _getUnclaimedRewards(staker, userStakeInputs);
    }
-
+ 
    /**
     * @dev returns the revision of the implementation contract
     * @return The revision
@@ -1684,18 +1684,18 @@ index 83f9691..3380717 100644
 +  function getRevision() internal pure virtual override returns (uint256) {
 +    return REVISION();
    }
-
+ 
    /**
-@@ -1963,7 +2039,7 @@ contract StakedTokenV2Rev3 is
+@@ -1963,7 +2032,7 @@ contract StakedTokenV2Rev3 is
      );
-
+ 
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 -    _nonces[owner] = currentValidNonce.add(1);
 +    _nonces[owner] = currentValidNonce + 1;
      _approve(owner, spender, value);
    }
-
-@@ -1980,7 +2056,7 @@ contract StakedTokenV2Rev3 is
+ 
+@@ -1980,7 +2049,7 @@ contract StakedTokenV2Rev3 is
      address from,
      address to,
      uint256 amount
@@ -1703,9 +1703,9 @@ index 83f9691..3380717 100644
 +  ) internal virtual override {
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
-
-@@ -2017,7 +2093,7 @@ contract StakedTokenV2Rev3 is
-
+ 
+@@ -2017,7 +2086,7 @@ contract StakedTokenV2Rev3 is
+ 
      // caching the aave governance address to avoid multiple state loads
      ITransferHook aaveGovernance = _aaveGovernance;
 -    if (aaveGovernance != ITransferHook(0)) {
@@ -1713,7 +1713,7 @@ index 83f9691..3380717 100644
        aaveGovernance.onTransfer(from, to, amount);
      }
    }
-@@ -2112,3 +2188,1053 @@ contract StakedTokenV2Rev3 is
+@@ -2112,3 +2181,1009 @@ contract StakedTokenV2Rev3 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -2060,10 +2060,10 @@ index 83f9691..3380717 100644
 +  // slashing states
 +  uint256 internal _cooldownSeconds;
 +  uint256 internal _maxSlashablePercentage;
-+  bool public isPendingSlashing;
 +  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-+  uint256 internal _exchangeRateSnapshotsCount;
++  uint120 internal _exchangeRateSnapshotsCount;
 +  uint128 internal _currentExchangeRate;
++  bool public inPostSlashingPeriod;
 +
 +  modifier onlySlashingAdmin() {
 +    require(
@@ -2096,8 +2096,6 @@ index 83f9691..3380717 100644
 +    address rewardsVault,
 +    address emissionManager,
 +    uint128 distributionDuration,
-+    string memory name,
-+    string memory symbol,
 +    address governance
 +  )
 +    StakedTokenV2(
@@ -2107,8 +2105,6 @@ index 83f9691..3380717 100644
 +      rewardsVault,
 +      emissionManager,
 +      distributionDuration,
-+      name,
-+      symbol,
 +      governance
 +    )
 +  {}
@@ -2309,7 +2305,7 @@ index 83f9691..3380717 100644
 +    onlySlashingAdmin
 +    returns (uint256)
 +  {
-+    require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
++    require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
 +    uint256 currentShares = totalSupply();
 +    uint256 balance = previewRedeem(currentShares);
 +
@@ -2319,7 +2315,7 @@ index 83f9691..3380717 100644
 +      amount = maxSlashable;
 +    }
 +
-+    isPendingSlashing = true;
++    inPostSlashingPeriod = true;
 +    _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
 +
 +    STAKED_TOKEN.safeTransfer(destination, amount);
@@ -2340,7 +2336,7 @@ index 83f9691..3380717 100644
 +
 +  /// @inheritdoc IStakedTokenV3
 +  function settleSlashing() external override {
-+    isPendingSlashing = false;
++    inPostSlashingPeriod = false;
 +    emit SlashingSettled();
 +  }
 +
@@ -2442,7 +2438,7 @@ index 83f9691..3380717 100644
 +    address to,
 +    uint256 amount
 +  ) internal {
-+    require(isPendingSlashing != true, 'SLASHING_ONGOING');
++    require(inPostSlashingPeriod != true, 'SLASHING_ONGOING');
 +    require(amount != 0, 'INVALID_ZERO_AMOUNT');
 +
 +    uint256 balanceOfUser = balanceOf(to);
@@ -2538,7 +2534,7 @@ index 83f9691..3380717 100644
 +    //solium-disable-next-line
 +    uint256 cooldownStartTimestamp = stakersCooldowns[from];
 +
-+    if (!isPendingSlashing) {
++    if (!inPostSlashingPeriod) {
 +      require(
 +        (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
 +        'INSUFFICIENT_COOLDOWN'
@@ -2679,10 +2675,6 @@ index 83f9691..3380717 100644
 + * @author Aave
 + **/
 +contract StakedAaveV3 is StakedTokenV3 {
-+  string internal constant NAME = 'Staked Aave';
-+  string internal constant SYMBOL = 'stkAAVE';
-+  uint8 internal constant DECIMALS = 18;
-+
 +  // GHO
 +  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 +
@@ -2707,11 +2699,10 @@ index 83f9691..3380717 100644
 +      rewardsVault,
 +      emissionManager,
 +      distributionDuration,
-+      NAME,
-+      SYMBOL,
 +      governance
 +    )
 +  {
++    require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');
 +    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
 +  }
 +
@@ -2722,49 +2713,14 @@ index 83f9691..3380717 100644
 +    address to,
 +    uint256 amount
 +  ) internal override {
-+    if (Address.isContract(address(GHO_DEBT_TOKEN))) {
-+      GHO_DEBT_TOKEN.updateDiscountDistribution(
-+        from,
-+        to,
-+        balanceOf(from),
-+        balanceOf(to),
-+        amount
-+      );
-+    }
-+
-+    address votingFromDelegatee = _votingDelegates[from];
-+    address votingToDelegatee = _votingDelegates[to];
-+
-+    if (votingFromDelegatee == address(0)) {
-+      votingFromDelegatee = from;
-+    }
-+    if (votingToDelegatee == address(0)) {
-+      votingToDelegatee = to;
-+    }
-+
-+    _moveDelegatesByType(
-+      votingFromDelegatee,
-+      votingToDelegatee,
-+      amount,
-+      DelegationType.VOTING_POWER
++    GHO_DEBT_TOKEN.updateDiscountDistribution(
++      from,
++      to,
++      balanceOf(from),
++      balanceOf(to),
++      amount
 +    );
-+
-+    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-+    address propPowerToDelegatee = _propositionPowerDelegates[to];
-+
-+    if (propPowerFromDelegatee == address(0)) {
-+      propPowerFromDelegatee = from;
-+    }
-+    if (propPowerToDelegatee == address(0)) {
-+      propPowerToDelegatee = to;
-+    }
-+
-+    _moveDelegatesByType(
-+      propPowerFromDelegatee,
-+      propPowerToDelegatee,
-+      amount,
-+      DelegationType.PROPOSITION_POWER
-+    );
++    super._beforeTokenTransfer(from, to, amount);
 +  }
 +}
 ```

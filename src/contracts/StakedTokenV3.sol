@@ -41,10 +41,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   // slashing states
   uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
-  bool public inPostSlashingPeriod;
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint256 internal _exchangeRateSnapshotsCount;
+  uint120 internal _exchangeRateSnapshotsCount;
   uint128 internal _currentExchangeRate;
+  bool public inPostSlashingPeriod;
 
   modifier onlySlashingAdmin() {
     require(

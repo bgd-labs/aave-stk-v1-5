@@ -170,6 +170,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   uint8 private _decimals; // @deprecated
 
   /**
+   * @dev Altered constructor as name and symbol are already initialized.
    * @dev Sets the values for {name} and {symbol}.
    *
    * The default value of {decimals} is 18. To select a different value for
@@ -178,10 +179,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    * All two of these values are immutable: they can only be set once during
    * construction.
    */
-  constructor(string memory name_, string memory symbol_) {
-    _name = name_;
-    _symbol = symbol_;
-  }
+  constructor() {}
 
   /**
    * @dev Returns the name of the token.
@@ -1771,13 +1769,8 @@ abstract contract StakedTokenV2 is
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration,
-    string memory name,
-    string memory symbol,
     address governance
-  )
-    ERC20(name, symbol)
-    AaveDistributionManager(emissionManager, distributionDuration)
-  {
+  ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
@@ -2529,10 +2522,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   // slashing states
   uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
-  bool public isPendingSlashing;
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint256 internal _exchangeRateSnapshotsCount;
+  uint120 internal _exchangeRateSnapshotsCount;
   uint128 internal _currentExchangeRate;
+  bool public inPostSlashingPeriod;
 
   modifier onlySlashingAdmin() {
     require(
@@ -2565,8 +2558,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration,
-    string memory name,
-    string memory symbol,
     address governance
   )
     StakedTokenV2(
@@ -2576,8 +2567,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       rewardsVault,
       emissionManager,
       distributionDuration,
-      name,
-      symbol,
       governance
     )
   {}
@@ -2778,7 +2767,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     onlySlashingAdmin
     returns (uint256)
   {
-    require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentShares = totalSupply();
     uint256 balance = previewRedeem(currentShares);
 
@@ -2788,7 +2777,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       amount = maxSlashable;
     }
 
-    isPendingSlashing = true;
+    inPostSlashingPeriod = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
 
     STAKED_TOKEN.safeTransfer(destination, amount);
@@ -2809,7 +2798,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV3
   function settleSlashing() external override {
-    isPendingSlashing = false;
+    inPostSlashingPeriod = false;
     emit SlashingSettled();
   }
 
@@ -2911,7 +2900,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal {
-    require(isPendingSlashing != true, 'SLASHING_ONGOING');
+    require(inPostSlashingPeriod != true, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     uint256 balanceOfUser = balanceOf(to);
@@ -3007,7 +2996,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
 
-    if (!isPendingSlashing) {
+    if (!inPostSlashingPeriod) {
       require(
         (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
