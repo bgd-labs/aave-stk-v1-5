@@ -6,6 +6,17 @@ import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
+import {IGhoVariableDebtToken} from '../src/interfaces/IGhoVariableDebtToken.sol';
+
+contract GhoDebtMock is IGhoVariableDebtToken {
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) public {}
+}
 
 contract BaseTest is Test {
   StakedTokenV3 STAKE_CONTRACT;
@@ -20,6 +31,7 @@ contract BaseTest is Test {
 
   function _deployImplementation(bool stkAAVE) internal returns (address) {
     if (stkAAVE) {
+      GhoDebtMock ghoMock = new GhoDebtMock();
       return
         address(
           new StakedAaveV3(
@@ -30,7 +42,7 @@ contract BaseTest is Test {
             STAKE_CONTRACT.EMISSION_MANAGER(),
             3155692600, // 100 years
             address(GovHelpers.GOV),
-            address(0)
+            address(ghoMock)
           )
         );
     }

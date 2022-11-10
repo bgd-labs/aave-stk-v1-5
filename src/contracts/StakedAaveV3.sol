@@ -58,6 +58,7 @@ contract StakedAaveV3 is StakedTokenV3 {
       governance
     )
   {
+    require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');
     GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
   }
 
@@ -68,48 +69,13 @@ contract StakedAaveV3 is StakedTokenV3 {
     address to,
     uint256 amount
   ) internal override {
-    if (Address.isContract(address(GHO_DEBT_TOKEN))) {
-      GHO_DEBT_TOKEN.updateDiscountDistribution(
-        from,
-        to,
-        balanceOf(from),
-        balanceOf(to),
-        amount
-      );
-    }
-
-    address votingFromDelegatee = _votingDelegates[from];
-    address votingToDelegatee = _votingDelegates[to];
-
-    if (votingFromDelegatee == address(0)) {
-      votingFromDelegatee = from;
-    }
-    if (votingToDelegatee == address(0)) {
-      votingToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      votingFromDelegatee,
-      votingToDelegatee,
-      amount,
-      DelegationType.VOTING_POWER
+    GHO_DEBT_TOKEN.updateDiscountDistribution(
+      from,
+      to,
+      balanceOf(from),
+      balanceOf(to),
+      amount
     );
-
-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-    address propPowerToDelegatee = _propositionPowerDelegates[to];
-
-    if (propPowerFromDelegatee == address(0)) {
-      propPowerFromDelegatee = from;
-    }
-    if (propPowerToDelegatee == address(0)) {
-      propPowerToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      propPowerFromDelegatee,
-      propPowerToDelegatee,
-      amount,
-      DelegationType.PROPOSITION_POWER
-    );
+    super._beforeTokenTransfer(from, to, amount);
   }
 }
