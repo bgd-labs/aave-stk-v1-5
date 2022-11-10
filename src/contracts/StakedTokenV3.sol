@@ -41,7 +41,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   // slashing states
   uint256 internal _cooldownSeconds;
   uint256 internal _maxSlashablePercentage;
-  bool public isPendingSlashing;
+  bool public inPostSlashingPeriod;
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint256 internal _exchangeRateSnapshotsCount;
   uint128 internal _currentExchangeRate;
@@ -290,7 +290,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     onlySlashingAdmin
     returns (uint256)
   {
-    require(!isPendingSlashing, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
     uint256 currentShares = totalSupply();
     uint256 balance = previewRedeem(currentShares);
 
@@ -300,7 +300,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       amount = maxSlashable;
     }
 
-    isPendingSlashing = true;
+    inPostSlashingPeriod = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
 
     STAKED_TOKEN.safeTransfer(destination, amount);
@@ -321,7 +321,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV3
   function settleSlashing() external override {
-    isPendingSlashing = false;
+    inPostSlashingPeriod = false;
     emit SlashingSettled();
   }
 
@@ -423,7 +423,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal {
-    require(isPendingSlashing != true, 'SLASHING_ONGOING');
+    require(inPostSlashingPeriod != true, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     uint256 balanceOfUser = balanceOf(to);
@@ -519,7 +519,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     //solium-disable-next-line
     uint256 cooldownStartTimestamp = stakersCooldowns[from];
 
-    if (!isPendingSlashing) {
+    if (!inPostSlashingPeriod) {
       require(
         (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
