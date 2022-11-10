@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..57c81b1 100644
+index 37a034f..8358364 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,37 +1,30 @@
@@ -2027,7 +2027,7 @@ index 37a034f..57c81b1 100644
 +  {}
 +
 +  function REVISION() public pure virtual override returns (uint256) {
-+    return 4;
++    return 3;
 +  }
 +
 +  /**
@@ -2060,22 +2060,22 @@ index 37a034f..57c81b1 100644
 +      maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
 +      'INVALID_SLASHING_PERCENTAGE'
 +    );
-+    uint256 chainId;
-+
++    // No need to reinitialize
++    // uint256 chainId;
 +    //solium-disable-next-line
-+    assembly {
-+      chainId := chainid()
-+    }
++    // assembly {
++    //   chainId := chainid()
++    // }
 +
-+    DOMAIN_SEPARATOR = keccak256(
-+      abi.encode(
-+        EIP712_DOMAIN,
-+        keccak256(bytes(super.name())),
-+        keccak256(EIP712_REVISION),
-+        chainId,
-+        address(this)
-+      )
-+    );
++    // DOMAIN_SEPARATOR = keccak256(
++    //   abi.encode(
++    //     EIP712_DOMAIN,
++    //     keccak256(bytes(super.name())),
++    //     keccak256(EIP712_REVISION),
++    //     chainId,
++    //     address(this)
++    //   )
++    // );
 +
 +    InitAdmin[] memory initAdmins = new InitAdmin[](3);
 +    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);

@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..7e9e163 100644
+index 83f9691..3380717 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,115 +1,26 @@
@@ -1713,7 +1713,7 @@ index 83f9691..7e9e163 100644
        aaveGovernance.onTransfer(from, to, amount);
      }
    }
-@@ -2112,3 +2188,1049 @@ contract StakedTokenV2Rev3 is
+@@ -2112,3 +2188,1053 @@ contract StakedTokenV2Rev3 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -2114,7 +2114,7 @@ index 83f9691..7e9e163 100644
 +  {}
 +
 +  function REVISION() public pure virtual override returns (uint256) {
-+    return 4;
++    return 3;
 +  }
 +
 +  /**
@@ -2147,22 +2147,22 @@ index 83f9691..7e9e163 100644
 +      maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
 +      'INVALID_SLASHING_PERCENTAGE'
 +    );
-+    uint256 chainId;
-+
++    // No need to reinitialize
++    // uint256 chainId;
 +    //solium-disable-next-line
-+    assembly {
-+      chainId := chainid()
-+    }
++    // assembly {
++    //   chainId := chainid()
++    // }
 +
-+    DOMAIN_SEPARATOR = keccak256(
-+      abi.encode(
-+        EIP712_DOMAIN,
-+        keccak256(bytes(super.name())),
-+        keccak256(EIP712_REVISION),
-+        chainId,
-+        address(this)
-+      )
-+    );
++    // DOMAIN_SEPARATOR = keccak256(
++    //   abi.encode(
++    //     EIP712_DOMAIN,
++    //     keccak256(bytes(super.name())),
++    //     keccak256(EIP712_REVISION),
++    //     chainId,
++    //     address(this)
++    //   )
++    // );
 +
 +    InitAdmin[] memory initAdmins = new InitAdmin[](3);
 +    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
@@ -2685,6 +2685,10 @@ index 83f9691..7e9e163 100644
 +
 +  // GHO
 +  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
++
++  function REVISION() public pure virtual override returns (uint256) {
++    return 4;
++  }
 +
 +  constructor(
 +    IERC20 stakedToken,

@@ -2585,7 +2585,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   {}
 
   function REVISION() public pure virtual override returns (uint256) {
-    return 4;
+    return 3;
   }
 
   /**
@@ -2618,22 +2618,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
       'INVALID_SLASHING_PERCENTAGE'
     );
-    uint256 chainId;
-
+    // No need to reinitialize
+    // uint256 chainId;
     //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
+    // assembly {
+    //   chainId := chainid()
+    // }
 
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(super.name())),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
+    // DOMAIN_SEPARATOR = keccak256(
+    //   abi.encode(
+    //     EIP712_DOMAIN,
+    //     keccak256(bytes(super.name())),
+    //     keccak256(EIP712_REVISION),
+    //     chainId,
+    //     address(this)
+    //   )
+    // );
 
     InitAdmin[] memory initAdmins = new InitAdmin[](3);
     initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
@@ -3156,6 +3156,10 @@ contract StakedAaveV3 is StakedTokenV3 {
 
   // GHO
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
+
+  function REVISION() public pure virtual override returns (uint256) {
+    return 4;
+  }
 
   constructor(
     IERC20 stakedToken,
