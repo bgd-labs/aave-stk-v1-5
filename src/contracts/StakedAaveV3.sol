@@ -39,7 +39,6 @@ contract StakedAaveV3 is StakedTokenV3 {
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration,
-    address governance,
     address ghoDebtToken
   )
     StakedTokenV3(
@@ -48,8 +47,7 @@ contract StakedAaveV3 is StakedTokenV3 {
       unstakeWindow,
       rewardsVault,
       emissionManager,
-      distributionDuration,
-      governance
+      distributionDuration
     )
   {
     require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');

@@ -1768,14 +1768,12 @@ abstract contract StakedTokenV2 is
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    address governance
+    uint128 distributionDuration
   ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
     REWARDS_VAULT = rewardsVault;
-    _aaveGovernance = ITransferHook(governance);
   }
 
   /**
@@ -2081,12 +2079,6 @@ abstract contract StakedTokenV2 is
       amount,
       DelegationType.PROPOSITION_POWER
     );
-
-    // caching the aave governance address to avoid multiple state loads
-    ITransferHook aaveGovernance = _aaveGovernance;
-    if (address(aaveGovernance) != address(0)) {
-      aaveGovernance.onTransfer(from, to, amount);
-    }
   }
 
   function _getDelegationDataByType(DelegationType delegationType)
@@ -2512,19 +2504,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
 
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
   uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant TOKEN_UNIT = 1e18;
 
-  // slashing states
+  /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
+  /// @notice The maximum amount of funds that can be slashed at any given time
   uint256 internal _maxSlashablePercentage;
+  /// @notice Snapshots of the exchangeRate for a given block
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint120 internal _exchangeRateSnapshotsCount;
+  /// @notice Mirror of latest snapshot value for cheaper access
   uint128 internal _currentExchangeRate;
+  /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
   bool public inPostSlashingPeriod;
 
   modifier onlySlashingAdmin() {
@@ -2557,8 +2552,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    address governance
+    uint128 distributionDuration
   )
     StakedTokenV2(
       stakedToken,
@@ -2566,8 +2560,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       unstakeWindow,
       rewardsVault,
       emissionManager,
-      distributionDuration,
-      governance
+      distributionDuration
     )
   {}
 
@@ -2605,22 +2598,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
       'INVALID_SLASHING_PERCENTAGE'
     );
-    // No need to reinitialize
-    // uint256 chainId;
-    //solium-disable-next-line
-    // assembly {
-    //   chainId := chainid()
-    // }
-
-    // DOMAIN_SEPARATOR = keccak256(
-    //   abi.encode(
-    //     EIP712_DOMAIN,
-    //     keccak256(bytes(super.name())),
-    //     keccak256(EIP712_REVISION),
-    //     chainId,
-    //     address(this)
-    //   )
-    // );
 
     InitAdmin[] memory initAdmins = new InitAdmin[](3);
     initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
@@ -3036,7 +3013,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       uint128(block.number),
       newExchangeRate
     );
-    _exchangeRateSnapshotsCount += 1;
+    ++_exchangeRateSnapshotsCount;
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }

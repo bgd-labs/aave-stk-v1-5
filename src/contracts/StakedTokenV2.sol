@@ -88,14 +88,12 @@ abstract contract StakedTokenV2 is
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    address governance
+    uint128 distributionDuration
   ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
     REWARDS_VAULT = rewardsVault;
-    _aaveGovernance = ITransferHook(governance);
   }
 
   /**
@@ -401,12 +399,6 @@ abstract contract StakedTokenV2 is
       amount,
       DelegationType.PROPOSITION_POWER
     );
-
-    // caching the aave governance address to avoid multiple state loads
-    ITransferHook aaveGovernance = _aaveGovernance;
-    if (address(aaveGovernance) != address(0)) {
-      aaveGovernance.onTransfer(from, to, amount);
-    }
   }
 
   function _getDelegationDataByType(DelegationType delegationType)

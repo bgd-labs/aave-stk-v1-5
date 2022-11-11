@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..6cc6ba0 100644
+index 83f9691..77a97c1 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,115 +1,26 @@
@@ -1492,7 +1492,7 @@ index 83f9691..6cc6ba0 100644
  
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,33 +1767,23 @@ contract StakedTokenV2Rev3 is
+@@ -1620,33 +1767,21 @@ contract StakedTokenV2Rev3 is
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1500,23 +1500,24 @@ index 83f9691..6cc6ba0 100644
      uint256 unstakeWindow,
      address rewardsVault,
      address emissionManager,
-     uint128 distributionDuration,
+-    uint128 distributionDuration,
 -    string memory name,
 -    string memory symbol,
 -    uint8 decimals,
-     address governance
+-    address governance
 -  )
 -    public
 -    ERC20(name, symbol)
 -    AaveDistributionManager(emissionManager, distributionDuration)
 -  {
++    uint128 distributionDuration
 +  ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
      STAKED_TOKEN = stakedToken;
      REWARD_TOKEN = rewardToken;
 -    COOLDOWN_SECONDS = cooldownSeconds;
      UNSTAKE_WINDOW = unstakeWindow;
      REWARDS_VAULT = rewardsVault;
-     _aaveGovernance = ITransferHook(governance);
+-    _aaveGovernance = ITransferHook(governance);
 -    ERC20._setupDecimals(decimals);
    }
  
@@ -1528,7 +1529,7 @@ index 83f9691..6cc6ba0 100644
      uint256 chainId;
  
      //solium-disable-next-line
-@@ -1663,13 +1800,9 @@ contract StakedTokenV2Rev3 is
+@@ -1663,13 +1798,9 @@ contract StakedTokenV2Rev3 is
          address(this)
        )
      );
@@ -1543,7 +1544,7 @@ index 83f9691..6cc6ba0 100644
      require(amount != 0, 'INVALID_ZERO_AMOUNT');
      uint256 balanceOfUser = balanceOf(onBehalfOf);
  
-@@ -1681,9 +1814,9 @@ contract StakedTokenV2Rev3 is
+@@ -1681,9 +1812,9 @@ contract StakedTokenV2Rev3 is
      );
      if (accruedRewards != 0) {
        emit RewardsAccrued(onBehalfOf, accruedRewards);
@@ -1556,7 +1557,7 @@ index 83f9691..6cc6ba0 100644
      }
  
      stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-@@ -1704,37 +1837,7 @@ contract StakedTokenV2Rev3 is
+@@ -1704,37 +1835,7 @@ contract StakedTokenV2Rev3 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     **/
@@ -1595,7 +1596,7 @@ index 83f9691..6cc6ba0 100644
  
    /**
     * @dev Activates the cooldown period to unstake
-@@ -1753,7 +1856,7 @@ contract StakedTokenV2Rev3 is
+@@ -1753,7 +1854,7 @@ contract StakedTokenV2Rev3 is
     * @param to Address to stake for
     * @param amount Amount to stake
     **/
@@ -1604,7 +1605,7 @@ index 83f9691..6cc6ba0 100644
      uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
        msg.sender,
        balanceOf(msg.sender),
-@@ -1763,10 +1866,7 @@ contract StakedTokenV2Rev3 is
+@@ -1763,10 +1864,7 @@ contract StakedTokenV2Rev3 is
        ? newTotalRewards
        : amount;
  
@@ -1616,7 +1617,7 @@ index 83f9691..6cc6ba0 100644
  
      REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
  
-@@ -1827,7 +1927,7 @@ contract StakedTokenV2Rev3 is
+@@ -1827,7 +1925,7 @@ contract StakedTokenV2Rev3 is
        userBalance,
        totalSupply()
      );
@@ -1625,7 +1626,7 @@ index 83f9691..6cc6ba0 100644
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1858,37 +1958,7 @@ contract StakedTokenV2Rev3 is
+@@ -1858,37 +1956,7 @@ contract StakedTokenV2Rev3 is
      uint256 amountToReceive,
      address toAddress,
      uint256 toBalance
@@ -1664,7 +1665,7 @@ index 83f9691..6cc6ba0 100644
  
    /**
     * @dev Return the total rewards pending to claim by an staker
-@@ -1908,17 +1978,16 @@ contract StakedTokenV2Rev3 is
+@@ -1908,17 +1976,16 @@ contract StakedTokenV2Rev3 is
        totalStaked: totalSupply()
      });
      return
@@ -1686,7 +1687,7 @@ index 83f9691..6cc6ba0 100644
    }
  
    /**
-@@ -1963,7 +2032,7 @@ contract StakedTokenV2Rev3 is
+@@ -1963,7 +2030,7 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -1695,7 +1696,7 @@ index 83f9691..6cc6ba0 100644
      _approve(owner, spender, value);
    }
  
-@@ -1980,7 +2049,7 @@ contract StakedTokenV2Rev3 is
+@@ -1980,7 +2047,7 @@ contract StakedTokenV2Rev3 is
      address from,
      address to,
      uint256 amount
@@ -1704,16 +1705,20 @@ index 83f9691..6cc6ba0 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2017,7 +2086,7 @@ contract StakedTokenV2Rev3 is
- 
-     // caching the aave governance address to avoid multiple state loads
-     ITransferHook aaveGovernance = _aaveGovernance;
+@@ -2014,12 +2081,6 @@ contract StakedTokenV2Rev3 is
+       amount,
+       DelegationType.PROPOSITION_POWER
+     );
+-
+-    // caching the aave governance address to avoid multiple state loads
+-    ITransferHook aaveGovernance = _aaveGovernance;
 -    if (aaveGovernance != ITransferHook(0)) {
-+    if (address(aaveGovernance) != address(0)) {
-       aaveGovernance.onTransfer(from, to, amount);
-     }
+-      aaveGovernance.onTransfer(from, to, amount);
+-    }
    }
-@@ -2112,3 +2181,1009 @@ contract StakedTokenV2Rev3 is
+ 
+   function _getDelegationDataByType(DelegationType delegationType)
+@@ -2112,3 +2173,992 @@ contract StakedTokenV2Rev3 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -2050,19 +2055,22 @@ index 83f9691..6cc6ba0 100644
 +  using SafeERC20 for IERC20;
 +  using PercentageMath for uint256;
 +
-+  /// @notice Seconds available to redeem once the cooldown period is fullfilled
 +  uint256 public constant SLASH_ADMIN_ROLE = 0;
 +  uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
 +  uint256 public constant CLAIM_HELPER_ROLE = 2;
 +  uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
 +  uint256 public constant TOKEN_UNIT = 1e18;
 +
-+  // slashing states
++  /// @notice Seconds between starting cooldown and being able to withdraw
 +  uint256 internal _cooldownSeconds;
++  /// @notice The maximum amount of funds that can be slashed at any given time
 +  uint256 internal _maxSlashablePercentage;
++  /// @notice Snapshots of the exchangeRate for a given block
 +  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
 +  uint120 internal _exchangeRateSnapshotsCount;
++  /// @notice Mirror of latest snapshot value for cheaper access
 +  uint128 internal _currentExchangeRate;
++  /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
 +  bool public inPostSlashingPeriod;
 +
 +  modifier onlySlashingAdmin() {
@@ -2095,8 +2103,7 @@ index 83f9691..6cc6ba0 100644
 +    uint256 unstakeWindow,
 +    address rewardsVault,
 +    address emissionManager,
-+    uint128 distributionDuration,
-+    address governance
++    uint128 distributionDuration
 +  )
 +    StakedTokenV2(
 +      stakedToken,
@@ -2104,8 +2111,7 @@ index 83f9691..6cc6ba0 100644
 +      unstakeWindow,
 +      rewardsVault,
 +      emissionManager,
-+      distributionDuration,
-+      governance
++      distributionDuration
 +    )
 +  {}
 +
@@ -2143,22 +2149,6 @@ index 83f9691..6cc6ba0 100644
 +      maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
 +      'INVALID_SLASHING_PERCENTAGE'
 +    );
-+    // No need to reinitialize
-+    // uint256 chainId;
-+    //solium-disable-next-line
-+    // assembly {
-+    //   chainId := chainid()
-+    // }
-+
-+    // DOMAIN_SEPARATOR = keccak256(
-+    //   abi.encode(
-+    //     EIP712_DOMAIN,
-+    //     keccak256(bytes(super.name())),
-+    //     keccak256(EIP712_REVISION),
-+    //     chainId,
-+    //     address(this)
-+    //   )
-+    // );
 +
 +    InitAdmin[] memory initAdmins = new InitAdmin[](3);
 +    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
@@ -2574,7 +2564,7 @@ index 83f9691..6cc6ba0 100644
 +      uint128(block.number),
 +      newExchangeRate
 +    );
-+    _exchangeRateSnapshotsCount += 1;
++    ++_exchangeRateSnapshotsCount;
 +    _currentExchangeRate = newExchangeRate;
 +    emit ExchangeRateChanged(newExchangeRate);
 +  }
@@ -2689,7 +2679,6 @@ index 83f9691..6cc6ba0 100644
 +    address rewardsVault,
 +    address emissionManager,
 +    uint128 distributionDuration,
-+    address governance,
 +    address ghoDebtToken
 +  )
 +    StakedTokenV3(
@@ -2698,8 +2687,7 @@ index 83f9691..6cc6ba0 100644
 +      unstakeWindow,
 +      rewardsVault,
 +      emissionManager,
-+      distributionDuration,
-+      governance
++      distributionDuration
 +    )
 +  {
 +    require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');

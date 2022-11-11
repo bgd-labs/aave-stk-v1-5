@@ -41,7 +41,6 @@ contract BaseTest is Test {
             STAKE_CONTRACT.REWARDS_VAULT(),
             STAKE_CONTRACT.EMISSION_MANAGER(),
             3155692600, // 100 years
-            address(GovHelpers.GOV),
             address(ghoMock)
           )
         );
@@ -54,8 +53,7 @@ contract BaseTest is Test {
           3000,
           STAKE_CONTRACT.REWARDS_VAULT(),
           STAKE_CONTRACT.EMISSION_MANAGER(),
-          3155692600, // 100 years
-          address(GovHelpers.GOV)
+          3155692600 // 100 years
         )
       );
   }
