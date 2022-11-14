@@ -288,7 +288,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /// @inheritdoc IStakedTokenV3
-  function settleSlashing() external override {
+  function settleSlashing() external override onlySlashingAdmin {
     inPostSlashingPeriod = false;
     emit SlashingSettled();
   }
