@@ -113,11 +113,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
   ) external initializer {
-    require(
-      maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
-      'INVALID_SLASHING_PERCENTAGE'
-    );
-
     InitAdmin[] memory initAdmins = new InitAdmin[](3);
     initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
     initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
@@ -330,6 +325,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _cooldownSeconds;
   }
 
+  /// @dev sets the max slashable percentage
+  /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
   function _setMaxSlashablePercentage(uint256 percentage) internal {
     require(
       percentage < PercentageMath.PERCENTAGE_FACTOR,
