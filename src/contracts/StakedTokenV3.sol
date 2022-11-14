@@ -104,14 +104,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /**
-   * @dev Inherited from StakedTokenV2, deprecated
-   * Overwrite `initialize` from `StakedTokenV2` so it can no longer be used to initialize
-   **/
-  function initialize() external override {
-    revert('DEPRECATED');
-  }
-
-  /**
    * @dev Called by the proxy contract
    **/
   function initialize(

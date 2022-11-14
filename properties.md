@@ -31,6 +31,8 @@ With the new iteration the StakedTokenV3 adds mechanics for slashing in the case
 
 - $shares = {assets * exchangeRate \over 1e18}$
 
+- initializer and constructor only initialize variables not previously initialized
+
 ### Slashing
 
 - `slash` should revert when amount exceeds max slashing amount

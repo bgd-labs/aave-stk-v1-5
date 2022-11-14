@@ -96,28 +96,6 @@ abstract contract StakedTokenV2 is
     REWARDS_VAULT = rewardsVault;
   }
 
-  /**
-   * @dev Called by the proxy contract
-   **/
-  function initialize() external virtual initializer {
-    uint256 chainId;
-
-    //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
-
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(name())),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
-  }
-
   function stake(address onBehalfOf, uint256 amount) external virtual override {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
     uint256 balanceOfUser = balanceOf(onBehalfOf);
