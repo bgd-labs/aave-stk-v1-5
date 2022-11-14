@@ -15,7 +15,14 @@ Together with all the standard ERC20 functionalities, the current implementation
 - management & accounting for safety module rewards
 - management & accounting of voting and proposition power
 
-With the new iteration the StakedTokenV3 adds mechanics for slashing in the case of shortfall events.
+With the new iteration the StakedTokenV3 adds enhanced mechanics for slashing in the case of shortfall events.
+
+In the case of StakedAaveV3 it also adds a hook for managing GHO discounts.
+
+The new iteration will update the revision of:
+
+- stkABPT from `2` to `3` via [StakedTokenV3.sol](./src/contracts/StakedTokenV3.sol) contract
+- stkAAVE from `3` to `4` via [StakedAaveV3.sol](./src/contracts/StakedAaveV3.sol) contract
 
 ## Glossary
 
