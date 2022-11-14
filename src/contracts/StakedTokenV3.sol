@@ -549,44 +549,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
   }
 
-  /**
-   * @dev searches a snapshot by block number. Uses binary search.
-   * @param blockNumber the block number being searched
-   * @return exchangeRate at block number
-   */
-  function _searchExchangeRateByBlockNumber(uint256 blockNumber)
-    internal
-    view
-    returns (uint256)
-  {
-    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
-    uint256 snapshotsCount = _exchangeRateSnapshotsCount;
-
-    if (snapshotsCount == 0) {
-      return INITIAL_EXCHANGE_RATE;
-    }
-
-    // First check most recent balance
-    if (_exchangeRateSnapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-      return _exchangeRateSnapshots[snapshotsCount - 1].value;
-    }
-
-    uint256 lower = 0;
-    uint256 upper = snapshotsCount - 1;
-    while (upper > lower) {
-      uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-      Snapshot memory snapshot = _exchangeRateSnapshots[center];
-      if (snapshot.blockNumber == blockNumber) {
-        return snapshot.value;
-      } else if (snapshot.blockNumber < blockNumber) {
-        lower = center;
-      } else {
-        upper = center - 1;
-      }
-    }
-    return _exchangeRateSnapshots[lower].value;
-  }
-
   /// @dev Modified version accounting for exchange rate at block
   /// @inheritdoc GovernancePowerDelegationERC20
   function _searchByBlockNumber(
@@ -601,6 +563,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         snapshotsCounts,
         user,
         blockNumber
-      ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
+      ) * TOKEN_UNIT) /
+      _binarySearch(
+        _exchangeRateSnapshots,
+        _exchangeRateSnapshotsCount,
+        blockNumber
+      );
   }
 }

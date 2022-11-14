@@ -88,11 +88,29 @@ contract BaseTest is Test {
       )
     );
     vm.stopPrank();
-    deal(address(STAKE_CONTRACT.STAKED_TOKEN()), address(this), 10 ether);
   }
 
   function _stake(uint256 amount) internal {
+    deal(address(STAKE_CONTRACT.STAKED_TOKEN()), address(this), amount);
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
     STAKE_CONTRACT.stake(address(this), amount);
+  }
+
+  function _slash20() internal {
+    address receiver = address(42);
+    uint256 amountToSlash = (STAKE_CONTRACT.previewRedeem(
+      STAKE_CONTRACT.totalSupply()
+    ) * 2) / 10;
+
+    // slash
+    vm.startPrank(STAKE_CONTRACT.getAdmin(SLASHING_ADMIN));
+    STAKE_CONTRACT.slash(receiver, amountToSlash);
+    vm.stopPrank();
+  }
+
+  function _settleSlashing() internal {
+    vm.startPrank(slashingAdmin);
+    STAKE_CONTRACT.settleSlashing();
+    vm.stopPrank();
   }
 }

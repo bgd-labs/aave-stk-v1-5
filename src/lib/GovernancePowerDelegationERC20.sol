@@ -216,21 +216,25 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
       return balanceOf(user);
     }
 
-    // First check most recent balance
-    if (snapshots[user][snapshotsCount - 1].blockNumber <= blockNumber) {
-      return snapshots[user][snapshotsCount - 1].value;
-    }
-
-    // Next check implicit zero balance
+    // Check implicit zero balance
     if (snapshots[user][0].blockNumber > blockNumber) {
       return 0;
+    }
+
+    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
+  }
+
+  function _binarySearch(mapping(uint256 => Snapshot) storage snapshots, uint256 snapshotsCount, uint256 blockNumber) internal view returns (uint256) {
+    // First check most recent balance
+    if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
+      return snapshots[snapshotsCount - 1].value;
     }
 
     uint256 lower = 0;
     uint256 upper = snapshotsCount - 1;
     while (upper > lower) {
       uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-      Snapshot memory snapshot = snapshots[user][center];
+      Snapshot memory snapshot = snapshots[center];
       if (snapshot.blockNumber == blockNumber) {
         return snapshot.value;
       } else if (snapshot.blockNumber < blockNumber) {
@@ -239,7 +243,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
         upper = center - 1;
       }
     }
-    return snapshots[user][lower].value;
+    return snapshots[lower].value;
   }
 
   /**

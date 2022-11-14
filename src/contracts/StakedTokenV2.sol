@@ -96,41 +96,10 @@ abstract contract StakedTokenV2 is
     REWARDS_VAULT = rewardsVault;
   }
 
-  function stake(address onBehalfOf, uint256 amount) external virtual override {
-    require(amount != 0, 'INVALID_ZERO_AMOUNT');
-    uint256 balanceOfUser = balanceOf(onBehalfOf);
+  /// @inheritdoc IStakedToken
+  function stake(address onBehalfOf, uint256 amount) external virtual override;
 
-    uint256 accruedRewards = _updateUserAssetInternal(
-      onBehalfOf,
-      address(this),
-      balanceOfUser,
-      totalSupply()
-    );
-    if (accruedRewards != 0) {
-      emit RewardsAccrued(onBehalfOf, accruedRewards);
-      stakerRewardsToClaim[onBehalfOf] =
-        stakerRewardsToClaim[onBehalfOf] +
-        accruedRewards;
-    }
-
-    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-      0,
-      amount,
-      onBehalfOf,
-      balanceOfUser
-    );
-
-    _mint(onBehalfOf, amount);
-    IERC20(STAKED_TOKEN).safeTransferFrom(msg.sender, address(this), amount);
-
-    emit Staked(msg.sender, onBehalfOf, amount);
-  }
-
-  /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
-   * @param amount Amount to redeem
-   **/
+  /// @inheritdoc IStakedToken
   function redeem(address to, uint256 amount) external virtual override;
 
   /**

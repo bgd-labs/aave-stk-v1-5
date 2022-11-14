@@ -45,6 +45,18 @@ contract GovernanceValidation is BaseTest {
   }
 
   /**
+   *
+   */
+  function test_voteNoPower() public {
+    uint256 proposalId = _createDummyProposal();
+    GovHelpers.GOV.submitVote(proposalId, true);
+    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GovHelpers
+      .getProposalById(proposalId);
+
+    assertEq(proposal.forVotes, 0);
+  }
+
+  /**
    * @dev User votes on proposal
    */
   function test_voteInitialExchangeRate() public {
