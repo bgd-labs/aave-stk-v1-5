@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '../interfaces/IERC20.sol';
-import {IStakedToken} from '../interfaces/IStakedToken.sol';
+import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 
 import {ERC20} from '../lib/ERC20.sol';
@@ -18,8 +18,8 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author Aave
  **/
-contract StakedTokenV2 is
-  IStakedToken,
+abstract contract StakedTokenV2 is
+  IStakedTokenV2,
   GovernancePowerWithSnapshot,
   VersionedInitializable,
   AaveDistributionManager
@@ -32,7 +32,6 @@ contract StakedTokenV2 is
 
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
-  uint256 public immutable COOLDOWN_SECONDS;
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
   uint256 public immutable UNSTAKE_WINDOW;
@@ -86,115 +85,22 @@ contract StakedTokenV2 is
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
-    uint256 cooldownSeconds,
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    string memory name,
-    string memory symbol,
-    address governance
-  )
-    public
-    ERC20(name, symbol)
-    AaveDistributionManager(emissionManager, distributionDuration)
-  {
+    uint128 distributionDuration
+  ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
-    COOLDOWN_SECONDS = cooldownSeconds;
     UNSTAKE_WINDOW = unstakeWindow;
     REWARDS_VAULT = rewardsVault;
-    _aaveGovernance = ITransferHook(governance);
   }
 
-  /**
-   * @dev Called by the proxy contract
-   **/
-  function initialize() external virtual initializer {
-    uint256 chainId;
+  /// @inheritdoc IStakedTokenV2
+  function stake(address onBehalfOf, uint256 amount) external virtual override;
 
-    //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
-
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(name())),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
-  }
-
-  function stake(address onBehalfOf, uint256 amount) external virtual override {
-    require(amount != 0, 'INVALID_ZERO_AMOUNT');
-    uint256 balanceOfUser = balanceOf(onBehalfOf);
-
-    uint256 accruedRewards = _updateUserAssetInternal(
-      onBehalfOf,
-      address(this),
-      balanceOfUser,
-      totalSupply()
-    );
-    if (accruedRewards != 0) {
-      emit RewardsAccrued(onBehalfOf, accruedRewards);
-      stakerRewardsToClaim[onBehalfOf] =
-        stakerRewardsToClaim[onBehalfOf] +
-        accruedRewards;
-    }
-
-    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-      0,
-      amount,
-      onBehalfOf,
-      balanceOfUser
-    );
-
-    _mint(onBehalfOf, amount);
-    IERC20(STAKED_TOKEN).safeTransferFrom(msg.sender, address(this), amount);
-
-    emit Staked(msg.sender, onBehalfOf, amount);
-  }
-
-  /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
-   * @param amount Amount to redeem
-   **/
-  function redeem(address to, uint256 amount) external virtual override {
-    require(amount != 0, 'INVALID_ZERO_AMOUNT');
-    //solium-disable-next-line
-    uint256 cooldownStartTimestamp = stakersCooldowns[msg.sender];
-    require(
-      block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
-      'INSUFFICIENT_COOLDOWN'
-    );
-    require(
-      block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-        UNSTAKE_WINDOW,
-      'UNSTAKE_WINDOW_FINISHED'
-    );
-    uint256 balanceOfMessageSender = balanceOf(msg.sender);
-
-    uint256 amountToRedeem = (amount > balanceOfMessageSender)
-      ? balanceOfMessageSender
-      : amount;
-
-    _updateCurrentUnclaimedRewards(msg.sender, balanceOfMessageSender, true);
-
-    _burn(msg.sender, amountToRedeem);
-
-    if (balanceOfMessageSender - amountToRedeem == 0) {
-      stakersCooldowns[msg.sender] = 0;
-    }
-
-    IERC20(STAKED_TOKEN).safeTransfer(to, amountToRedeem);
-
-    emit Redeem(msg.sender, to, amountToRedeem);
-  }
+  /// @inheritdoc IStakedTokenV2
+  function redeem(address to, uint256 amount) external virtual override;
 
   /**
    * @dev Activates the cooldown period to unstake
@@ -208,27 +114,8 @@ contract StakedTokenV2 is
     emit Cooldown(msg.sender);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
-   * @param to Address to stake for
-   * @param amount Amount to stake
-   **/
-  function claimRewards(address to, uint256 amount) external virtual override {
-    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
-      msg.sender,
-      balanceOf(msg.sender),
-      false
-    );
-    uint256 amountToClaim = (amount == type(uint256).max)
-      ? newTotalRewards
-      : amount;
-
-    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
-
-    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
-
-    emit RewardsClaimed(msg.sender, to, amountToClaim);
-  }
+  /// @inheritdoc IStakedTokenV2
+  function claimRewards(address to, uint256 amount) external virtual override;
 
   /**
    * @dev Internal ERC20 _transfer of the tokenized staked tokens
@@ -296,54 +183,13 @@ contract StakedTokenV2 is
     return unclaimedRewards;
   }
 
-  /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
-   **/
+  /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
-  ) public view virtual returns (uint256) {
-    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-    if (toCooldownTimestamp == 0) {
-      return 0;
-    }
-
-    uint256 minimalValidCooldownTimestamp = block.timestamp -
-      COOLDOWN_SECONDS -
-      UNSTAKE_WINDOW;
-
-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-      toCooldownTimestamp = 0;
-    } else {
-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
-        fromCooldownTimestamp)
-        ? block.timestamp
-        : fromCooldownTimestamp;
-
-      if (fromCooldownTimestamp < toCooldownTimestamp) {
-        return toCooldownTimestamp;
-      } else {
-        toCooldownTimestamp =
-          ((amountToReceive * fromCooldownTimestamp) +
-            (toBalance * toCooldownTimestamp)) /
-          (amountToReceive + toBalance);
-      }
-    }
-    return toCooldownTimestamp;
-  }
+  ) public view virtual returns (uint256);
 
   /**
    * @dev Return the total rewards pending to claim by an staker
@@ -434,7 +280,7 @@ contract StakedTokenV2 is
     address from,
     address to,
     uint256 amount
-  ) internal override {
+  ) internal virtual override {
     address votingFromDelegatee = _votingDelegates[from];
     address votingToDelegatee = _votingDelegates[to];
 
@@ -468,12 +314,6 @@ contract StakedTokenV2 is
       amount,
       DelegationType.PROPOSITION_POWER
     );
-
-    // caching the aave governance address to avoid multiple state loads
-    ITransferHook aaveGovernance = _aaveGovernance;
-    if (address(aaveGovernance) != address(0)) {
-      aaveGovernance.onTransfer(from, to, amount);
-    }
   }
 
   function _getDelegationDataByType(DelegationType delegationType)

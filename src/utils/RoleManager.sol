@@ -7,6 +7,11 @@ pragma solidity ^0.8.0;
  * @author Aave
  **/
 contract RoleManager {
+  struct InitAdmin {
+    uint256 role;
+    address admin;
+  }
+
   mapping(uint256 => address) private _admins;
   mapping(uint256 => address) private _pendingAdmins;
 
@@ -64,18 +69,15 @@ contract RoleManager {
     emit RoleClaimed(msg.sender, role);
   }
 
-  function _initAdmins(uint256[] memory roles, address[] memory admins)
-    internal
-  {
-    require(roles.length == admins.length, 'INCONSISTENT_INITIALIZATION');
-
-    for (uint256 i = 0; i < roles.length; i++) {
+  function _initAdmins(InitAdmin[] memory initAdmins) internal {
+    for (uint256 i = 0; i < initAdmins.length; i++) {
       require(
-        _admins[roles[i]] == address(0) && admins[i] != address(0),
+        _admins[initAdmins[i].role] == address(0) &&
+          initAdmins[i].admin != address(0),
         'ADMIN_CANNOT_BE_INITIALIZED'
       );
-      _admins[roles[i]] = admins[i];
-      emit RoleClaimed(admins[i], roles[i]);
+      _admins[initAdmins[i].role] = initAdmins[i].admin;
+      emit RoleClaimed(initAdmins[i].admin, initAdmins[i].role);
     }
   }
 }

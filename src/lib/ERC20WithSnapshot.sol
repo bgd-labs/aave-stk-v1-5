@@ -21,18 +21,14 @@ contract ERC20WithSnapshot is ERC20 {
     /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
     /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
     /// to control all potential reentrancies by calling back the this contract
+    /// @dev DEPRECATED
     ITransferHook public _aaveGovernance;
 
     event SnapshotDone(address owner, uint128 oldValue, uint128 newValue);
 
-    constructor(string memory name, string memory symbol)
-        public
-        ERC20(name, symbol)
+    constructor()
+        ERC20()
     {}
-
-    function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
-        _aaveGovernance = aaveGovernance;
-    }
 
     /**
      * @dev Writes a snapshot for an owner of tokens
@@ -97,12 +93,6 @@ contract ERC20WithSnapshot is ERC20 {
         if (to != address(0)) {
             uint256 toBalance = balanceOf(to);
             _writeSnapshot(to, uint128(toBalance), uint128(toBalance + amount));
-        }
-
-        // caching the aave governance address to avoid multiple state loads
-        ITransferHook aaveGovernance = _aaveGovernance;
-        if (address(aaveGovernance) != address(0)) {
-            aaveGovernance.onTransfer(from, to, amount);
         }
     }
 }
