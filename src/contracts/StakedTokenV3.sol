@@ -393,7 +393,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address to,
     uint256 amount
   ) internal {
-    require(inPostSlashingPeriod != true, 'SLASHING_ONGOING');
+    require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     uint256 balanceOfUser = balanceOf(to);
