@@ -16,7 +16,7 @@ import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDel
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
-import {IStakedToken} from '../interfaces/IStakedToken.sol';
+import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
@@ -133,10 +133,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return (assets * _currentExchangeRate) / TOKEN_UNIT;
   }
 
-  /// @inheritdoc IStakedToken
+  /// @inheritdoc IStakedTokenV2
   function stake(address to, uint256 amount)
     external
-    override(IStakedToken, StakedTokenV2)
+    override(IStakedTokenV2, StakedTokenV2)
   {
     _stake(msg.sender, to, amount);
   }
@@ -163,10 +163,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _stake(from, to, amount);
   }
 
-  /// @inheritdoc IStakedToken
+  /// @inheritdoc IStakedTokenV2
   function redeem(address to, uint256 amount)
     external
-    override(IStakedToken, StakedTokenV2)
+    override(IStakedTokenV2, StakedTokenV2)
   {
     _redeem(msg.sender, to, amount);
   }
@@ -180,10 +180,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _redeem(from, to, amount);
   }
 
-  /// @inheritdoc IStakedToken
+  /// @inheritdoc IStakedTokenV2
   function claimRewards(address to, uint256 amount)
     external
-    override(IStakedToken, StakedTokenV2)
+    override(IStakedTokenV2, StakedTokenV2)
   {
     _claimRewards(msg.sender, to, amount);
   }
@@ -425,26 +425,13 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit Staked(from, to, amount, sharesToMint);
   }
 
-  /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
-   **/
+  /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
-  ) public view override returns (uint256) {
+  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
     uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
     if (toCooldownTimestamp == 0) {
       return 0;

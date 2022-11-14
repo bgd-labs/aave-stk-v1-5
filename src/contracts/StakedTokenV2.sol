@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '../interfaces/IERC20.sol';
-import {IStakedToken} from '../interfaces/IStakedToken.sol';
+import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 
 import {ERC20} from '../lib/ERC20.sol';
@@ -19,7 +19,7 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
  * @author Aave
  **/
 abstract contract StakedTokenV2 is
-  IStakedToken,
+  IStakedTokenV2,
   GovernancePowerWithSnapshot,
   VersionedInitializable,
   AaveDistributionManager
@@ -96,10 +96,10 @@ abstract contract StakedTokenV2 is
     REWARDS_VAULT = rewardsVault;
   }
 
-  /// @inheritdoc IStakedToken
+  /// @inheritdoc IStakedTokenV2
   function stake(address onBehalfOf, uint256 amount) external virtual override;
 
-  /// @inheritdoc IStakedToken
+  /// @inheritdoc IStakedTokenV2
   function redeem(address to, uint256 amount) external virtual override;
 
   /**
@@ -114,27 +114,8 @@ abstract contract StakedTokenV2 is
     emit Cooldown(msg.sender);
   }
 
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
-   * @param to Address to stake for
-   * @param amount Amount to stake
-   **/
-  function claimRewards(address to, uint256 amount) external virtual override {
-    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
-      msg.sender,
-      balanceOf(msg.sender),
-      false
-    );
-    uint256 amountToClaim = (amount == type(uint256).max)
-      ? newTotalRewards
-      : amount;
-
-    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
-
-    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
-
-    emit RewardsClaimed(msg.sender, to, amountToClaim);
-  }
+  /// @inheritdoc IStakedTokenV2
+  function claimRewards(address to, uint256 amount) external virtual override;
 
   /**
    * @dev Internal ERC20 _transfer of the tokenized staked tokens
@@ -202,20 +183,7 @@ abstract contract StakedTokenV2 is
     return unclaimedRewards;
   }
 
-  /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
-   **/
+  /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
     uint256 amountToReceive,
