@@ -27,6 +27,10 @@ With the new iteration the StakedTokenV3 adds mechanics for slashing in the case
 
 - $Account1 \ne Account2$
 
+- $assets = {shares * 1e18 \over exchangeRate}$
+
+- $shares = {assets * exchangeRate \over 1e18}$
+
 ### Slashing
 
 - `slash` should revert when amount exceeds max slashing amount
@@ -51,7 +55,7 @@ $$
 - staking after a slashing should not penalize people entering the pool and therefore scale up the staked amount
 
 $$
-stkAmount_{t1} = {amount_{t1} \over exchangeRate_{t1}}
+stkAmount_{t0} = {amount_{t0} * exchangeRate_{t0} \over 1e18}
 $$
 
 ### Redeem after slashing
@@ -59,7 +63,7 @@ $$
 - the redeemable amount should be scaled down by the correct exchange factor
 
 $$
-redeemAmount_{t1} = {stkAmount_{t0} * exchangeRate_{t1}}
+amount_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}
 $$
 
 ## Airdrops
@@ -71,7 +75,7 @@ The stkToken will only consider tokens staked via `stake` and injected via `retu
 The governance power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`.
 
 $$
-power_{t1} = {stkAmount_{t1} * exchangeRate_{t1}}
+power_{t0} = {stkAmount_{t0} * exchangeRate_{t0}}
 $$
 
 ### Changed events
