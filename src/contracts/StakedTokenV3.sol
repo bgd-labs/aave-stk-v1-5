@@ -325,6 +325,42 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _cooldownSeconds;
   }
 
+  /// @inheritdoc IStakedTokenV2
+  function getNextCooldownTimestamp(
+    uint256 fromCooldownTimestamp,
+    uint256 amountToReceive,
+    address toAddress,
+    uint256 toBalance
+  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
+    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
+    if (toCooldownTimestamp == 0) {
+      return 0;
+    }
+
+    uint256 minimalValidCooldownTimestamp = block.timestamp -
+      _cooldownSeconds -
+      UNSTAKE_WINDOW;
+
+    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
+      toCooldownTimestamp = 0;
+    } else {
+      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
+        fromCooldownTimestamp)
+        ? block.timestamp
+        : fromCooldownTimestamp;
+
+      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
+        return toCooldownTimestamp;
+      } else {
+        toCooldownTimestamp =
+          ((amountToReceive * adjustedFromCooldownTimestamp) +
+            (toBalance * toCooldownTimestamp)) /
+          (amountToReceive + toBalance);
+      }
+    }
+    return toCooldownTimestamp;
+  }
+
   /// @dev sets the max slashable percentage
   /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
   function _setMaxSlashablePercentage(uint256 percentage) internal {
@@ -423,42 +459,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
 
     emit Staked(from, to, amount, sharesToMint);
-  }
-
-  /// @inheritdoc IStakedTokenV2
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
-    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-    if (toCooldownTimestamp == 0) {
-      return 0;
-    }
-
-    uint256 minimalValidCooldownTimestamp = block.timestamp -
-      _cooldownSeconds -
-      UNSTAKE_WINDOW;
-
-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-      toCooldownTimestamp = 0;
-    } else {
-      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
-        fromCooldownTimestamp)
-        ? block.timestamp
-        : fromCooldownTimestamp;
-
-      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
-        return toCooldownTimestamp;
-      } else {
-        toCooldownTimestamp =
-          ((amountToReceive * adjustedFromCooldownTimestamp) +
-            (toBalance * toCooldownTimestamp)) /
-          (amountToReceive + toBalance);
-      }
-    }
-    return toCooldownTimestamp;
   }
 
   /**
