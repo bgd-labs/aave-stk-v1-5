@@ -56,6 +56,7 @@ $_{t1}$: the state of the system after a transaction.
 - a slashing is ongoing until it is settled by the slashing admin.
   - As long as the slashing is ongoing accounts can exit the pool immediately without a cooldown period.
   - As long as the slashing is ongoing no account can enter the pool.
+  - As long as the slashing is ongoing no other slashing can occur.
 
 ### Staking
 
