@@ -25,67 +25,66 @@ The new iteration will update the revision of:
 
 ## Glossary
 
-**exchange rate** -> the rate to which you can redeem `stkToken` for `Token`
+$_{t0}$: the state of the system before a transaction.
 
-**slashing amount** -> the amount being slashed
+$_{t1}$: the state of the system after a transaction.
+
+**account:** Ethereum address involved in a transaction on the system.
+
+**exchange rate:** the rate to which you can redeem `stkToken` for `Token`
+
+**total staked:** the amount of underlying staked into the `stkToken` (ignoring airdrops)
 
 ## General rules
 
 - $Account1 \ne Account2$
 
-- $assets = {shares * 1e18 \over exchangeRate}$
+- $assets = {shares \times 1e18 \over exchangeRate}$
 
-- $shares = {assets * exchangeRate \over 1e18}$
+- $shares = {assets \times exchangeRate \over 1e18}$
 
 - initializer and constructor only initialize variables not previously initialized
 
-### Slashing
+## Slashing
 
 - `slash` should revert when amount exceeds max slashing amount
 
 - `slash` should transfer `amount` of the staked tokens to the `destination` address
 
-- after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount
+- after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount: $$exchangeRate_{t1}={totalStaked_{t0} - amount \over totalSupply_{t0}}$$
+
+- a slashing is ongoing until it is settled by the slashing admin.
+  - As long as the slashing is ongoing accounts can exit the pool immediately without a cooldown period.
+  - As long as the slashing is ongoing no account can enter the pool.
+
+### Staking
+
+- staking should scale up the amount, so the pool always guarantees fair entry
 
 $$
-\displaylines{underlyingAmount_{t0} = n \\
-totalSupply_{t0} = n \\
-exchangeRate_{t0} = {underlyingAmount_{t0} \over totalSupply_{t0}} = 1 \\
-slashAmount = 0.3*n \\
-\Downarrow \\
-underlyingAmount_{t1} = n - slash \\
-totalSupply_{t1} = n \\
-exchangeRate_{t1} = {underlyingAmount_{t0} \over totalSupply_{t0}} = {n - slash \over n}}
+stkAmount_{t1} = {amount * exchangeRate_{t0} \over 1e18}
 $$
 
-### Stake after slashing
+### Redeeming
 
-- staking after a slashing should not penalize people entering the pool and therefore scale up the staked amount
-
-$$
-stkAmount_{t0} = {amount_{t0} * exchangeRate_{t0} \over 1e18}
-$$
-
-### Redeem after slashing
-
-- the redeemable amount should be scaled down by the correct exchange factor
+- the redeemable amount should be scaled down, so the pool always guarantees fair exit
 
 $$
-amount_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}
+amount_{t1} = {amount * 1e18 \over exchangeRate_{t0}}
 $$
+
+### Governance (only stkAAVE)
+
+- The total power (of one type) of all users in the system is less or equal than the sum of balances of all stkAAVE holders (total staked): $$\sum powerOfAccount_i <= \sum balanceOf(account_i)$$
+
+- The governance voting and proposition power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`: $$power_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}$$
+
+- If an account is not receiving delegation of power (one type) from anybody, and that account is not delegating that power to anybody, the power of that account must be equal to its proportional AAVE balance.
 
 ## Airdrops
 
-The stkToken will only consider tokens staked via `stake` and injected via `returnFunds` for the exchangeRate. Tokens accidentally `airdropped` to the staking contract will not be mutualized and can in theory be rescued by governance.
+- The stkToken will only consider tokens staked via `stake` and injected via `returnFunds` for the exchangeRate. Tokens accidentally `airdropped` to the staking contract via transfer will not be mutualized and can in theory be rescued by governance.
 
-### Governance
-
-The governance voting and proposition power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`.
-
-$$
-power_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}
-$$
-
-### Changed events
+## Changed events
 
 - `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616 standard
