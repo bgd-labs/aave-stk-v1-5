@@ -449,9 +449,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
 
     uint256 sharesToMint = previewStake(amount);
-    _mint(to, sharesToMint);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
+
+    _mint(to, sharesToMint);
 
     emit Staked(from, to, amount, sharesToMint);
   }
