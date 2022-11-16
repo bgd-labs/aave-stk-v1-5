@@ -13,10 +13,9 @@ Together with all the standard ERC20 functionalities, the current implementation
 
 - entering and exiting the safety module
 - management & accounting for safety module rewards
-- management & accounting of voting and proposition power
+- management & accounting of voting and proposition power (only is the case of stkAAVE)
 
 With the new iteration the StakedTokenV3 adds enhanced mechanics for slashing in the case of shortfall events.
-
 In the case of StakedAaveV3 it also adds a hook for managing GHO discounts.
 
 The new iteration will update the revision of:
@@ -49,14 +48,14 @@ The new iteration will update the revision of:
 - after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount
 
 $$
-underlyingAmount_{t0} = n \\
+\displaylines{underlyingAmount_{t0} = n \\
 totalSupply_{t0} = n \\
 exchangeRate_{t0} = {underlyingAmount_{t0} \over totalSupply_{t0}} = 1 \\
 slashAmount = 0.3*n \\
 \Downarrow \\
 underlyingAmount_{t1} = n - slash \\
 totalSupply_{t1} = n \\
-exchangeRate_{t1} = {underlyingAmount_{t0} \over totalSupply_{t0}} = {n - slash \over n}
+exchangeRate_{t1} = {underlyingAmount_{t0} \over totalSupply_{t0}} = {n - slash \over n}}
 $$
 
 ### Stake after slashing
@@ -81,10 +80,10 @@ The stkToken will only consider tokens staked via `stake` and injected via `retu
 
 ### Governance
 
-The governance power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`.
+The governance voting and proposition power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`.
 
 $$
-power_{t0} = {stkAmount_{t0} * exchangeRate_{t0}}
+power_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}
 $$
 
 ### Changed events
