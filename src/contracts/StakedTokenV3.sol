@@ -432,12 +432,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
-    uint256 balanceOfUser = balanceOf(to);
+    uint256 balanceOfTo = balanceOf(to);
 
     uint256 accruedRewards = _updateUserAssetInternal(
       to,
       address(this),
-      balanceOfUser,
+      balanceOfTo,
       totalSupply()
     );
 
@@ -446,12 +446,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       stakerRewardsToClaim[to] = stakerRewardsToClaim[to] + accruedRewards;
     }
 
-    stakersCooldowns[to] = getNextCooldownTimestamp(
-      0,
-      amount,
-      to,
-      balanceOfUser
-    );
+    stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
 
     uint256 sharesToMint = previewStake(amount);
     _mint(to, sharesToMint);
