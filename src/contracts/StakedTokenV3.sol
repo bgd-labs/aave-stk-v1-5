@@ -442,8 +442,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     );
 
     if (accruedRewards != 0) {
-      emit RewardsAccrued(to, accruedRewards);
       stakerRewardsToClaim[to] = stakerRewardsToClaim[to] + accruedRewards;
+      emit RewardsAccrued(to, accruedRewards);
     }
 
     stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
