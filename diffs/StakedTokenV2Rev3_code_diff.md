@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..77a97c1 100644
+index 83f9691..59753a3 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,115 +1,26 @@
@@ -1405,7 +1405,53 @@ index 83f9691..77a97c1 100644
      require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
  
      uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1526,8 +1640,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1425,21 +1539,29 @@ abstract contract GovernancePowerDelegationERC20 is
+       return balanceOf(user);
+     }
+ 
+-    // First check most recent balance
+-    if (snapshots[user][snapshotsCount - 1].blockNumber <= blockNumber) {
+-      return snapshots[user][snapshotsCount - 1].value;
+-    }
+-
+-    // Next check implicit zero balance
++    // Check implicit zero balance
+     if (snapshots[user][0].blockNumber > blockNumber) {
+       return 0;
+     }
+ 
++    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
++  }
++
++  function _binarySearch(
++    mapping(uint256 => Snapshot) storage snapshots,
++    uint256 snapshotsCount,
++    uint256 blockNumber
++  ) internal view returns (uint256) {
++    // First check most recent balance
++    if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
++      return snapshots[snapshotsCount - 1].value;
++    }
++
+     uint256 lower = 0;
+     uint256 upper = snapshotsCount - 1;
+     while (upper > lower) {
+       uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+-      Snapshot memory snapshot = snapshots[user][center];
++      Snapshot memory snapshot = snapshots[center];
+       if (snapshot.blockNumber == blockNumber) {
+         return snapshot.value;
+       } else if (snapshot.blockNumber < blockNumber) {
+@@ -1448,7 +1570,7 @@ abstract contract GovernancePowerDelegationERC20 is
+         upper = center - 1;
+       }
+     }
+-    return snapshots[user][lower].value;
++    return snapshots[lower].value;
+   }
+ 
+   /**
+@@ -1526,8 +1648,6 @@ abstract contract GovernancePowerDelegationERC20 is
  abstract contract GovernancePowerWithSnapshot is
    GovernancePowerDelegationERC20
  {
@@ -1414,7 +1460,7 @@ index 83f9691..77a97c1 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1540,11 +1652,47 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1540,11 +1660,68 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1439,7 +1485,7 @@ index 83f9691..77a97c1 100644
 +  ) external;
 +}
 +
-+interface IStakedToken {
++interface IStakedTokenV2 {
 +  /**
 +   * @dev Allows staking a specified amount of STAKED_TOKEN
 +   * @param to The address to receiving the shares
@@ -1462,17 +1508,38 @@ index 83f9691..77a97c1 100644
 +   * @param amount Amount to stake
 +   **/
 +  function claimRewards(address to, uint256 amount) external;
++
++  /**
++   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
++   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
++   *  - Weighted average of from/to cooldown timestamps if:
++   *    # The sender doesn't have the cooldown activated (timestamp 0).
++   *    # The sender timestamp is expired
++   *    # The sender has a "worse" timestamp
++   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
++   * @param fromCooldownTimestamp Cooldown timestamp of the sender
++   * @param amountToReceive Amount
++   * @param toAddress Address of the recipient
++   * @param toBalance Current balance of the receiver
++   * @return The new cooldown timestamp
++   **/
++  function getNextCooldownTimestamp(
++    uint256 fromCooldownTimestamp,
++    uint256 amountToReceive,
++    address toAddress,
++    uint256 toBalance
++  ) external view returns (uint256);
  }
  
  /**
-@@ -1552,21 +1700,20 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1552,21 +1729,20 @@ abstract contract GovernancePowerWithSnapshot is
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
   * @author Aave
   **/
 -contract StakedTokenV2Rev3 is
 -  IStakedAave,
 +abstract contract StakedTokenV2 is
-+  IStakedToken,
++  IStakedTokenV2,
    GovernancePowerWithSnapshot,
    VersionedInitializable,
    AaveDistributionManager
@@ -1492,7 +1559,7 @@ index 83f9691..77a97c1 100644
  
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,33 +1767,21 @@ contract StakedTokenV2Rev3 is
+@@ -1620,121 +1796,22 @@ contract StakedTokenV2Rev3 is
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1521,46 +1588,69 @@ index 83f9691..77a97c1 100644
 -    ERC20._setupDecimals(decimals);
    }
  
-   /**
-    * @dev Called by the proxy contract
-    **/
+-  /**
+-   * @dev Called by the proxy contract
+-   **/
 -  function initialize() external initializer {
-+  function initialize() external virtual initializer {
-     uint256 chainId;
+-    uint256 chainId;
++  /// @inheritdoc IStakedTokenV2
++  function stake(address onBehalfOf, uint256 amount) external virtual override;
  
-     //solium-disable-next-line
-@@ -1663,13 +1798,9 @@ contract StakedTokenV2Rev3 is
-         address(this)
-       )
-     );
+-    //solium-disable-next-line
+-    assembly {
+-      chainId := chainid()
+-    }
+-
+-    DOMAIN_SEPARATOR = keccak256(
+-      abi.encode(
+-        EIP712_DOMAIN,
+-        keccak256(bytes(name())),
+-        keccak256(EIP712_REVISION),
+-        chainId,
+-        address(this)
+-      )
+-    );
 -
 -    // Update lastUpdateTimestamp of stkAave to reward users since the end of the prior staking period
 -    AssetData storage assetData = assets[address(this)];
 -    assetData.lastUpdateTimestamp = 1620594720;
-   }
- 
+-  }
+-
 -  function stake(address onBehalfOf, uint256 amount) external override {
-+  function stake(address onBehalfOf, uint256 amount) external virtual override {
-     require(amount != 0, 'INVALID_ZERO_AMOUNT');
-     uint256 balanceOfUser = balanceOf(onBehalfOf);
- 
-@@ -1681,9 +1812,9 @@ contract StakedTokenV2Rev3 is
-     );
-     if (accruedRewards != 0) {
-       emit RewardsAccrued(onBehalfOf, accruedRewards);
+-    require(amount != 0, 'INVALID_ZERO_AMOUNT');
+-    uint256 balanceOfUser = balanceOf(onBehalfOf);
+-
+-    uint256 accruedRewards = _updateUserAssetInternal(
+-      onBehalfOf,
+-      address(this),
+-      balanceOfUser,
+-      totalSupply()
+-    );
+-    if (accruedRewards != 0) {
+-      emit RewardsAccrued(onBehalfOf, accruedRewards);
 -      stakerRewardsToClaim[onBehalfOf] = stakerRewardsToClaim[onBehalfOf].add(
 -        accruedRewards
 -      );
-+      stakerRewardsToClaim[onBehalfOf] =
-+        stakerRewardsToClaim[onBehalfOf] +
-+        accruedRewards;
-     }
- 
-     stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
-@@ -1704,37 +1835,7 @@ contract StakedTokenV2Rev3 is
-    * @param to Address to redeem to
-    * @param amount Amount to redeem
-    **/
+-    }
+-
+-    stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(
+-      0,
+-      amount,
+-      onBehalfOf,
+-      balanceOfUser
+-    );
+-
+-    _mint(onBehalfOf, amount);
+-    IERC20(STAKED_TOKEN).safeTransferFrom(msg.sender, address(this), amount);
+-
+-    emit Staked(msg.sender, onBehalfOf, amount);
+-  }
+-
+-  /**
+-   * @dev Redeems staked tokens, and stop earning rewards
+-   * @param to Address to redeem to
+-   * @param amount Amount to redeem
+-   **/
 -  function redeem(address to, uint256 amount) external override {
 -    require(amount != 0, 'INVALID_ZERO_AMOUNT');
 -    //solium-disable-next-line
@@ -1592,32 +1682,45 @@ index 83f9691..77a97c1 100644
 -
 -    emit Redeem(msg.sender, to, amountToRedeem);
 -  }
++  /// @inheritdoc IStakedTokenV2
 +  function redeem(address to, uint256 amount) external virtual override;
  
    /**
     * @dev Activates the cooldown period to unstake
-@@ -1753,7 +1854,7 @@ contract StakedTokenV2Rev3 is
-    * @param to Address to stake for
-    * @param amount Amount to stake
-    **/
--  function claimRewards(address to, uint256 amount) external override {
-+  function claimRewards(address to, uint256 amount) external virtual override {
-     uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
-       msg.sender,
-       balanceOf(msg.sender),
-@@ -1763,10 +1864,7 @@ contract StakedTokenV2Rev3 is
-       ? newTotalRewards
-       : amount;
+@@ -1748,30 +1825,8 @@ contract StakedTokenV2Rev3 is
+     emit Cooldown(msg.sender);
+   }
  
+-  /**
+-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
+-   * @param to Address to stake for
+-   * @param amount Amount to stake
+-   **/
+-  function claimRewards(address to, uint256 amount) external override {
+-    uint256 newTotalRewards = _updateCurrentUnclaimedRewards(
+-      msg.sender,
+-      balanceOf(msg.sender),
+-      false
+-    );
+-    uint256 amountToClaim = (amount == type(uint256).max)
+-      ? newTotalRewards
+-      : amount;
+-
 -    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(
 -      amountToClaim,
 -      'INVALID_AMOUNT'
 -    );
-+    stakerRewardsToClaim[msg.sender] = newTotalRewards - amountToClaim;
+-
+-    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
+-
+-    emit RewardsClaimed(msg.sender, to, amountToClaim);
+-  }
++  /// @inheritdoc IStakedTokenV2
++  function claimRewards(address to, uint256 amount) external virtual override;
  
-     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
- 
-@@ -1827,7 +1925,7 @@ contract StakedTokenV2Rev3 is
+   /**
+    * @dev Internal ERC20 _transfer of the tokenized staked tokens
+@@ -1827,7 +1882,7 @@ contract StakedTokenV2Rev3 is
        userBalance,
        totalSupply()
      );
@@ -1626,7 +1729,27 @@ index 83f9691..77a97c1 100644
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1858,37 +1956,7 @@ contract StakedTokenV2Rev3 is
+@@ -1839,56 +1894,13 @@ contract StakedTokenV2Rev3 is
+     return unclaimedRewards;
+   }
+ 
+-  /**
+-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
+-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
+-   *  - Weighted average of from/to cooldown timestamps if:
+-   *    # The sender doesn't have the cooldown activated (timestamp 0).
+-   *    # The sender timestamp is expired
+-   *    # The sender has a "worse" timestamp
+-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
+-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
+-   * @param amountToReceive Amount
+-   * @param toAddress Address of the recipient
+-   * @param toBalance Current balance of the receiver
+-   * @return The new cooldown timestamp
+-   **/
++  /// @inheritdoc IStakedTokenV2
+   function getNextCooldownTimestamp(
+     uint256 fromCooldownTimestamp,
      uint256 amountToReceive,
      address toAddress,
      uint256 toBalance
@@ -1665,7 +1788,7 @@ index 83f9691..77a97c1 100644
  
    /**
     * @dev Return the total rewards pending to claim by an staker
-@@ -1908,17 +1976,16 @@ contract StakedTokenV2Rev3 is
+@@ -1908,17 +1920,16 @@ contract StakedTokenV2Rev3 is
        totalStaked: totalSupply()
      });
      return
@@ -1687,7 +1810,7 @@ index 83f9691..77a97c1 100644
    }
  
    /**
-@@ -1963,7 +2030,7 @@ contract StakedTokenV2Rev3 is
+@@ -1963,7 +1974,7 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -1696,7 +1819,7 @@ index 83f9691..77a97c1 100644
      _approve(owner, spender, value);
    }
  
-@@ -1980,7 +2047,7 @@ contract StakedTokenV2Rev3 is
+@@ -1980,7 +1991,7 @@ contract StakedTokenV2Rev3 is
      address from,
      address to,
      uint256 amount
@@ -1705,7 +1828,7 @@ index 83f9691..77a97c1 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,12 +2081,6 @@ contract StakedTokenV2Rev3 is
+@@ -2014,12 +2025,6 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );
@@ -1718,12 +1841,12 @@ index 83f9691..77a97c1 100644
    }
  
    function _getDelegationDataByType(DelegationType delegationType)
-@@ -2112,3 +2173,992 @@ contract StakedTokenV2Rev3 is
+@@ -2112,3 +2117,932 @@ contract StakedTokenV2Rev3 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
 +
-+interface IStakedTokenV3 is IStakedToken {
++interface IStakedTokenV3 is IStakedTokenV2 {
 +  event Staked(
 +    address indexed from,
 +    address indexed to,
@@ -1755,9 +1878,10 @@ index 83f9691..77a97c1 100644
 +   * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
 +   * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
 +   * As long as the slashing event is ongoing, stake and slash are deactivated.
++   * - MUST NOT be called when a spevious slashing is still ongoing
 +   * @param destination the address where seized funds will be transferred
 +   * @param amount the amount to be slashed
-+   * If the amount bigger than maximum allowed, the maximum will be slashed instead.
++   * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
 +   * @return amount the amount slashed
 +   **/
 +  function slash(address destination, uint256 amount)
@@ -2128,14 +2252,6 @@ index 83f9691..77a97c1 100644
 +  }
 +
 +  /**
-+   * @dev Inherited from StakedTokenV2, deprecated
-+   * Overwrite `initialize` from `StakedTokenV2` so it can no longer be used to initialize
-+   **/
-+  function initialize() external override {
-+    revert('DEPRECATED');
-+  }
-+
-+  /**
 +   * @dev Called by the proxy contract
 +   **/
 +  function initialize(
@@ -2145,11 +2261,6 @@ index 83f9691..77a97c1 100644
 +    uint256 maxSlashablePercentage,
 +    uint256 cooldownSeconds
 +  ) external initializer {
-+    require(
-+      maxSlashablePercentage <= PercentageMath.PERCENTAGE_FACTOR,
-+      'INVALID_SLASHING_PERCENTAGE'
-+    );
-+
 +    InitAdmin[] memory initAdmins = new InitAdmin[](3);
 +    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
 +    initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
@@ -2170,10 +2281,10 @@ index 83f9691..77a97c1 100644
 +    return (assets * _currentExchangeRate) / TOKEN_UNIT;
 +  }
 +
-+  /// @inheritdoc IStakedToken
++  /// @inheritdoc IStakedTokenV2
 +  function stake(address to, uint256 amount)
 +    external
-+    override(IStakedToken, StakedTokenV2)
++    override(IStakedTokenV2, StakedTokenV2)
 +  {
 +    _stake(msg.sender, to, amount);
 +  }
@@ -2200,10 +2311,10 @@ index 83f9691..77a97c1 100644
 +    _stake(from, to, amount);
 +  }
 +
-+  /// @inheritdoc IStakedToken
++  /// @inheritdoc IStakedTokenV2
 +  function redeem(address to, uint256 amount)
 +    external
-+    override(IStakedToken, StakedTokenV2)
++    override(IStakedTokenV2, StakedTokenV2)
 +  {
 +    _redeem(msg.sender, to, amount);
 +  }
@@ -2217,10 +2328,10 @@ index 83f9691..77a97c1 100644
 +    _redeem(from, to, amount);
 +  }
 +
-+  /// @inheritdoc IStakedToken
++  /// @inheritdoc IStakedTokenV2
 +  function claimRewards(address to, uint256 amount)
 +    external
-+    override(IStakedToken, StakedTokenV2)
++    override(IStakedTokenV2, StakedTokenV2)
 +  {
 +    _claimRewards(msg.sender, to, amount);
 +  }
@@ -2325,7 +2436,7 @@ index 83f9691..77a97c1 100644
 +  }
 +
 +  /// @inheritdoc IStakedTokenV3
-+  function settleSlashing() external override {
++  function settleSlashing() external override onlySlashingAdmin {
 +    inPostSlashingPeriod = false;
 +    emit SlashingSettled();
 +  }
@@ -2362,6 +2473,44 @@ index 83f9691..77a97c1 100644
 +    return _cooldownSeconds;
 +  }
 +
++  /// @inheritdoc IStakedTokenV2
++  function getNextCooldownTimestamp(
++    uint256 fromCooldownTimestamp,
++    uint256 amountToReceive,
++    address toAddress,
++    uint256 toBalance
++  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
++    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
++    if (toCooldownTimestamp == 0) {
++      return 0;
++    }
++
++    uint256 minimalValidCooldownTimestamp = block.timestamp -
++      _cooldownSeconds -
++      UNSTAKE_WINDOW;
++
++    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
++      toCooldownTimestamp = 0;
++    } else {
++      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
++        fromCooldownTimestamp)
++        ? block.timestamp
++        : fromCooldownTimestamp;
++
++      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
++        return toCooldownTimestamp;
++      } else {
++        toCooldownTimestamp =
++          ((amountToReceive * adjustedFromCooldownTimestamp) +
++            (toBalance * toCooldownTimestamp)) /
++          (amountToReceive + toBalance);
++      }
++    }
++    return toCooldownTimestamp;
++  }
++
++  /// @dev sets the max slashable percentage
++  /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
 +  function _setMaxSlashablePercentage(uint256 percentage) internal {
 +    require(
 +      percentage < PercentageMath.PERCENTAGE_FACTOR,
@@ -2428,85 +2577,32 @@ index 83f9691..77a97c1 100644
 +    address to,
 +    uint256 amount
 +  ) internal {
-+    require(inPostSlashingPeriod != true, 'SLASHING_ONGOING');
++    require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
 +    require(amount != 0, 'INVALID_ZERO_AMOUNT');
 +
-+    uint256 balanceOfUser = balanceOf(to);
++    uint256 balanceOfTo = balanceOf(to);
 +
 +    uint256 accruedRewards = _updateUserAssetInternal(
 +      to,
 +      address(this),
-+      balanceOfUser,
++      balanceOfTo,
 +      totalSupply()
 +    );
 +
 +    if (accruedRewards != 0) {
-+      emit RewardsAccrued(to, accruedRewards);
 +      stakerRewardsToClaim[to] = stakerRewardsToClaim[to] + accruedRewards;
++      emit RewardsAccrued(to, accruedRewards);
 +    }
 +
-+    stakersCooldowns[to] = getNextCooldownTimestamp(
-+      0,
-+      amount,
-+      to,
-+      balanceOfUser
-+    );
++    stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
 +
 +    uint256 sharesToMint = previewStake(amount);
-+    _mint(to, sharesToMint);
 +
 +    STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
 +
++    _mint(to, sharesToMint);
++
 +    emit Staked(from, to, amount, sharesToMint);
-+  }
-+
-+  /**
-+   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-+   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-+   *  - Weighted average of from/to cooldown timestamps if:
-+   *    # The sender doesn't have the cooldown activated (timestamp 0).
-+   *    # The sender timestamp is expired
-+   *    # The sender has a "worse" timestamp
-+   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-+   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-+   * @param amountToReceive Amount
-+   * @param toAddress Address of the recipient
-+   * @param toBalance Current balance of the receiver
-+   * @return The new cooldown timestamp
-+   **/
-+  function getNextCooldownTimestamp(
-+    uint256 fromCooldownTimestamp,
-+    uint256 amountToReceive,
-+    address toAddress,
-+    uint256 toBalance
-+  ) public view override returns (uint256) {
-+    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-+    if (toCooldownTimestamp == 0) {
-+      return 0;
-+    }
-+
-+    uint256 minimalValidCooldownTimestamp = block.timestamp -
-+      _cooldownSeconds -
-+      UNSTAKE_WINDOW;
-+
-+    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-+      toCooldownTimestamp = 0;
-+    } else {
-+      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
-+        fromCooldownTimestamp)
-+        ? block.timestamp
-+        : fromCooldownTimestamp;
-+
-+      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
-+        return toCooldownTimestamp;
-+      } else {
-+        toCooldownTimestamp =
-+          ((amountToReceive * adjustedFromCooldownTimestamp) +
-+            (toBalance * toCooldownTimestamp)) /
-+          (amountToReceive + toBalance);
-+      }
-+    }
-+    return toCooldownTimestamp;
 +  }
 +
 +  /**
@@ -2584,44 +2680,6 @@ index 83f9691..77a97c1 100644
 +    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
 +  }
 +
-+  /**
-+   * @dev searches a snapshot by block number. Uses binary search.
-+   * @param blockNumber the block number being searched
-+   * @return exchangeRate at block number
-+   */
-+  function _searchExchangeRateByBlockNumber(uint256 blockNumber)
-+    internal
-+    view
-+    returns (uint256)
-+  {
-+    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
-+    uint256 snapshotsCount = _exchangeRateSnapshotsCount;
-+
-+    if (snapshotsCount == 0) {
-+      return INITIAL_EXCHANGE_RATE;
-+    }
-+
-+    // First check most recent balance
-+    if (_exchangeRateSnapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-+      return _exchangeRateSnapshots[snapshotsCount - 1].value;
-+    }
-+
-+    uint256 lower = 0;
-+    uint256 upper = snapshotsCount - 1;
-+    while (upper > lower) {
-+      uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-+      Snapshot memory snapshot = _exchangeRateSnapshots[center];
-+      if (snapshot.blockNumber == blockNumber) {
-+        return snapshot.value;
-+      } else if (snapshot.blockNumber < blockNumber) {
-+        lower = center;
-+      } else {
-+        upper = center - 1;
-+      }
-+    }
-+    return _exchangeRateSnapshots[lower].value;
-+  }
-+
 +  /// @dev Modified version accounting for exchange rate at block
 +  /// @inheritdoc GovernancePowerDelegationERC20
 +  function _searchByBlockNumber(
@@ -2636,7 +2694,12 @@ index 83f9691..77a97c1 100644
 +        snapshotsCounts,
 +        user,
 +        blockNumber
-+      ) * TOKEN_UNIT) / _searchExchangeRateByBlockNumber(blockNumber);
++      ) * TOKEN_UNIT) /
++      _binarySearch(
++        _exchangeRateSnapshots,
++        _exchangeRateSnapshotsCount,
++        blockNumber
++      );
 +  }
 +}
 +

@@ -35,9 +35,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
    * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
    * As long as the slashing event is ongoing, stake and slash are deactivated.
+   * - MUST NOT be called when a spevious slashing is still ongoing
    * @param destination the address where seized funds will be transferred
    * @param amount the amount to be slashed
-   * If the amount bigger than maximum allowed, the maximum will be slashed instead.
+   * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
    **/
   function slash(address destination, uint256 amount)
