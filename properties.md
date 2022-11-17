@@ -30,7 +30,7 @@ The new iteration also updates:
 
 - solidity to version `0.8` and therefore removes `SafeMath`
 - open zeppelin contracts to latest 0.8 compatible versions resulting in deprecation of `_decimals` on `ERC20`
-- the `_governance` transfer hook, as it was never used
+- the `_governance` storage slot has been deprecated, as the transfer hook utilizing it has never been used
 
 ## Glossary
 
