@@ -38,9 +38,13 @@ $_{t1}$: the state of the system after a transaction.
 
 **total staked:** the amount of underlying staked into the `stkToken` (ignoring airdrops)
 
-**slashing** transfers specified amount of `Token` to the destination (altering the exchangeRate in favour of the pool)
+**staking:** entering the pool
 
-**returnFunds** injects amount of `Token` into the pool (altering the exchangeRate in favour of participants)
+**redeeming:** leaving the pool
+
+**slashing:** transfers specified amount of `Token` to the destination (altering the exchangeRate in favour of the pool)
+
+**returnFunds:** injects amount of `Token` into the pool (altering the exchangeRate in favour of participants)
 
 ## General rules
 
