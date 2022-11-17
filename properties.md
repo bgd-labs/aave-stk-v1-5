@@ -26,6 +26,12 @@ The new iteration will update the revision of:
 - stkABPT from `2` to `3` via [StakedTokenV3.sol](./src/contracts/StakedTokenV3.sol) contract
 - stkAAVE from `3` to `4` via [StakedAaveV3.sol](./src/contracts/StakedAaveV3.sol) contract
 
+The new iteration also updates:
+
+- solidity to version `0.8` and therefore removes `SafeMath`
+- open zeppelin contracts to latest 0.8 compatible versions resulting in deprecation of `_decimals` on `ERC20`
+- the `_governance` transfer hook, as it was never used
+
 ## Glossary
 
 $_{t0}$: the state of the system before a transaction.

@@ -25,11 +25,26 @@ abstract contract Context {
   }
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
+
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
- * From https://github.com/OpenZeppelin/openzeppelin-contracts
  */
 interface IERC20 {
+  /**
+   * @dev Emitted when `value` tokens are moved from one account (`from`) to
+   * another (`to`).
+   *
+   * Note that `value` may be zero.
+   */
+  event Transfer(address indexed from, address indexed to, uint256 value);
+
+  /**
+   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+   * a call to {approve}. `value` is the new allowance.
+   */
+  event Approval(address indexed owner, address indexed spender, uint256 value);
+
   /**
    * @dev Returns the amount of tokens in existence.
    */
@@ -41,13 +56,13 @@ interface IERC20 {
   function balanceOf(address account) external view returns (uint256);
 
   /**
-   * @dev Moves `amount` tokens from the caller's account to `recipient`.
+   * @dev Moves `amount` tokens from the caller's account to `to`.
    *
    * Returns a boolean value indicating whether the operation succeeded.
    *
    * Emits a {Transfer} event.
    */
-  function transfer(address recipient, uint256 amount) external returns (bool);
+  function transfer(address to, uint256 amount) external returns (bool);
 
   /**
    * @dev Returns the remaining number of tokens that `spender` will be
@@ -78,7 +93,7 @@ interface IERC20 {
   function approve(address spender, uint256 amount) external returns (bool);
 
   /**
-   * @dev Moves `amount` tokens from `sender` to `recipient` using the
+   * @dev Moves `amount` tokens from `from` to `to` using the
    * allowance mechanism. `amount` is then deducted from the caller's
    * allowance.
    *
@@ -87,27 +102,13 @@ interface IERC20 {
    * Emits a {Transfer} event.
    */
   function transferFrom(
-    address sender,
-    address recipient,
+    address from,
+    address to,
     uint256 amount
   ) external returns (bool);
-
-  /**
-   * @dev Emitted when `value` tokens are moved from one account (`from`) to
-   * another (`to`).
-   *
-   * Note that `value` may be zero.
-   */
-  event Transfer(address indexed from, address indexed to, uint256 value);
-
-  /**
-   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-   * a call to {approve}. `value` is the new allowance.
-   */
-  event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 
@@ -141,7 +142,7 @@ interface IERC20Metadata is IERC20 {
  * For a generic mechanism see {ERC20PresetMinterPauser}.
  *
  * TIP: For a detailed writeup see our guide
- * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
+ * https://forum.openzeppelin.com/t/how-to-implement-erc20-supply-mechanisms/226[How
  * to implement supply mechanisms].
  *
  * We have followed general OpenZeppelin Contracts guidelines: functions revert
@@ -170,7 +171,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   uint8 private _decimals; // @deprecated
 
   /**
-   * @dev Altered constructor as name and symbol are already initialized.
    * @dev Sets the values for {name} and {symbol}.
    *
    * The default value of {decimals} is 18. To select a different value for
@@ -395,8 +395,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     require(fromBalance >= amount, 'ERC20: transfer amount exceeds balance');
     unchecked {
       _balances[from] = fromBalance - amount;
+      // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
+      // decrementing then incrementing.
+      _balances[to] += amount;
     }
-    _balances[to] += amount;
 
     emit Transfer(from, to, amount);
 
@@ -418,7 +420,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     _beforeTokenTransfer(address(0), account, amount);
 
     _totalSupply += amount;
-    _balances[account] += amount;
+    unchecked {
+      // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
+      _balances[account] += amount;
+    }
     emit Transfer(address(0), account, amount);
 
     _afterTokenTransfer(address(0), account, amount);
@@ -444,8 +449,9 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     require(accountBalance >= amount, 'ERC20: burn amount exceeds balance');
     unchecked {
       _balances[account] = accountBalance - amount;
+      // Overflow not possible: amount <= accountBalance <= totalSupply.
+      _totalSupply -= amount;
     }
-    _totalSupply -= amount;
 
     emit Transfer(account, address(0), amount);
 
@@ -562,11 +568,10 @@ library DistributionTypes {
   }
 }
 
-// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
+// OpenZeppelin Contracts (last updated v4.8.0) (utils/Address.sol)
 
 /**
  * @dev Collection of functions related to the address type
- * From https://github.com/OpenZeppelin/openzeppelin-contracts
  */
 library Address {
   /**
@@ -612,7 +617,7 @@ library Address {
    * imposed by `transfer`, making them unable to receive funds via
    * `transfer`. {sendValue} removes this limitation.
    *
-   * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+   * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].
    *
    * IMPORTANT: because control is transferred to `recipient`, care must be
    * taken to not create reentrancy vulnerabilities. Consider using
@@ -651,7 +656,8 @@ library Address {
     internal
     returns (bytes memory)
   {
-    return functionCall(target, data, 'Address: low-level call failed');
+    return
+      functionCallWithValue(target, data, 0, 'Address: low-level call failed');
   }
 
   /**
@@ -709,10 +715,9 @@ library Address {
       address(this).balance >= value,
       'Address: insufficient balance for call'
     );
-    require(isContract(target), 'Address: call to non-contract');
-
     (bool success, bytes memory returndata) = target.call{value: value}(data);
-    return verifyCallResult(success, returndata, errorMessage);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
   }
 
   /**
@@ -741,10 +746,9 @@ library Address {
     bytes memory data,
     string memory errorMessage
   ) internal view returns (bytes memory) {
-    require(isContract(target), 'Address: static call to non-contract');
-
     (bool success, bytes memory returndata) = target.staticcall(data);
-    return verifyCallResult(success, returndata, errorMessage);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
   }
 
   /**
@@ -776,15 +780,38 @@ library Address {
     bytes memory data,
     string memory errorMessage
   ) internal returns (bytes memory) {
-    require(isContract(target), 'Address: delegate call to non-contract');
-
     (bool success, bytes memory returndata) = target.delegatecall(data);
-    return verifyCallResult(success, returndata, errorMessage);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
   }
 
   /**
-   * @dev Tool to verifies that a low level call was successful, and revert if it wasn't, either by bubbling the
-   * revert reason using the provided one.
+   * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling
+   * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.
+   *
+   * _Available since v4.8._
+   */
+  function verifyCallResultFromTarget(
+    address target,
+    bool success,
+    bytes memory returndata,
+    string memory errorMessage
+  ) internal view returns (bytes memory) {
+    if (success) {
+      if (returndata.length == 0) {
+        // only check isContract if the call was successful and the return data is empty
+        // otherwise we already know that it was a contract
+        require(isContract(target), 'Address: call to non-contract');
+      }
+      return returndata;
+    } else {
+      _revert(returndata, errorMessage);
+    }
+  }
+
+  /**
+   * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the
+   * revert reason or using the provided one.
    *
    * _Available since v4.3._
    */
@@ -796,17 +823,24 @@ library Address {
     if (success) {
       return returndata;
     } else {
-      // Look for revert reason and bubble it up if present
-      if (returndata.length > 0) {
-        // The easiest way to bubble the revert reason is using memory via assembly
+      _revert(returndata, errorMessage);
+    }
+  }
 
-        assembly {
-          let returndata_size := mload(returndata)
-          revert(add(32, returndata), returndata_size)
-        }
-      } else {
-        revert(errorMessage);
+  function _revert(bytes memory returndata, string memory errorMessage)
+    private
+    pure
+  {
+    // Look for revert reason and bubble it up if present
+    if (returndata.length > 0) {
+      // The easiest way to bubble the revert reason is using memory via assembly
+      /// @solidity memory-safe-assembly
+      assembly {
+        let returndata_size := mload(returndata)
+        revert(add(32, returndata), returndata_size)
       }
+    } else {
+      revert(errorMessage);
     }
   }
 }
