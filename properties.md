@@ -73,7 +73,7 @@ This design was chosen opposed to a dynamic exchangeRate based on underlying as 
 
 - after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount: $$exchangeRate_{t1}={totalStaked_{t0} - amount \over totalSupply_{t0}}$$
 
-- a slashing is ongoing until it is settled by the slashing admin. As long as the slashing is ongoing:
+- a slashing even will set `inPostSlashingPeriod` to `true`. The post slashing period lasts until it is settled by the slashing admin. For the post lashing period the following rules apply:
   - accounts can exit the pool immediately without a cooldown period.
   - no account can enter the pool.
   - no other slashing can occur.
