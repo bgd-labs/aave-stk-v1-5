@@ -41,9 +41,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 internal _cooldownSeconds;
   /// @notice The maximum amount of funds that can be slashed at any given time
   uint256 internal _maxSlashablePercentage;
-  /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint120 internal _exchangeRateSnapshotsCount;
   /// @notice Mirror of latest snapshot value for cheaper access
   uint128 internal _currentExchangeRate;
   /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
@@ -507,12 +504,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal {
-    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
-      uint128(block.number),
-      newExchangeRate
-    );
-    ++_exchangeRateSnapshotsCount;
+  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }
@@ -530,27 +522,5 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     returns (uint128)
   {
     return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
-  }
-
-  /// @dev Modified version accounting for exchange rate at block
-  /// @inheritdoc GovernancePowerDelegationERC20
-  function _searchByBlockNumber(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address user,
-    uint256 blockNumber
-  ) internal view override returns (uint256) {
-    return
-      (super._searchByBlockNumber(
-        snapshots,
-        snapshotsCounts,
-        user,
-        blockNumber
-      ) * TOKEN_UNIT) /
-      _binarySearch(
-        _exchangeRateSnapshots,
-        _exchangeRateSnapshotsCount,
-        blockNumber
-      );
   }
 }
