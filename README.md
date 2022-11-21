@@ -10,7 +10,7 @@ While being in post lashing period, no other slashing can be performed. While ac
 
 The community can then use (parts of) the funds for recovery. Once the recovery is finished potentially remaining funds should be returned to the pool and mutualized by the remaining stakers.
 
-Once the slashing is officially settled settled, accounts can reenter the pool and a new slashing can occur.
+Once the slashing is officially settled, accounts can reenter the pool and a new slashing can occur.
 
 The `StakedAaveV3` extends on top of `StakedTokenV3` , by adding hooks for managing the GHO discounts via a transferHook.
 
