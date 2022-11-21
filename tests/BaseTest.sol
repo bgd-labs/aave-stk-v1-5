@@ -71,7 +71,7 @@ contract BaseTest is Test {
       stake = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
     }
     STAKE_CONTRACT = StakedTokenV3(stake);
-    address stkImpl = _deployImplementation(true);
+    address stkImpl = _deployImplementation(stkAAVE);
     vm.startPrank(admin);
     IInitializableAdminUpgradeabilityProxy stkProxy = IInitializableAdminUpgradeabilityProxy(
         address(STAKE_CONTRACT)
