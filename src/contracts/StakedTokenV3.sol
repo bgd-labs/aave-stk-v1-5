@@ -109,7 +109,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address claimHelper,
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
-  ) public virtual initializer {
+  ) external virtual initializer {
     _initialize(
       slashingAdmin,
       cooldownPauseAdmin,
