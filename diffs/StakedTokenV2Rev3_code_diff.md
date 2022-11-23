@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..b4a600a 100644
+index 83f9691..5879951 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,50 @@
@@ -1918,7 +1918,7 @@ index 83f9691..b4a600a 100644
    }
  
    /**
-@@ -1963,7 +2008,7 @@ contract StakedTokenV2Rev3 is
+@@ -1963,10 +2008,1021 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -1927,32 +1927,96 @@ index 83f9691..b4a600a 100644
      _approve(owner, spender, value);
    }
  
-@@ -1980,7 +2025,7 @@ contract StakedTokenV2Rev3 is
-     address from,
-     address to,
-     uint256 amount
--  ) internal override {
-+  ) internal virtual override {
-     address votingFromDelegatee = _votingDelegates[from];
-     address votingToDelegatee = _votingDelegates[to];
- 
-@@ -2014,12 +2059,6 @@ contract StakedTokenV2Rev3 is
-       amount,
-       DelegationType.PROPOSITION_POWER
-     );
--
--    // caching the aave governance address to avoid multiple state loads
--    ITransferHook aaveGovernance = _aaveGovernance;
--    if (aaveGovernance != ITransferHook(0)) {
--      aaveGovernance.onTransfer(from, to, amount);
--    }
-   }
- 
-   function _getDelegationDataByType(DelegationType delegationType)
-@@ -2112,3 +2151,932 @@ contract StakedTokenV2Rev3 is
-     _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
-   }
- }
++  function _getDelegationDataByType(DelegationType delegationType)
++    internal
++    view
++    override
++    returns (
++      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
++      mapping(address => uint256) storage, //snapshots count
++      mapping(address => address) storage //delegatees list
++    )
++  {
++    if (delegationType == DelegationType.VOTING_POWER) {
++      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
++    } else {
++      return (
++        _propositionPowerSnapshots,
++        _propositionPowerSnapshotsCounts,
++        _propositionPowerDelegates
++      );
++    }
++  }
++
++  /**
++   * @dev Delegates power from signatory to `delegatee`
++   * @param delegatee The address to delegate votes to
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   * @param nonce The contract state required to match the signature
++   * @param expiry The time at which to expire the signature
++   * @param v The recovery byte of the signature
++   * @param r Half of the ECDSA signature pair
++   * @param s Half of the ECDSA signature pair
++   */
++  function delegateByTypeBySig(
++    address delegatee,
++    DelegationType delegationType,
++    uint256 nonce,
++    uint256 expiry,
++    uint8 v,
++    bytes32 r,
++    bytes32 s
++  ) public {
++    bytes32 structHash = keccak256(
++      abi.encode(
++        DELEGATE_BY_TYPE_TYPEHASH,
++        delegatee,
++        uint256(delegationType),
++        nonce,
++        expiry
++      )
++    );
++    bytes32 digest = keccak256(
++      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
++    );
++    address signatory = ecrecover(digest, v, r, s);
++    require(signatory != address(0), 'INVALID_SIGNATURE');
++    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
++    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
++    _delegateByType(signatory, delegatee, delegationType);
++  }
++
++  /**
++   * @dev Delegates power from signatory to `delegatee`
++   * @param delegatee The address to delegate votes to
++   * @param nonce The contract state required to match the signature
++   * @param expiry The time at which to expire the signature
++   * @param v The recovery byte of the signature
++   * @param r Half of the ECDSA signature pair
++   * @param s Half of the ECDSA signature pair
++   */
++  function delegateBySig(
++    address delegatee,
++    uint256 nonce,
++    uint256 expiry,
++    uint8 v,
++    bytes32 r,
++    bytes32 s
++  ) public {
++    bytes32 structHash = keccak256(
++      abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry)
++    );
++    bytes32 digest = keccak256(
++      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
++    );
++    address signatory = ecrecover(digest, v, r, s);
++    require(signatory != address(0), 'INVALID_SIGNATURE');
++    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
++    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
++    _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
++    _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
++  }
++}
 +
 +interface IStakedTokenV3 is IStakedTokenV2 {
 +  event Staked(
@@ -2297,9 +2361,6 @@ index 83f9691..b4a600a 100644
 +  uint256 internal _cooldownSeconds;
 +  /// @notice The maximum amount of funds that can be slashed at any given time
 +  uint256 internal _maxSlashablePercentage;
-+  /// @notice Snapshots of the exchangeRate for a given block
-+  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-+  uint120 internal _exchangeRateSnapshotsCount;
 +  /// @notice Mirror of latest snapshot value for cheaper access
 +  uint128 internal _currentExchangeRate;
 +  /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
@@ -2368,7 +2429,23 @@ index 83f9691..b4a600a 100644
 +    address claimHelper,
 +    uint256 maxSlashablePercentage,
 +    uint256 cooldownSeconds
-+  ) external initializer {
++  ) external virtual initializer {
++    _initialize(
++      slashingAdmin,
++      cooldownPauseAdmin,
++      claimHelper,
++      maxSlashablePercentage,
++      cooldownSeconds
++    );
++  }
++
++  function _initialize(
++    address slashingAdmin,
++    address cooldownPauseAdmin,
++    address claimHelper,
++    uint256 maxSlashablePercentage,
++    uint256 cooldownSeconds
++  ) internal {
 +    InitAdmin[] memory initAdmins = new InitAdmin[](3);
 +    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
 +    initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
@@ -2379,9 +2456,6 @@ index 83f9691..b4a600a 100644
 +    _setMaxSlashablePercentage(maxSlashablePercentage);
 +    _setCooldownSeconds(cooldownSeconds);
 +    _updateExchangeRate(INITIAL_EXCHANGE_RATE);
-+
-+    // needed to claimRewardsAndStake works without a custom approval each time
-+    STAKED_TOKEN.approve(address(this), type(uint256).max);
 +  }
 +
 +  /// @inheritdoc IStakedTokenV3
@@ -2763,12 +2837,7 @@ index 83f9691..b4a600a 100644
 +   * @dev Updates the exchangeRate and emits events accordingly
 +   * @param newExchangeRate the new exchange rate
 +   */
-+  function _updateExchangeRate(uint128 newExchangeRate) internal {
-+    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
-+      uint128(block.number),
-+      newExchangeRate
-+    );
-+    ++_exchangeRateSnapshotsCount;
++  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
 +    _currentExchangeRate = newExchangeRate;
 +    emit ExchangeRateChanged(newExchangeRate);
 +  }
@@ -2786,28 +2855,6 @@ index 83f9691..b4a600a 100644
 +    returns (uint128)
 +  {
 +    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
-+  }
-+
-+  /// @dev Modified version accounting for exchange rate at block
-+  /// @inheritdoc GovernancePowerDelegationERC20
-+  function _searchByBlockNumber(
-+    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-+    mapping(address => uint256) storage snapshotsCounts,
-+    address user,
-+    uint256 blockNumber
-+  ) internal view override returns (uint256) {
-+    return
-+      (super._searchByBlockNumber(
-+        snapshots,
-+        snapshotsCounts,
-+        user,
-+        blockNumber
-+      ) * TOKEN_UNIT) /
-+      _binarySearch(
-+        _exchangeRateSnapshots,
-+        _exchangeRateSnapshotsCount,
-+        blockNumber
-+      );
 +  }
 +}
 +
@@ -2839,6 +2886,10 @@ index 83f9691..b4a600a 100644
 +  // GHO
 +  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 +
++  /// @notice Snapshots of the exchangeRate for a given block
++  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
++  uint120 internal _exchangeRateSnapshotsCount;
++
 +  function REVISION() public pure virtual override returns (uint256) {
 +    return 4;
 +  }
@@ -2865,13 +2916,35 @@ index 83f9691..b4a600a 100644
 +    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
 +  }
 +
-+  /// @dev Modified version including GHO hook
-+  /// @inheritdoc StakedTokenV2
-+  function _beforeTokenTransfer(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) internal override {
++  /**
++   * @dev Called by the proxy contract
++   **/
++  function initialize(
++    address slashingAdmin,
++    address cooldownPauseAdmin,
++    address claimHelper,
++    uint256 maxSlashablePercentage,
++    uint256 cooldownSeconds
++  ) external override initializer {
++    _initialize(
++      slashingAdmin,
++      cooldownPauseAdmin,
++      claimHelper,
++      maxSlashablePercentage,
++      cooldownSeconds
++    );
++
++    // needed to claimRewardsAndStake works without a custom approval each time
++    STAKED_TOKEN.approve(address(this), type(uint256).max);
++  }
++
+   /**
+    * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
+    * - On _transfer, it writes snapshots for both "from" and "to"
+@@ -1981,6 +3037,13 @@ contract StakedTokenV2Rev3 is
+     address to,
+     uint256 amount
+   ) internal override {
 +    GHO_DEBT_TOKEN.updateDiscountDistribution(
 +      from,
 +      to,
@@ -2879,7 +2952,136 @@ index 83f9691..b4a600a 100644
 +      balanceOf(to),
 +      amount
 +    );
-+    super._beforeTokenTransfer(from, to, amount);
-+  }
-+}
+     address votingFromDelegatee = _votingDelegates[from];
+     address votingToDelegatee = _votingDelegates[to];
+ 
+@@ -2014,101 +3077,40 @@ contract StakedTokenV2Rev3 is
+       amount,
+       DelegationType.PROPOSITION_POWER
+     );
+-
+-    // caching the aave governance address to avoid multiple state loads
+-    ITransferHook aaveGovernance = _aaveGovernance;
+-    if (aaveGovernance != ITransferHook(0)) {
+-      aaveGovernance.onTransfer(from, to, amount);
+-    }
+   }
+ 
+-  function _getDelegationDataByType(DelegationType delegationType)
+-    internal
+-    view
+-    override
+-    returns (
+-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+-      mapping(address => uint256) storage, //snapshots count
+-      mapping(address => address) storage //delegatees list
+-    )
+-  {
+-    if (delegationType == DelegationType.VOTING_POWER) {
+-      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
+-    } else {
+-      return (
+-        _propositionPowerSnapshots,
+-        _propositionPowerSnapshotsCounts,
+-        _propositionPowerDelegates
++  /// @dev Modified version accounting for exchange rate at block
++  /// @inheritdoc GovernancePowerDelegationERC20
++  function _searchByBlockNumber(
++    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++    mapping(address => uint256) storage snapshotsCounts,
++    address user,
++    uint256 blockNumber
++  ) internal view override returns (uint256) {
++    return
++      (super._searchByBlockNumber(
++        snapshots,
++        snapshotsCounts,
++        user,
++        blockNumber
++      ) * TOKEN_UNIT) /
++      _binarySearch(
++        _exchangeRateSnapshots,
++        _exchangeRateSnapshotsCount,
++        blockNumber
+       );
+-    }
+   }
+ 
+   /**
+-   * @dev Delegates power from signatory to `delegatee`
+-   * @param delegatee The address to delegate votes to
+-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+-   * @param nonce The contract state required to match the signature
+-   * @param expiry The time at which to expire the signature
+-   * @param v The recovery byte of the signature
+-   * @param r Half of the ECDSA signature pair
+-   * @param s Half of the ECDSA signature pair
++   * @dev Updates the exchangeRate and emits events accordingly
++   * @param newExchangeRate the new exchange rate
+    */
+-  function delegateByTypeBySig(
+-    address delegatee,
+-    DelegationType delegationType,
+-    uint256 nonce,
+-    uint256 expiry,
+-    uint8 v,
+-    bytes32 r,
+-    bytes32 s
+-  ) public {
+-    bytes32 structHash = keccak256(
+-      abi.encode(
+-        DELEGATE_BY_TYPE_TYPEHASH,
+-        delegatee,
+-        uint256(delegationType),
+-        nonce,
+-        expiry
+-      )
++  function _updateExchangeRate(uint128 newExchangeRate) internal override {
++    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
++      uint128(block.number),
++      newExchangeRate
+     );
+-    bytes32 digest = keccak256(
+-      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
+-    );
+-    address signatory = ecrecover(digest, v, r, s);
+-    require(signatory != address(0), 'INVALID_SIGNATURE');
+-    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
+-    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
+-    _delegateByType(signatory, delegatee, delegationType);
+-  }
+-
+-  /**
+-   * @dev Delegates power from signatory to `delegatee`
+-   * @param delegatee The address to delegate votes to
+-   * @param nonce The contract state required to match the signature
+-   * @param expiry The time at which to expire the signature
+-   * @param v The recovery byte of the signature
+-   * @param r Half of the ECDSA signature pair
+-   * @param s Half of the ECDSA signature pair
+-   */
+-  function delegateBySig(
+-    address delegatee,
+-    uint256 nonce,
+-    uint256 expiry,
+-    uint8 v,
+-    bytes32 r,
+-    bytes32 s
+-  ) public {
+-    bytes32 structHash = keccak256(
+-      abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry)
+-    );
+-    bytes32 digest = keccak256(
+-      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
+-    );
+-    address signatory = ecrecover(digest, v, r, s);
+-    require(signatory != address(0), 'INVALID_SIGNATURE');
+-    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
+-    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
+-    _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
+-    _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
++    ++_exchangeRateSnapshotsCount;
++    super._updateExchangeRate(newExchangeRate);
+   }
+ }
 ```
