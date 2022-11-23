@@ -67,17 +67,14 @@ contract StakedAaveV3 is StakedTokenV3 {
     address claimHelper,
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
-  ) external override initializer {
-    InitAdmin[] memory initAdmins = new InitAdmin[](3);
-    initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
-    initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
-    initAdmins[2] = InitAdmin(CLAIM_HELPER_ROLE, claimHelper);
-
-    _initAdmins(initAdmins);
-
-    _setMaxSlashablePercentage(maxSlashablePercentage);
-    _setCooldownSeconds(cooldownSeconds);
-    _updateExchangeRate(INITIAL_EXCHANGE_RATE);
+  ) public override {
+    super.initialize(
+      slashingAdmin,
+      cooldownPauseAdmin,
+      claimHelper,
+      maxSlashablePercentage,
+      cooldownSeconds
+    );
 
     // needed to claimRewardsAndStake works without a custom approval each time
     STAKED_TOKEN.approve(address(this), type(uint256).max);
