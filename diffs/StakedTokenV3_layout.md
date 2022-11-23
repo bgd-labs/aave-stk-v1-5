@@ -24,7 +24,5 @@
 | _pendingAdmins                   | mapping(uint256 => address)                                                            | 70   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
 | _cooldownSeconds                 | uint256                                                                                | 71   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
 | _maxSlashablePercentage          | uint256                                                                                | 72   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _exchangeRateSnapshots           | mapping(uint256 => struct GovernancePowerDelegationERC20.Snapshot)                     | 73   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _exchangeRateSnapshotsCount      | uint120                                                                                | 74   | 0      | 15    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _currentExchangeRate             | uint128                                                                                | 74   | 15     | 16    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| inPostSlashingPeriod             | bool                                                                                   | 74   | 31     | 1     | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| _currentExchangeRate             | uint128                                                                                | 73   | 0      | 16    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| inPostSlashingPeriod             | bool                                                                                   | 73   | 16     | 1     | src/contracts/StakedTokenV3.sol:StakedTokenV3 |

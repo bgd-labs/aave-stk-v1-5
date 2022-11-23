@@ -2012,55 +2012,6 @@ abstract contract StakedTokenV2 is
     _approve(owner, spender, value);
   }
 
-  /**
-   * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
-   * - On _transfer, it writes snapshots for both "from" and "to"
-   * - On _mint, only for _to
-   * - On _burn, only for _from
-   * @param from the from address
-   * @param to the to address
-   * @param amount the amount to transfer
-   */
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal virtual override {
-    address votingFromDelegatee = _votingDelegates[from];
-    address votingToDelegatee = _votingDelegates[to];
-
-    if (votingFromDelegatee == address(0)) {
-      votingFromDelegatee = from;
-    }
-    if (votingToDelegatee == address(0)) {
-      votingToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      votingFromDelegatee,
-      votingToDelegatee,
-      amount,
-      DelegationType.VOTING_POWER
-    );
-
-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-    address propPowerToDelegatee = _propositionPowerDelegates[to];
-
-    if (propPowerFromDelegatee == address(0)) {
-      propPowerFromDelegatee = from;
-    }
-    if (propPowerToDelegatee == address(0)) {
-      propPowerToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      propPowerFromDelegatee,
-      propPowerToDelegatee,
-      amount,
-      DelegationType.PROPOSITION_POWER
-    );
-  }
-
   function _getDelegationDataByType(DelegationType delegationType)
     internal
     view
@@ -2495,9 +2446,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 internal _cooldownSeconds;
   /// @notice The maximum amount of funds that can be slashed at any given time
   uint256 internal _maxSlashablePercentage;
-  /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint120 internal _exchangeRateSnapshotsCount;
   /// @notice Mirror of latest snapshot value for cheaper access
   uint128 internal _currentExchangeRate;
   /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
@@ -2566,7 +2514,23 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     address claimHelper,
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
-  ) external initializer {
+  ) external virtual initializer {
+    _initialize(
+      slashingAdmin,
+      cooldownPauseAdmin,
+      claimHelper,
+      maxSlashablePercentage,
+      cooldownSeconds
+    );
+  }
+
+  function _initialize(
+    address slashingAdmin,
+    address cooldownPauseAdmin,
+    address claimHelper,
+    uint256 maxSlashablePercentage,
+    uint256 cooldownSeconds
+  ) internal {
     InitAdmin[] memory initAdmins = new InitAdmin[](3);
     initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
     initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
@@ -2577,9 +2541,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
-
-    // needed to claimRewardsAndStake works without a custom approval each time
-    STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -2961,12 +2922,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal {
-    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
-      uint128(block.number),
-      newExchangeRate
-    );
-    ++_exchangeRateSnapshotsCount;
+  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }
@@ -2984,28 +2940,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     returns (uint128)
   {
     return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
-  }
-
-  /// @dev Modified version accounting for exchange rate at block
-  /// @inheritdoc GovernancePowerDelegationERC20
-  function _searchByBlockNumber(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address user,
-    uint256 blockNumber
-  ) internal view override returns (uint256) {
-    return
-      (super._searchByBlockNumber(
-        snapshots,
-        snapshotsCounts,
-        user,
-        blockNumber
-      ) * TOKEN_UNIT) /
-      _binarySearch(
-        _exchangeRateSnapshots,
-        _exchangeRateSnapshotsCount,
-        blockNumber
-      );
   }
 }
 
@@ -3037,6 +2971,10 @@ contract StakedAaveV3 is StakedTokenV3 {
   // GHO
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
+  /// @notice Snapshots of the exchangeRate for a given block
+  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
+  uint120 internal _exchangeRateSnapshotsCount;
+
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
   }
@@ -3063,8 +3001,37 @@ contract StakedAaveV3 is StakedTokenV3 {
     GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
   }
 
-  /// @dev Modified version including GHO hook
-  /// @inheritdoc StakedTokenV2
+  /**
+   * @dev Called by the proxy contract
+   **/
+  function initialize(
+    address slashingAdmin,
+    address cooldownPauseAdmin,
+    address claimHelper,
+    uint256 maxSlashablePercentage,
+    uint256 cooldownSeconds
+  ) external override initializer {
+    _initialize(
+      slashingAdmin,
+      cooldownPauseAdmin,
+      claimHelper,
+      maxSlashablePercentage,
+      cooldownSeconds
+    );
+
+    // needed to claimRewardsAndStake works without a custom approval each time
+    STAKED_TOKEN.approve(address(this), type(uint256).max);
+  }
+
+  /**
+   * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
+   * - On _transfer, it writes snapshots for both "from" and "to"
+   * - On _mint, only for _to
+   * - On _burn, only for _from
+   * @param from the from address
+   * @param to the to address
+   * @param amount the amount to transfer
+   */
   function _beforeTokenTransfer(
     address from,
     address to,
@@ -3077,6 +3044,73 @@ contract StakedAaveV3 is StakedTokenV3 {
       balanceOf(to),
       amount
     );
-    super._beforeTokenTransfer(from, to, amount);
+    address votingFromDelegatee = _votingDelegates[from];
+    address votingToDelegatee = _votingDelegates[to];
+
+    if (votingFromDelegatee == address(0)) {
+      votingFromDelegatee = from;
+    }
+    if (votingToDelegatee == address(0)) {
+      votingToDelegatee = to;
+    }
+
+    _moveDelegatesByType(
+      votingFromDelegatee,
+      votingToDelegatee,
+      amount,
+      DelegationType.VOTING_POWER
+    );
+
+    address propPowerFromDelegatee = _propositionPowerDelegates[from];
+    address propPowerToDelegatee = _propositionPowerDelegates[to];
+
+    if (propPowerFromDelegatee == address(0)) {
+      propPowerFromDelegatee = from;
+    }
+    if (propPowerToDelegatee == address(0)) {
+      propPowerToDelegatee = to;
+    }
+
+    _moveDelegatesByType(
+      propPowerFromDelegatee,
+      propPowerToDelegatee,
+      amount,
+      DelegationType.PROPOSITION_POWER
+    );
+  }
+
+  /// @dev Modified version accounting for exchange rate at block
+  /// @inheritdoc GovernancePowerDelegationERC20
+  function _searchByBlockNumber(
+    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+    mapping(address => uint256) storage snapshotsCounts,
+    address user,
+    uint256 blockNumber
+  ) internal view override returns (uint256) {
+    return
+      (super._searchByBlockNumber(
+        snapshots,
+        snapshotsCounts,
+        user,
+        blockNumber
+      ) * TOKEN_UNIT) /
+      _binarySearch(
+        _exchangeRateSnapshots,
+        _exchangeRateSnapshotsCount,
+        blockNumber
+      );
+  }
+
+  /**
+   * @dev Updates the exchangeRate and emits events accordingly
+   * @param newExchangeRate the new exchange rate
+   */
+  function _updateExchangeRate(uint128 newExchangeRate) internal override {
+    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
+      uint128(block.number),
+      newExchangeRate
+    );
+    ++_exchangeRateSnapshotsCount;
+    super._updateExchangeRate(newExchangeRate);
   }
 }
