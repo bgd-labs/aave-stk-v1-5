@@ -67,8 +67,8 @@ contract StakedAaveV3 is StakedTokenV3 {
     address claimHelper,
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
-  ) public override {
-    super.initialize(
+  ) public override initializer {
+    _initialize(
       slashingAdmin,
       cooldownPauseAdmin,
       claimHelper,
