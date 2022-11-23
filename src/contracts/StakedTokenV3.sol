@@ -110,6 +110,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
   ) external virtual initializer {
+    _initialize(
+      slashingAdmin,
+      cooldownPauseAdmin,
+      claimHelper,
+      maxSlashablePercentage,
+      cooldownSeconds
+    );
+  }
+
+  function _initialize(
+    address slashingAdmin,
+    address cooldownPauseAdmin,
+    address claimHelper,
+    uint256 maxSlashablePercentage,
+    uint256 cooldownSeconds
+  ) internal {
     InitAdmin[] memory initAdmins = new InitAdmin[](3);
     initAdmins[0] = InitAdmin(SLASH_ADMIN_ROLE, slashingAdmin);
     initAdmins[1] = InitAdmin(COOLDOWN_ADMIN_ROLE, cooldownPauseAdmin);
