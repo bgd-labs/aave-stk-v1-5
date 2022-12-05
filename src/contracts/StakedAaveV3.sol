@@ -25,7 +25,7 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
  * @author Aave
  **/
 contract StakedAaveV3 is StakedTokenV3 {
-  // GHO
+  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
   /// @notice Snapshots of the exchangeRate for a given block
@@ -88,7 +88,7 @@ contract StakedAaveV3 is StakedTokenV3 {
    * @param from the from address
    * @param to the to address
    * @param amount the amount to transfer
-   */
+   **/
   function _beforeTokenTransfer(
     address from,
     address to,
@@ -161,7 +161,7 @@ contract StakedAaveV3 is StakedTokenV3 {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   */
+   **/
   function _updateExchangeRate(uint128 newExchangeRate) internal override {
     _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
       uint128(block.number),

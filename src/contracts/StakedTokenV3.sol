@@ -95,7 +95,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   */
+   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -383,6 +383,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit MaxSlashablePercentageChanged(percentage);
   }
 
+  /// @dev sets the cooldown seconds
+  /// @param cooldownSeconds the new amount of cooldown seconds
   function _setCooldownSeconds(uint256 cooldownSeconds) internal {
     _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
@@ -516,7 +518,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   */
+   **/
   function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
@@ -528,7 +530,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
-   */
+   **/
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure

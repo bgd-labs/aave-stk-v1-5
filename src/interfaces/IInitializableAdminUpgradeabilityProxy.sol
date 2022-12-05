@@ -8,7 +8,9 @@ interface IInitializableAdminUpgradeabilityProxy {
     external
     payable;
 
+  function implementation() external returns (address);
+
   function admin() external returns (address);
 
-  function implementation() external returns (address);
+  function changeAdmin(address newAdmin) external;
 }

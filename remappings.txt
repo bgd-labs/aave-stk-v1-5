@@ -1,0 +1,4 @@
+forge-std/=lib/forge-std/src/
+aave-address-book/=lib/aave-address-book/src/
+aave-helpers/=lib/aave-helpers/src/
+openzeppelin-contracts/=lib/openzeppelin-contracts/

@@ -102,10 +102,7 @@ abstract contract StakedTokenV2 is
   /// @inheritdoc IStakedTokenV2
   function redeem(address to, uint256 amount) external virtual override;
 
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   **/
+  /// @inheritdoc IStakedTokenV2
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
     //solium-disable-next-line
@@ -195,7 +192,7 @@ abstract contract StakedTokenV2 is
    * @dev Return the total rewards pending to claim by an staker
    * @param staker The staker address
    * @return The rewards
-   */
+   **/
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -216,7 +213,7 @@ abstract contract StakedTokenV2 is
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   */
+   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -230,8 +227,7 @@ abstract contract StakedTokenV2 is
    * @param v signature param
    * @param s signature param
    * @param r signature param
-   */
-
+   **/
   function permit(
     address owner,
     address spender,
@@ -297,7 +293,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   */
+   **/
   function delegateByTypeBySig(
     address delegatee,
     DelegationType delegationType,
@@ -334,7 +330,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   */
+   **/
   function delegateBySig(
     address delegatee,
     uint256 nonce,

@@ -16,6 +16,10 @@ interface IStakedTokenV2 {
    **/
   function redeem(address to, uint256 amount) external;
 
+  /**
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
+   **/
   function cooldown() external;
 
   /**
