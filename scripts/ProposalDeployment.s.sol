@@ -7,42 +7,31 @@ import {AaveGovernanceV2, IExecutorWithTimelock} from 'aave-address-book/AaveGov
 
 library DeployL1Proposal {
   function _deployL1Proposal(
-    address polygonPayload,
-    address optimismPayload,
+    address payload,
+    address executor,
     bytes32 ipfsHash
   ) internal returns (uint256 proposalId) {
-    require(
-      polygonPayload != address(0),
-      "ERROR: L2_PAYLOAD can't be address(0)"
-    );
-    require(
-      optimismPayload != address(0),
-      "ERROR: L2_PAYLOAD can't be address(0)"
-    );
+    require(payload != address(0), "ERROR: payload can't be address(0)");
+    require(executor != address(0), "ERROR: executor can't be address(0)");
     require(ipfsHash != bytes32(0), "ERROR: IPFS_HASH can't be bytes32(0)");
-    address[] memory targets = new address[](2);
-    targets[0] = AaveGovernanceV2.CROSSCHAIN_FORWARDER_POLYGON;
-    targets[1] = AaveGovernanceV2.CROSSCHAIN_FORWARDER_OPTIMISM;
+    address[] memory targets = new address[](1);
+    targets[0] = payload;
 
-    uint256[] memory values = new uint256[](2);
+    uint256[] memory values = new uint256[](1);
     values[0] = 0;
-    values[1] = 0;
 
-    string[] memory signatures = new string[](2);
-    signatures[0] = 'execute(address)';
-    signatures[1] = 'execute(address)';
+    string[] memory signatures = new string[](1);
+    signatures[0] = 'execute()';
 
-    bytes[] memory calldatas = new bytes[](2);
-    calldatas[0] = abi.encode(polygonPayload);
-    calldatas[1] = abi.encode(optimismPayload);
+    bytes[] memory calldatas = new bytes[](1);
+    calldatas[0] = '';
 
-    bool[] memory withDelegatecalls = new bool[](2);
+    bool[] memory withDelegatecalls = new bool[](1);
     withDelegatecalls[0] = true;
-    withDelegatecalls[1] = true;
 
     return
       AaveGovernanceV2.GOV.create(
-        IExecutorWithTimelock(AaveGovernanceV2.SHORT_EXECUTOR),
+        IExecutorWithTimelock(executor),
         targets,
         values,
         signatures,

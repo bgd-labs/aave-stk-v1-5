@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
 import {GovHelpers, IAaveGovernanceV2} from 'aave-helpers/GovHelpers.sol';
-import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 import {BaseTest} from './BaseTest.sol';
