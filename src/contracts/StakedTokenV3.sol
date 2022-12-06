@@ -88,6 +88,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     )
   {}
 
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
   function REVISION() public pure virtual override returns (uint256) {
     return 3;
   }
@@ -371,8 +375,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return toCooldownTimestamp;
   }
 
-  /// @dev sets the max slashable percentage
-  /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+  /**
+   * @dev sets the max slashable percentage
+   * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+   */
   function _setMaxSlashablePercentage(uint256 percentage) internal {
     require(
       percentage < PercentageMath.PERCENTAGE_FACTOR,
@@ -383,13 +389,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit MaxSlashablePercentageChanged(percentage);
   }
 
-  /// @dev sets the cooldown seconds
-  /// @param cooldownSeconds the new amount of cooldown seconds
+  /**
+   * @dev sets the cooldown seconds
+   * @param cooldownSeconds the new amount of cooldown seconds
+   */
   function _setCooldownSeconds(uint256 cooldownSeconds) internal {
     _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
+  /**
+   * @dev claims the rewards for a specified address to a specified address
+   * @param from The address of the from from which to claim
+   * @param to Address to receive the rewards
+   * @param amount Amount to claim
+   * @return amount claimed
+   */
   function _claimRewards(
     address from,
     address to,
@@ -412,6 +427,13 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return amountToClaim;
   }
 
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @param from The address of the from from which to claim
+   * @param to Address to stake to
+   * @param amount Amount to claim
+   * @return amount claimed
+   */
   function _claimRewardsAndStakeOnBehalf(
     address from,
     address to,
@@ -436,6 +458,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return amountToClaim;
   }
 
+  /**
+   * @dev Allows staking a specified amount of STAKED_TOKEN
+   * @param to The address to receiving the shares
+   * @param amount The amount of assets to be staked
+   */
   function _stake(
     address from,
     address to,

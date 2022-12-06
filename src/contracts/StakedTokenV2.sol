@@ -72,14 +72,12 @@ abstract contract StakedTokenV2 is
     uint256 amount
   );
   event Redeem(address indexed from, address indexed to, uint256 amount);
-
   event RewardsAccrued(address user, uint256 amount);
   event RewardsClaimed(
     address indexed from,
     address indexed to,
     uint256 amount
   );
-
   event Cooldown(address indexed user);
 
   constructor(
@@ -114,72 +112,6 @@ abstract contract StakedTokenV2 is
   /// @inheritdoc IStakedTokenV2
   function claimRewards(address to, uint256 amount) external virtual override;
 
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   */
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
-    // Sender
-    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
-
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
-
-      uint256 previousSenderCooldown = stakersCooldowns[from];
-      stakersCooldowns[to] = getNextCooldownTimestamp(
-        previousSenderCooldown,
-        amount,
-        to,
-        balanceOfTo
-      );
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        stakersCooldowns[from] = 0;
-      }
-    }
-
-    super._transfer(from, to, amount);
-  }
-
-  /**
-   * @dev Updates the user state related with his accrued rewards
-   * @param user Address of the user
-   * @param userBalance The current balance of the user
-   * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
-   * @return The unclaimed rewards that were added to the total accrued
-   */
-  function _updateCurrentUnclaimedRewards(
-    address user,
-    uint256 userBalance,
-    bool updateStorage
-  ) internal returns (uint256) {
-    uint256 accruedRewards = _updateUserAssetInternal(
-      user,
-      address(this),
-      userBalance,
-      totalSupply()
-    );
-    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
-
-    if (accruedRewards != 0) {
-      if (updateStorage) {
-        stakerRewardsToClaim[user] = unclaimedRewards;
-      }
-      emit RewardsAccrued(user, accruedRewards);
-    }
-
-    return unclaimedRewards;
-  }
-
   /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
@@ -188,11 +120,7 @@ abstract contract StakedTokenV2 is
     uint256 toBalance
   ) public view virtual returns (uint256);
 
-  /**
-   * @dev Return the total rewards pending to claim by an staker
-   * @param staker The staker address
-   * @return The rewards
-   */
+  /// @inheritdoc IStakedTokenV2
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -263,27 +191,6 @@ abstract contract StakedTokenV2 is
     _approve(owner, spender, value);
   }
 
-  function _getDelegationDataByType(DelegationType delegationType)
-    internal
-    view
-    override
-    returns (
-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-      mapping(address => uint256) storage, //snapshots count
-      mapping(address => address) storage //delegatees list
-    )
-  {
-    if (delegationType == DelegationType.VOTING_POWER) {
-      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
-    } else {
-      return (
-        _propositionPowerSnapshots,
-        _propositionPowerSnapshotsCounts,
-        _propositionPowerDelegates
-      );
-    }
-  }
-
   /**
    * @dev Delegates power from signatory to `delegatee`
    * @param delegatee The address to delegate votes to
@@ -351,5 +258,97 @@ abstract contract StakedTokenV2 is
     require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
     _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
     _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
+  }
+
+  /**
+   * @dev Internal ERC20 _transfer of the tokenized staked tokens
+   * @param from Address to transfer from
+   * @param to Address to transfer to
+   * @param amount Amount to transfer
+   */
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
+    uint256 balanceOfFrom = balanceOf(from);
+    // Sender
+    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
+
+    // Recipient
+    if (from != to) {
+      uint256 balanceOfTo = balanceOf(to);
+      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
+
+      uint256 previousSenderCooldown = stakersCooldowns[from];
+      stakersCooldowns[to] = getNextCooldownTimestamp(
+        previousSenderCooldown,
+        amount,
+        to,
+        balanceOfTo
+      );
+      // if cooldown was set and whole balance of sender was transferred - clear cooldown
+      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
+        stakersCooldowns[from] = 0;
+      }
+    }
+
+    super._transfer(from, to, amount);
+  }
+
+  /**
+   * @dev Updates the user state related with his accrued rewards
+   * @param user Address of the user
+   * @param userBalance The current balance of the user
+   * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
+   * @return The unclaimed rewards that were added to the total accrued
+   */
+  function _updateCurrentUnclaimedRewards(
+    address user,
+    uint256 userBalance,
+    bool updateStorage
+  ) internal returns (uint256) {
+    uint256 accruedRewards = _updateUserAssetInternal(
+      user,
+      address(this),
+      userBalance,
+      totalSupply()
+    );
+    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
+
+    if (accruedRewards != 0) {
+      if (updateStorage) {
+        stakerRewardsToClaim[user] = unclaimedRewards;
+      }
+      emit RewardsAccrued(user, accruedRewards);
+    }
+
+    return unclaimedRewards;
+  }
+
+  /**
+   * @dev returns relevant storage slots for a DelegationType
+   * @param delegationType the requested DelegationType
+   * @return the relevant storage
+   */
+  function _getDelegationDataByType(DelegationType delegationType)
+    internal
+    view
+    override
+    returns (
+      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+      mapping(address => uint256) storage, //snapshots count
+      mapping(address => address) storage //delegatees list
+    )
+  {
+    if (delegationType == DelegationType.VOTING_POWER) {
+      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
+    } else {
+      return (
+        _propositionPowerSnapshots,
+        _propositionPowerSnapshotsCounts,
+        _propositionPowerDelegates
+      );
+    }
   }
 }

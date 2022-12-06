@@ -1717,27 +1717,27 @@ interface IStakedTokenV2 {
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares
    * @param amount The amount of assets to be staked
-   **/
+   */
   function stake(address to, uint256 amount) external;
 
   /**
    * @dev Redeems shares, and stop earning rewards
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
-   **/
+   */
   function redeem(address to, uint256 amount) external;
 
   /**
    * @dev Activates the cooldown period to unstake
    * - It can't be called if the user is not staking
-   **/
+   */
   function cooldown() external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
    * @param to Address to send the claimed rewards
    * @param amount Amount to stake
-   **/
+   */
   function claimRewards(address to, uint256 amount) external;
 
   /**
@@ -1753,13 +1753,23 @@ interface IStakedTokenV2 {
    * @param toAddress Address of the recipient
    * @param toBalance Current balance of the receiver
    * @return The new cooldown timestamp
-   **/
+   */
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
   ) external view returns (uint256);
+
+  /**
+   * @dev Return the total rewards pending to claim by an staker
+   * @param staker The staker address
+   * @return The rewards
+   */
+  function getTotalRewardsBalance(address staker)
+    external
+    view
+    returns (uint256);
 }
 
 /**
@@ -1821,14 +1831,12 @@ abstract contract StakedTokenV2 is
     uint256 amount
   );
   event Redeem(address indexed from, address indexed to, uint256 amount);
-
   event RewardsAccrued(address user, uint256 amount);
   event RewardsClaimed(
     address indexed from,
     address indexed to,
     uint256 amount
   );
-
   event Cooldown(address indexed user);
 
   constructor(
@@ -1863,72 +1871,6 @@ abstract contract StakedTokenV2 is
   /// @inheritdoc IStakedTokenV2
   function claimRewards(address to, uint256 amount) external virtual override;
 
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   */
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
-    // Sender
-    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
-
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
-
-      uint256 previousSenderCooldown = stakersCooldowns[from];
-      stakersCooldowns[to] = getNextCooldownTimestamp(
-        previousSenderCooldown,
-        amount,
-        to,
-        balanceOfTo
-      );
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        stakersCooldowns[from] = 0;
-      }
-    }
-
-    super._transfer(from, to, amount);
-  }
-
-  /**
-   * @dev Updates the user state related with his accrued rewards
-   * @param user Address of the user
-   * @param userBalance The current balance of the user
-   * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
-   * @return The unclaimed rewards that were added to the total accrued
-   */
-  function _updateCurrentUnclaimedRewards(
-    address user,
-    uint256 userBalance,
-    bool updateStorage
-  ) internal returns (uint256) {
-    uint256 accruedRewards = _updateUserAssetInternal(
-      user,
-      address(this),
-      userBalance,
-      totalSupply()
-    );
-    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
-
-    if (accruedRewards != 0) {
-      if (updateStorage) {
-        stakerRewardsToClaim[user] = unclaimedRewards;
-      }
-      emit RewardsAccrued(user, accruedRewards);
-    }
-
-    return unclaimedRewards;
-  }
-
   /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
@@ -1937,11 +1879,7 @@ abstract contract StakedTokenV2 is
     uint256 toBalance
   ) public view virtual returns (uint256);
 
-  /**
-   * @dev Return the total rewards pending to claim by an staker
-   * @param staker The staker address
-   * @return The rewards
-   */
+  /// @inheritdoc IStakedTokenV2
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -2012,27 +1950,6 @@ abstract contract StakedTokenV2 is
     _approve(owner, spender, value);
   }
 
-  function _getDelegationDataByType(DelegationType delegationType)
-    internal
-    view
-    override
-    returns (
-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-      mapping(address => uint256) storage, //snapshots count
-      mapping(address => address) storage //delegatees list
-    )
-  {
-    if (delegationType == DelegationType.VOTING_POWER) {
-      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
-    } else {
-      return (
-        _propositionPowerSnapshots,
-        _propositionPowerSnapshotsCounts,
-        _propositionPowerDelegates
-      );
-    }
-  }
-
   /**
    * @dev Delegates power from signatory to `delegatee`
    * @param delegatee The address to delegate votes to
@@ -2101,6 +2018,98 @@ abstract contract StakedTokenV2 is
     _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
     _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
   }
+
+  /**
+   * @dev Internal ERC20 _transfer of the tokenized staked tokens
+   * @param from Address to transfer from
+   * @param to Address to transfer to
+   * @param amount Amount to transfer
+   */
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
+    uint256 balanceOfFrom = balanceOf(from);
+    // Sender
+    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
+
+    // Recipient
+    if (from != to) {
+      uint256 balanceOfTo = balanceOf(to);
+      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
+
+      uint256 previousSenderCooldown = stakersCooldowns[from];
+      stakersCooldowns[to] = getNextCooldownTimestamp(
+        previousSenderCooldown,
+        amount,
+        to,
+        balanceOfTo
+      );
+      // if cooldown was set and whole balance of sender was transferred - clear cooldown
+      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
+        stakersCooldowns[from] = 0;
+      }
+    }
+
+    super._transfer(from, to, amount);
+  }
+
+  /**
+   * @dev Updates the user state related with his accrued rewards
+   * @param user Address of the user
+   * @param userBalance The current balance of the user
+   * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
+   * @return The unclaimed rewards that were added to the total accrued
+   */
+  function _updateCurrentUnclaimedRewards(
+    address user,
+    uint256 userBalance,
+    bool updateStorage
+  ) internal returns (uint256) {
+    uint256 accruedRewards = _updateUserAssetInternal(
+      user,
+      address(this),
+      userBalance,
+      totalSupply()
+    );
+    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
+
+    if (accruedRewards != 0) {
+      if (updateStorage) {
+        stakerRewardsToClaim[user] = unclaimedRewards;
+      }
+      emit RewardsAccrued(user, accruedRewards);
+    }
+
+    return unclaimedRewards;
+  }
+
+  /**
+   * @dev returns relevant storage slots for a DelegationType
+   * @param delegationType the requested DelegationType
+   * @return the relevant storage
+   */
+  function _getDelegationDataByType(DelegationType delegationType)
+    internal
+    view
+    override
+    returns (
+      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+      mapping(address => uint256) storage, //snapshots count
+      mapping(address => address) storage //delegatees list
+    )
+  {
+    if (delegationType == DelegationType.VOTING_POWER) {
+      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
+    } else {
+      return (
+        _propositionPowerSnapshots,
+        _propositionPowerSnapshotsCounts,
+        _propositionPowerDelegates
+      );
+    }
+  }
 }
 
 interface IStakedTokenV3 is IStakedTokenV2 {
@@ -2127,7 +2136,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev Returns the current exchange rate
    * @return exchangeRate as 18 decimal precision uint128
-   **/
+   */
   function getExchangeRate() external view returns (uint128);
 
   /**
@@ -2140,7 +2149,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param amount the amount to be slashed
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
-   **/
+   */
   function slash(address destination, uint256 amount)
     external
     returns (uint256);
@@ -2198,7 +2207,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param v The v component of the signed message
    * @param r The r component of the signed message
    * @param s The s component of the signed message
-   **/
+   */
   function stakeWithPermit(
     address from,
     address to,
@@ -2214,7 +2223,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from The address of the user from to claim
    * @param to Address to send the claimed rewards
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsOnBehalf(
     address from,
     address to,
@@ -2233,7 +2242,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from Address to redeem from
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
-   **/
+   */
   function redeemOnBehalf(
     address from,
     address to,
@@ -2244,7 +2253,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
    * @param to Address to stake to
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsAndStake(address to, uint256 amount)
     external
     returns (uint256);
@@ -2254,7 +2263,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    * @param to Address to claim and unstake to
-   **/
+   */
   function claimRewardsAndRedeem(
     address to,
     uint256 claimAmount,
@@ -2266,7 +2275,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsAndStakeOnBehalf(
     address from,
     address to,
@@ -2279,7 +2288,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to claim and unstake to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
-   **/
+   */
   function claimRewardsAndRedeemOnBehalf(
     address from,
     address to,
@@ -2493,6 +2502,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     )
   {}
 
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
   function REVISION() public pure virtual override returns (uint256) {
     return 3;
   }
@@ -2776,8 +2789,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return toCooldownTimestamp;
   }
 
-  /// @dev sets the max slashable percentage
-  /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+  /**
+   * @dev sets the max slashable percentage
+   * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+   */
   function _setMaxSlashablePercentage(uint256 percentage) internal {
     require(
       percentage < PercentageMath.PERCENTAGE_FACTOR,
@@ -2788,13 +2803,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit MaxSlashablePercentageChanged(percentage);
   }
 
-  /// @dev sets the cooldown seconds
-  /// @param cooldownSeconds the new amount of cooldown seconds
+  /**
+   * @dev sets the cooldown seconds
+   * @param cooldownSeconds the new amount of cooldown seconds
+   */
   function _setCooldownSeconds(uint256 cooldownSeconds) internal {
     _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
   }
 
+  /**
+   * @dev claims the rewards for a specified address to a specified address
+   * @param from The address of the from from which to claim
+   * @param to Address to receive the rewards
+   * @param amount Amount to claim
+   * @return amount claimed
+   */
   function _claimRewards(
     address from,
     address to,
@@ -2817,6 +2841,13 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return amountToClaim;
   }
 
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @param from The address of the from from which to claim
+   * @param to Address to stake to
+   * @param amount Amount to claim
+   * @return amount claimed
+   */
   function _claimRewardsAndStakeOnBehalf(
     address from,
     address to,
@@ -2841,6 +2872,11 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return amountToClaim;
   }
 
+  /**
+   * @dev Allows staking a specified amount of STAKED_TOKEN
+   * @param to The address to receiving the shares
+   * @param amount The amount of assets to be staked
+   */
   function _stake(
     address from,
     address to,

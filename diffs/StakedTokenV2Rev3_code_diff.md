@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..1776799 100644
+index 83f9691..f45081f 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,50 @@
@@ -1641,7 +1641,7 @@ index 83f9691..1776799 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1540,33 +1694,93 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1540,33 +1694,103 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1671,27 +1671,27 @@ index 83f9691..1776799 100644
 +   * @dev Allows staking a specified amount of STAKED_TOKEN
 +   * @param to The address to receiving the shares
 +   * @param amount The amount of assets to be staked
-+   **/
++   */
 +  function stake(address to, uint256 amount) external;
 +
 +  /**
 +   * @dev Redeems shares, and stop earning rewards
 +   * @param to Address to redeem to
 +   * @param amount Amount of shares to redeem
-+   **/
++   */
 +  function redeem(address to, uint256 amount) external;
 +
 +  /**
 +   * @dev Activates the cooldown period to unstake
 +   * - It can't be called if the user is not staking
-+   **/
++   */
 +  function cooldown() external;
 +
 +  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
 +   * @param to Address to send the claimed rewards
 +   * @param amount Amount to stake
-+   **/
++   */
 +  function claimRewards(address to, uint256 amount) external;
 +
 +  /**
@@ -1707,13 +1707,23 @@ index 83f9691..1776799 100644
 +   * @param toAddress Address of the recipient
 +   * @param toBalance Current balance of the receiver
 +   * @return The new cooldown timestamp
-+   **/
++   */
 +  function getNextCooldownTimestamp(
 +    uint256 fromCooldownTimestamp,
 +    uint256 amountToReceive,
 +    address toAddress,
 +    uint256 toBalance
 +  ) external view returns (uint256);
++
++  /**
++   * @dev Return the total rewards pending to claim by an staker
++   * @param staker The staker address
++   * @return The rewards
++   */
++  function getTotalRewardsBalance(address staker)
++    external
++    view
++    returns (uint256);
  }
  
  /**
@@ -1747,7 +1757,20 @@ index 83f9691..1776799 100644
  
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,126 +1834,24 @@ contract StakedTokenV2Rev3 is
+@@ -1607,139 +1831,35 @@ contract StakedTokenV2Rev3 is
+     uint256 amount
+   );
+   event Redeem(address indexed from, address indexed to, uint256 amount);
+-
+   event RewardsAccrued(address user, uint256 amount);
+   event RewardsClaimed(
+     address indexed from,
+     address indexed to,
+     uint256 amount
+   );
+-
+   event Cooldown(address indexed user);
+ 
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1881,11 +1904,40 @@ index 83f9691..1776799 100644
    function cooldown() external override {
      require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
      //solium-disable-next-line
-@@ -1748,37 +1860,15 @@ contract StakedTokenV2Rev3 is
+@@ -1748,29 +1868,155 @@ contract StakedTokenV2Rev3 is
      emit Cooldown(msg.sender);
    }
  
--  /**
++  /// @inheritdoc IStakedTokenV2
++  function claimRewards(address to, uint256 amount) external virtual override;
++
++  /// @inheritdoc IStakedTokenV2
++  function getNextCooldownTimestamp(
++    uint256 fromCooldownTimestamp,
++    uint256 amountToReceive,
++    address toAddress,
++    uint256 toBalance
++  ) public view virtual returns (uint256);
++
++  /// @inheritdoc IStakedTokenV2
++  function getTotalRewardsBalance(address staker)
++    external
++    view
++    returns (uint256)
++  {
++    DistributionTypes.UserStakeInput[]
++      memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
++    userStakeInputs[0] = DistributionTypes.UserStakeInput({
++      underlyingAsset: address(this),
++      stakedByUser: balanceOf(staker),
++      totalStaked: totalSupply()
++    });
++    return
++      stakerRewardsToClaim[staker] +
++      _getUnclaimedRewards(staker, userStakeInputs);
++  }
++
+   /**
 -   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
 -   * @param to Address to stake for
 -   * @param amount Amount to stake
@@ -1899,164 +1951,60 @@ index 83f9691..1776799 100644
 -    uint256 amountToClaim = (amount == type(uint256).max)
 -      ? newTotalRewards
 -      : amount;
--
++   * @dev returns the revision of the implementation contract
++   * @return The revision
++   */
++  function getRevision() internal pure virtual override returns (uint256) {
++    return REVISION();
++  }
+ 
 -    stakerRewardsToClaim[msg.sender] = newTotalRewards.sub(
 -      amountToClaim,
 -      'INVALID_AMOUNT'
--    );
--
++  /**
++   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
++   * @param owner the owner of the funds
++   * @param spender the spender
++   * @param value the amount
++   * @param deadline the deadline timestamp, type(uint256).max for no deadline
++   * @param v signature param
++   * @param s signature param
++   * @param r signature param
++   */
++  function permit(
++    address owner,
++    address spender,
++    uint256 value,
++    uint256 deadline,
++    uint8 v,
++    bytes32 r,
++    bytes32 s
++  ) external {
++    require(owner != address(0), 'INVALID_OWNER');
++    //solium-disable-next-line
++    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
++    uint256 currentValidNonce = _nonces[owner];
++    bytes32 digest = keccak256(
++      abi.encodePacked(
++        '\x19\x01',
++        DOMAIN_SEPARATOR,
++        keccak256(
++          abi.encode(
++            PERMIT_TYPEHASH,
++            owner,
++            spender,
++            value,
++            currentValidNonce,
++            deadline
++          )
++        )
++      )
+     );
+ 
 -    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
--
--    emit RewardsClaimed(msg.sender, to, amountToClaim);
--  }
-+  /// @inheritdoc IStakedTokenV2
-+  function claimRewards(address to, uint256 amount) external virtual override;
- 
-   /**
-    * @dev Internal ERC20 _transfer of the tokenized staked tokens
-    * @param from Address to transfer from
-    * @param to Address to transfer to
-    * @param amount Amount to transfer
--   **/
-+   */
-   function _transfer(
-     address from,
-     address to,
-@@ -1815,7 +1905,7 @@ contract StakedTokenV2Rev3 is
-    * @param userBalance The current balance of the user
-    * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
-    * @return The unclaimed rewards that were added to the total accrued
--   **/
-+   */
-   function _updateCurrentUnclaimedRewards(
-     address user,
-     uint256 userBalance,
-@@ -1827,7 +1917,7 @@ contract StakedTokenV2Rev3 is
-       userBalance,
-       totalSupply()
-     );
--    uint256 unclaimedRewards = stakerRewardsToClaim[user].add(accruedRewards);
-+    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
- 
-     if (accruedRewards != 0) {
-       if (updateStorage) {
-@@ -1839,56 +1929,13 @@ contract StakedTokenV2Rev3 is
-     return unclaimedRewards;
-   }
- 
--  /**
--   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
--   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
--   *  - Weighted average of from/to cooldown timestamps if:
--   *    # The sender doesn't have the cooldown activated (timestamp 0).
--   *    # The sender timestamp is expired
--   *    # The sender has a "worse" timestamp
--   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
--   * @param fromCooldownTimestamp Cooldown timestamp of the sender
--   * @param amountToReceive Amount
--   * @param toAddress Address of the recipient
--   * @param toBalance Current balance of the receiver
--   * @return The new cooldown timestamp
--   **/
-+  /// @inheritdoc IStakedTokenV2
-   function getNextCooldownTimestamp(
-     uint256 fromCooldownTimestamp,
-     uint256 amountToReceive,
-     address toAddress,
-     uint256 toBalance
--  ) public view returns (uint256) {
--    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
--    if (toCooldownTimestamp == 0) {
--      return 0;
--    }
--
--    uint256 minimalValidCooldownTimestamp = block
--      .timestamp
--      .sub(COOLDOWN_SECONDS)
--      .sub(UNSTAKE_WINDOW);
--
--    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
--      toCooldownTimestamp = 0;
--    } else {
--      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
--        fromCooldownTimestamp)
--        ? block.timestamp
--        : fromCooldownTimestamp;
--
--      if (fromCooldownTimestamp < toCooldownTimestamp) {
--        return toCooldownTimestamp;
--      } else {
--        toCooldownTimestamp = (
--          amountToReceive.mul(fromCooldownTimestamp).add(
--            toBalance.mul(toCooldownTimestamp)
--          )
--        ).div(amountToReceive.add(toBalance));
--      }
--    }
--    return toCooldownTimestamp;
--  }
-+  ) public view virtual returns (uint256);
- 
-   /**
-    * @dev Return the total rewards pending to claim by an staker
-@@ -1908,17 +1955,16 @@ contract StakedTokenV2Rev3 is
-       totalStaked: totalSupply()
-     });
-     return
--      stakerRewardsToClaim[staker].add(
--        _getUnclaimedRewards(staker, userStakeInputs)
--      );
-+      stakerRewardsToClaim[staker] +
-+      _getUnclaimedRewards(staker, userStakeInputs);
-   }
- 
-   /**
-    * @dev returns the revision of the implementation contract
-    * @return The revision
-    */
--  function getRevision() internal pure override returns (uint256) {
--    return REVISION;
-+  function getRevision() internal pure virtual override returns (uint256) {
-+    return REVISION();
-   }
- 
-   /**
-@@ -1931,7 +1977,6 @@ contract StakedTokenV2Rev3 is
-    * @param s signature param
-    * @param r signature param
-    */
--
-   function permit(
-     address owner,
-     address spender,
-@@ -1963,10 +2008,1023 @@ contract StakedTokenV2Rev3 is
-     );
- 
-     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
--    _nonces[owner] = currentValidNonce.add(1);
++    require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 +    _nonces[owner] = currentValidNonce + 1;
-     _approve(owner, spender, value);
-   }
- 
-+  function _getDelegationDataByType(DelegationType delegationType)
-+    internal
-+    view
-+    override
-+    returns (
-+      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-+      mapping(address => uint256) storage, //snapshots count
-+      mapping(address => address) storage //delegatees list
-+    )
-+  {
-+    if (delegationType == DelegationType.VOTING_POWER) {
-+      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
-+    } else {
-+      return (
-+        _propositionPowerSnapshots,
-+        _propositionPowerSnapshotsCounts,
-+        _propositionPowerDelegates
-+      );
-+    }
++    _approve(owner, spender, value);
 +  }
 +
 +  /**
@@ -2096,7 +2044,8 @@ index 83f9691..1776799 100644
 +    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
 +    _delegateByType(signatory, delegatee, delegationType);
 +  }
-+
+ 
+-    emit RewardsClaimed(msg.sender, to, amountToClaim);
 +  /**
 +   * @dev Delegates power from signatory to `delegatee`
 +   * @param delegatee The address to delegate votes to
@@ -2126,6 +2075,75 @@ index 83f9691..1776799 100644
 +    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
 +    _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
 +    _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
+   }
+ 
+   /**
+@@ -1778,7 +2024,7 @@ contract StakedTokenV2Rev3 is
+    * @param from Address to transfer from
+    * @param to Address to transfer to
+    * @param amount Amount to transfer
+-   **/
++   */
+   function _transfer(
+     address from,
+     address to,
+@@ -1815,7 +2061,7 @@ contract StakedTokenV2Rev3 is
+    * @param userBalance The current balance of the user
+    * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
+    * @return The unclaimed rewards that were added to the total accrued
+-   **/
++   */
+   function _updateCurrentUnclaimedRewards(
+     address user,
+     uint256 userBalance,
+@@ -1827,7 +2073,7 @@ contract StakedTokenV2Rev3 is
+       userBalance,
+       totalSupply()
+     );
+-    uint256 unclaimedRewards = stakerRewardsToClaim[user].add(accruedRewards);
++    uint256 unclaimedRewards = stakerRewardsToClaim[user] + accruedRewards;
+ 
+     if (accruedRewards != 0) {
+       if (updateStorage) {
+@@ -1840,131 +2086,979 @@ contract StakedTokenV2Rev3 is
+   }
+ 
+   /**
+-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
+-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
+-   *  - Weighted average of from/to cooldown timestamps if:
+-   *    # The sender doesn't have the cooldown activated (timestamp 0).
+-   *    # The sender timestamp is expired
+-   *    # The sender has a "worse" timestamp
+-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
+-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
+-   * @param amountToReceive Amount
+-   * @param toAddress Address of the recipient
+-   * @param toBalance Current balance of the receiver
+-   * @return The new cooldown timestamp
++   * @dev returns relevant storage slots for a DelegationType
++   * @param delegationType the requested DelegationType
++   * @return the relevant storage
++   */
++  function _getDelegationDataByType(DelegationType delegationType)
++    internal
++    view
++    override
++    returns (
++      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
++      mapping(address => uint256) storage, //snapshots count
++      mapping(address => address) storage //delegatees list
++    )
++  {
++    if (delegationType == DelegationType.VOTING_POWER) {
++      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
++    } else {
++      return (
++        _propositionPowerSnapshots,
++        _propositionPowerSnapshotsCounts,
++        _propositionPowerDelegates
++      );
++    }
 +  }
 +}
 +
@@ -2153,7 +2171,7 @@ index 83f9691..1776799 100644
 +  /**
 +   * @dev Returns the current exchange rate
 +   * @return exchangeRate as 18 decimal precision uint128
-+   **/
++   */
 +  function getExchangeRate() external view returns (uint128);
 +
 +  /**
@@ -2166,7 +2184,7 @@ index 83f9691..1776799 100644
 +   * @param amount the amount to be slashed
 +   * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
 +   * @return amount the amount slashed
-+   **/
++   */
 +  function slash(address destination, uint256 amount)
 +    external
 +    returns (uint256);
@@ -2224,7 +2242,7 @@ index 83f9691..1776799 100644
 +   * @param v The v component of the signed message
 +   * @param r The r component of the signed message
 +   * @param s The s component of the signed message
-+   **/
++   */
 +  function stakeWithPermit(
 +    address from,
 +    address to,
@@ -2240,7 +2258,7 @@ index 83f9691..1776799 100644
 +   * @param from The address of the user from to claim
 +   * @param to Address to send the claimed rewards
 +   * @param amount Amount to claim
-+   **/
++   */
 +  function claimRewardsOnBehalf(
 +    address from,
 +    address to,
@@ -2259,7 +2277,7 @@ index 83f9691..1776799 100644
 +   * @param from Address to redeem from
 +   * @param to Address to redeem to
 +   * @param amount Amount of shares to redeem
-+   **/
++   */
 +  function redeemOnBehalf(
 +    address from,
 +    address to,
@@ -2270,7 +2288,7 @@ index 83f9691..1776799 100644
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
 +   * @param to Address to stake to
 +   * @param amount Amount to claim
-+   **/
++   */
 +  function claimRewardsAndStake(address to, uint256 amount)
 +    external
 +    returns (uint256);
@@ -2280,7 +2298,7 @@ index 83f9691..1776799 100644
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
 +   * @param to Address to claim and unstake to
-+   **/
++   */
 +  function claimRewardsAndRedeem(
 +    address to,
 +    uint256 claimAmount,
@@ -2292,7 +2310,7 @@ index 83f9691..1776799 100644
 +   * @param from The address of the from from which to claim
 +   * @param to Address to stake to
 +   * @param amount Amount to claim
-+   **/
++   */
 +  function claimRewardsAndStakeOnBehalf(
 +    address from,
 +    address to,
@@ -2305,7 +2323,7 @@ index 83f9691..1776799 100644
 +   * @param to Address to claim and unstake to
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
-+   **/
++   */
 +  function claimRewardsAndRedeemOnBehalf(
 +    address from,
 +    address to,
@@ -2331,7 +2349,7 @@ index 83f9691..1776799 100644
 +   * @param value The value of which the percentage needs to be calculated
 +   * @param percentage The percentage of the value to be calculated
 +   * @return The percentage of value
-+   **/
+    **/
 +  function percentMul(uint256 value, uint256 percentage)
 +    internal
 +    pure
@@ -2519,6 +2537,10 @@ index 83f9691..1776799 100644
 +    )
 +  {}
 +
++  /**
++   * @dev returns the revision of the implementation contract
++   * @return The revision
++   */
 +  function REVISION() public pure virtual override returns (uint256) {
 +    return 3;
 +  }
@@ -2767,43 +2789,76 @@ index 83f9691..1776799 100644
 +  }
 +
 +  /// @inheritdoc IStakedTokenV2
-+  function getNextCooldownTimestamp(
-+    uint256 fromCooldownTimestamp,
-+    uint256 amountToReceive,
-+    address toAddress,
-+    uint256 toBalance
+   function getNextCooldownTimestamp(
+     uint256 fromCooldownTimestamp,
+     uint256 amountToReceive,
+     address toAddress,
+     uint256 toBalance
+-  ) public view returns (uint256) {
 +  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
-+    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-+    if (toCooldownTimestamp == 0) {
-+      return 0;
-+    }
-+
+     uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
+     if (toCooldownTimestamp == 0) {
+       return 0;
+     }
+ 
+-    uint256 minimalValidCooldownTimestamp = block
+-      .timestamp
+-      .sub(COOLDOWN_SECONDS)
+-      .sub(UNSTAKE_WINDOW);
 +    uint256 minimalValidCooldownTimestamp = block.timestamp -
 +      _cooldownSeconds -
 +      UNSTAKE_WINDOW;
-+
-+    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-+      toCooldownTimestamp = 0;
-+    } else {
+ 
+     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
+       toCooldownTimestamp = 0;
+     } else {
+-      uint256 fromCooldownTimestamp = (minimalValidCooldownTimestamp >
 +      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
-+        fromCooldownTimestamp)
-+        ? block.timestamp
-+        : fromCooldownTimestamp;
-+
+         fromCooldownTimestamp)
+         ? block.timestamp
+         : fromCooldownTimestamp;
+ 
+-      if (fromCooldownTimestamp < toCooldownTimestamp) {
 +      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
-+        return toCooldownTimestamp;
-+      } else {
+         return toCooldownTimestamp;
+       } else {
+-        toCooldownTimestamp = (
+-          amountToReceive.mul(fromCooldownTimestamp).add(
+-            toBalance.mul(toCooldownTimestamp)
+-          )
+-        ).div(amountToReceive.add(toBalance));
 +        toCooldownTimestamp =
 +          ((amountToReceive * adjustedFromCooldownTimestamp) +
 +            (toBalance * toCooldownTimestamp)) /
 +          (amountToReceive + toBalance);
-+      }
-+    }
-+    return toCooldownTimestamp;
-+  }
-+
-+  /// @dev sets the max slashable percentage
-+  /// @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+       }
+     }
+     return toCooldownTimestamp;
+   }
+ 
+   /**
+-   * @dev Return the total rewards pending to claim by an staker
+-   * @param staker The staker address
+-   * @return The rewards
++   * @dev sets the max slashable percentage
++   * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
+    */
+-  function getTotalRewardsBalance(address staker)
+-    external
+-    view
+-    returns (uint256)
+-  {
+-    DistributionTypes.UserStakeInput[]
+-      memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
+-    userStakeInputs[0] = DistributionTypes.UserStakeInput({
+-      underlyingAsset: address(this),
+-      stakedByUser: balanceOf(staker),
+-      totalStaked: totalSupply()
+-    });
+-    return
+-      stakerRewardsToClaim[staker].add(
+-        _getUnclaimedRewards(staker, userStakeInputs)
+-      );
 +  function _setMaxSlashablePercentage(uint256 percentage) internal {
 +    require(
 +      percentage < PercentageMath.PERCENTAGE_FACTOR,
@@ -2812,15 +2867,28 @@ index 83f9691..1776799 100644
 +
 +    _maxSlashablePercentage = percentage;
 +    emit MaxSlashablePercentageChanged(percentage);
-+  }
-+
-+  /// @dev sets the cooldown seconds
-+  /// @param cooldownSeconds the new amount of cooldown seconds
+   }
+ 
+   /**
+-   * @dev returns the revision of the implementation contract
+-   * @return The revision
++   * @dev sets the cooldown seconds
++   * @param cooldownSeconds the new amount of cooldown seconds
+    */
+-  function getRevision() internal pure override returns (uint256) {
+-    return REVISION;
 +  function _setCooldownSeconds(uint256 cooldownSeconds) internal {
 +    _cooldownSeconds = cooldownSeconds;
 +    emit CooldownSecondsChanged(cooldownSeconds);
 +  }
 +
++  /**
++   * @dev claims the rewards for a specified address to a specified address
++   * @param from The address of the from from which to claim
++   * @param to Address to receive the rewards
++   * @param amount Amount to claim
++   * @return amount claimed
++   */
 +  function _claimRewards(
 +    address from,
 +    address to,
@@ -2841,15 +2909,40 @@ index 83f9691..1776799 100644
 +    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
 +    emit RewardsClaimed(from, to, amountToClaim);
 +    return amountToClaim;
-+  }
-+
+   }
+ 
+   /**
+-   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
+-   * @param owner the owner of the funds
+-   * @param spender the spender
+-   * @param value the amount
+-   * @param deadline the deadline timestamp, type(uint256).max for no deadline
+-   * @param v signature param
+-   * @param s signature param
+-   * @param r signature param
++   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
++   * @param from The address of the from from which to claim
++   * @param to Address to stake to
++   * @param amount Amount to claim
++   * @return amount claimed
+    */
 +  function _claimRewardsAndStakeOnBehalf(
 +    address from,
 +    address to,
 +    uint256 amount
 +  ) internal returns (uint256) {
 +    require(REWARD_TOKEN == STAKED_TOKEN, 'REWARD_TOKEN_IS_NOT_STAKED_TOKEN');
-+
+ 
+-  function permit(
+-    address owner,
+-    address spender,
+-    uint256 value,
+-    uint256 deadline,
+-    uint8 v,
+-    bytes32 r,
+-    bytes32 s
+-  ) external {
+-    require(owner != address(0), 'INVALID_OWNER');
 +    uint256 userUpdatedRewards = _updateCurrentUnclaimedRewards(
 +      from,
 +      balanceOf(from),
@@ -2867,6 +2960,11 @@ index 83f9691..1776799 100644
 +    return amountToClaim;
 +  }
 +
++  /**
++   * @dev Allows staking a specified amount of STAKED_TOKEN
++   * @param to The address to receiving the shares
++   * @param amount The amount of assets to be staked
++   */
 +  function _stake(
 +    address from,
 +    address to,
@@ -2912,7 +3010,24 @@ index 83f9691..1776799 100644
 +    uint256 amount
 +  ) internal {
 +    require(amount != 0, 'INVALID_ZERO_AMOUNT');
-+    //solium-disable-next-line
+     //solium-disable-next-line
+-    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
+-    uint256 currentValidNonce = _nonces[owner];
+-    bytes32 digest = keccak256(
+-      abi.encodePacked(
+-        '\x19\x01',
+-        DOMAIN_SEPARATOR,
+-        keccak256(
+-          abi.encode(
+-            PERMIT_TYPEHASH,
+-            owner,
+-            spender,
+-            value,
+-            currentValidNonce,
+-            deadline
+-          )
+-        )
+-      )
 +    uint256 cooldownStartTimestamp = stakersCooldowns[from];
 +
 +    if (!inPostSlashingPeriod) {
@@ -3045,16 +3160,17 @@ index 83f9691..1776799 100644
 +      claimHelper,
 +      maxSlashablePercentage,
 +      cooldownSeconds
-+    );
-+
+     );
+ 
+-    require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
+-    _nonces[owner] = currentValidNonce.add(1);
+-    _approve(owner, spender, value);
 +    // needed to claimRewardsAndStake works without a custom approval each time
 +    STAKED_TOKEN.approve(address(this), type(uint256).max);
-+  }
-+
+   }
+ 
    /**
-    * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
-    * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +3039,13 @@ contract StakedTokenV2Rev3 is
+@@ -1981,6 +3075,13 @@ contract StakedTokenV2Rev3 is
      address to,
      uint256 amount
    ) internal override {
@@ -3068,7 +3184,7 @@ index 83f9691..1776799 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +3079,40 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +3115,40 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );

@@ -27,7 +27,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev Returns the current exchange rate
    * @return exchangeRate as 18 decimal precision uint128
-   **/
+   */
   function getExchangeRate() external view returns (uint128);
 
   /**
@@ -40,7 +40,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param amount the amount to be slashed
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
-   **/
+   */
   function slash(address destination, uint256 amount)
     external
     returns (uint256);
@@ -98,7 +98,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param v The v component of the signed message
    * @param r The r component of the signed message
    * @param s The s component of the signed message
-   **/
+   */
   function stakeWithPermit(
     address from,
     address to,
@@ -114,7 +114,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from The address of the user from to claim
    * @param to Address to send the claimed rewards
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsOnBehalf(
     address from,
     address to,
@@ -133,7 +133,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from Address to redeem from
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
-   **/
+   */
   function redeemOnBehalf(
     address from,
     address to,
@@ -144,7 +144,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
    * @param to Address to stake to
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsAndStake(address to, uint256 amount)
     external
     returns (uint256);
@@ -154,7 +154,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    * @param to Address to claim and unstake to
-   **/
+   */
   function claimRewardsAndRedeem(
     address to,
     uint256 claimAmount,
@@ -166,7 +166,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
-   **/
+   */
   function claimRewardsAndStakeOnBehalf(
     address from,
     address to,
@@ -179,7 +179,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to claim and unstake to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
-   **/
+   */
   function claimRewardsAndRedeemOnBehalf(
     address from,
     address to,
