@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..5879951 100644
+index 83f9691..46ff622 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,50 @@
@@ -1568,7 +1568,7 @@ index 83f9691..5879951 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1540,11 +1694,68 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1540,33 +1694,93 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1608,6 +1608,10 @@ index 83f9691..5879951 100644
 +   **/
 +  function redeem(address to, uint256 amount) external;
 +
++  /**
++   * @dev Activates the cooldown period to unstake
++   * - It can't be called if the user is not staking
++   **/
 +  function cooldown() external;
 +
 +  /**
@@ -1640,9 +1644,11 @@ index 83f9691..5879951 100644
  }
  
  /**
-@@ -1552,21 +1763,20 @@ abstract contract GovernancePowerWithSnapshot is
+- * @title StakedToken
++ * @title StakedTokenV2
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-  * @author Aave
+- * @author Aave
++ * @author BGD Labs
   **/
 -contract StakedTokenV2Rev3 is
 -  IStakedAave,
@@ -1667,7 +1673,7 @@ index 83f9691..5879951 100644
  
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,121 +1830,22 @@ contract StakedTokenV2Rev3 is
+@@ -1620,126 +1834,24 @@ contract StakedTokenV2Rev3 is
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1708,7 +1714,9 @@ index 83f9691..5879951 100644
 -    assembly {
 -      chainId := chainid()
 -    }
--
++  /// @inheritdoc IStakedTokenV2
++  function redeem(address to, uint256 amount) external virtual override;
+ 
 -    DOMAIN_SEPARATOR = keccak256(
 -      abi.encode(
 -        EIP712_DOMAIN,
@@ -1790,12 +1798,16 @@ index 83f9691..5879951 100644
 -
 -    emit Redeem(msg.sender, to, amountToRedeem);
 -  }
+-
+-  /**
+-   * @dev Activates the cooldown period to unstake
+-   * - It can't be called if the user is not staking
+-   **/
 +  /// @inheritdoc IStakedTokenV2
-+  function redeem(address to, uint256 amount) external virtual override;
- 
-   /**
-    * @dev Activates the cooldown period to unstake
-@@ -1748,30 +1859,8 @@ contract StakedTokenV2Rev3 is
+   function cooldown() external override {
+     require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+     //solium-disable-next-line
+@@ -1748,30 +1860,8 @@ contract StakedTokenV2Rev3 is
      emit Cooldown(msg.sender);
    }
  
@@ -1828,7 +1840,7 @@ index 83f9691..5879951 100644
  
    /**
     * @dev Internal ERC20 _transfer of the tokenized staked tokens
-@@ -1827,7 +1916,7 @@ contract StakedTokenV2Rev3 is
+@@ -1827,7 +1917,7 @@ contract StakedTokenV2Rev3 is
        userBalance,
        totalSupply()
      );
@@ -1837,7 +1849,7 @@ index 83f9691..5879951 100644
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1839,56 +1928,13 @@ contract StakedTokenV2Rev3 is
+@@ -1839,62 +1929,19 @@ contract StakedTokenV2Rev3 is
      return unclaimedRewards;
    }
  
@@ -1896,7 +1908,14 @@ index 83f9691..5879951 100644
  
    /**
     * @dev Return the total rewards pending to claim by an staker
-@@ -1908,17 +1954,16 @@ contract StakedTokenV2Rev3 is
+    * @param staker The staker address
+    * @return The rewards
+-   */
++   **/
+   function getTotalRewardsBalance(address staker)
+     external
+     view
+@@ -1908,17 +1955,16 @@ contract StakedTokenV2Rev3 is
        totalStaked: totalSupply()
      });
      return
@@ -1910,15 +1929,26 @@ index 83f9691..5879951 100644
    /**
     * @dev returns the revision of the implementation contract
     * @return The revision
-    */
+-   */
 -  function getRevision() internal pure override returns (uint256) {
 -    return REVISION;
++   **/
 +  function getRevision() internal pure virtual override returns (uint256) {
 +    return REVISION();
    }
  
    /**
-@@ -1963,10 +2008,1021 @@ contract StakedTokenV2Rev3 is
+@@ -1930,8 +1976,7 @@ contract StakedTokenV2Rev3 is
+    * @param v signature param
+    * @param s signature param
+    * @param r signature param
+-   */
+-
++   **/
+   function permit(
+     address owner,
+     address spender,
+@@ -1963,10 +2008,1023 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -1957,7 +1987,7 @@ index 83f9691..5879951 100644
 +   * @param v The recovery byte of the signature
 +   * @param r Half of the ECDSA signature pair
 +   * @param s Half of the ECDSA signature pair
-+   */
++   **/
 +  function delegateByTypeBySig(
 +    address delegatee,
 +    DelegationType delegationType,
@@ -1994,7 +2024,7 @@ index 83f9691..5879951 100644
 +   * @param v The recovery byte of the signature
 +   * @param r Half of the ECDSA signature pair
 +   * @param s Half of the ECDSA signature pair
-+   */
++   **/
 +  function delegateBySig(
 +    address delegatee,
 +    uint256 nonce,
@@ -2343,9 +2373,9 @@ index 83f9691..5879951 100644
 +}
 +
 +/**
-+ * @title StakedToken
++ * @title StakedTokenV3
 + * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-+ * @author Aave
++ * @author BGD Labs
 + **/
 +contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 +  using SafeERC20 for IERC20;
@@ -2415,7 +2445,7 @@ index 83f9691..5879951 100644
 +  /**
 +   * @dev returns the revision of the implementation contract
 +   * @return The revision
-+   */
++   **/
 +  function getRevision() internal pure virtual override returns (uint256) {
 +    return REVISION();
 +  }
@@ -2703,6 +2733,8 @@ index 83f9691..5879951 100644
 +    emit MaxSlashablePercentageChanged(percentage);
 +  }
 +
++  /// @dev sets the cooldown seconds
++  /// @param cooldownSeconds the new amount of cooldown seconds
 +  function _setCooldownSeconds(uint256 cooldownSeconds) internal {
 +    _cooldownSeconds = cooldownSeconds;
 +    emit CooldownSecondsChanged(cooldownSeconds);
@@ -2836,7 +2868,7 @@ index 83f9691..5879951 100644
 +  /**
 +   * @dev Updates the exchangeRate and emits events accordingly
 +   * @param newExchangeRate the new exchange rate
-+   */
++   **/
 +  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
 +    _currentExchangeRate = newExchangeRate;
 +    emit ExchangeRateChanged(newExchangeRate);
@@ -2848,7 +2880,7 @@ index 83f9691..5879951 100644
 +   * @param totalAssets The total amount of assets staked
 +   * @param totalShares The total amount of shares
 +   * @return exchangeRate as 18 decimal precision uint128
-+   */
++   **/
 +  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
 +    internal
 +    pure
@@ -2880,10 +2912,10 @@ index 83f9691..5879951 100644
 +/**
 + * @title StakedAaveV3
 + * @notice StakedTokenV3 with AAVE token as staked token
-+ * @author Aave
++ * @author BGD Labs
 + **/
 +contract StakedAaveV3 is StakedTokenV3 {
-+  // GHO
++  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
 +  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 +
 +  /// @notice Snapshots of the exchangeRate for a given block
@@ -2941,7 +2973,14 @@ index 83f9691..5879951 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +3037,13 @@ contract StakedTokenV2Rev3 is
+@@ -1975,12 +3033,19 @@ contract StakedTokenV2Rev3 is
+    * @param from the from address
+    * @param to the to address
+    * @param amount the amount to transfer
+-   */
++   **/
+   function _beforeTokenTransfer(
+     address from,
      address to,
      uint256 amount
    ) internal override {
@@ -2955,7 +2994,7 @@ index 83f9691..5879951 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +3077,40 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +3079,40 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );
@@ -3016,9 +3055,7 @@ index 83f9691..5879951 100644
 -   * @param v The recovery byte of the signature
 -   * @param r Half of the ECDSA signature pair
 -   * @param s Half of the ECDSA signature pair
-+   * @dev Updates the exchangeRate and emits events accordingly
-+   * @param newExchangeRate the new exchange rate
-    */
+-   */
 -  function delegateByTypeBySig(
 -    address delegatee,
 -    DelegationType delegationType,
@@ -3036,11 +3073,7 @@ index 83f9691..5879951 100644
 -        nonce,
 -        expiry
 -      )
-+  function _updateExchangeRate(uint128 newExchangeRate) internal override {
-+    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
-+      uint128(block.number),
-+      newExchangeRate
-     );
+-    );
 -    bytes32 digest = keccak256(
 -      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
 -    );
@@ -3080,6 +3113,14 @@ index 83f9691..5879951 100644
 -    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
 -    _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
 -    _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
++   * @dev Updates the exchangeRate and emits events accordingly
++   * @param newExchangeRate the new exchange rate
++   **/
++  function _updateExchangeRate(uint128 newExchangeRate) internal override {
++    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
++      uint128(block.number),
++      newExchangeRate
++    );
 +    ++_exchangeRateSnapshotsCount;
 +    super._updateExchangeRate(newExchangeRate);
    }

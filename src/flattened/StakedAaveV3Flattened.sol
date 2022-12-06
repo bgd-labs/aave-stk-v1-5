@@ -1727,6 +1727,10 @@ interface IStakedTokenV2 {
    **/
   function redeem(address to, uint256 amount) external;
 
+  /**
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
+   **/
   function cooldown() external;
 
   /**
@@ -1759,9 +1763,9 @@ interface IStakedTokenV2 {
 }
 
 /**
- * @title StakedToken
+ * @title StakedTokenV2
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
- * @author Aave
+ * @author BGD Labs
  **/
 abstract contract StakedTokenV2 is
   IStakedTokenV2,
@@ -1847,10 +1851,7 @@ abstract contract StakedTokenV2 is
   /// @inheritdoc IStakedTokenV2
   function redeem(address to, uint256 amount) external virtual override;
 
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   **/
+  /// @inheritdoc IStakedTokenV2
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
     //solium-disable-next-line
@@ -1940,7 +1941,7 @@ abstract contract StakedTokenV2 is
    * @dev Return the total rewards pending to claim by an staker
    * @param staker The staker address
    * @return The rewards
-   */
+   **/
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -1961,7 +1962,7 @@ abstract contract StakedTokenV2 is
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   */
+   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -1975,8 +1976,7 @@ abstract contract StakedTokenV2 is
    * @param v signature param
    * @param s signature param
    * @param r signature param
-   */
-
+   **/
   function permit(
     address owner,
     address spender,
@@ -2042,7 +2042,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   */
+   **/
   function delegateByTypeBySig(
     address delegatee,
     DelegationType delegationType,
@@ -2079,7 +2079,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   */
+   **/
   function delegateBySig(
     address delegatee,
     uint256 nonce,
@@ -2428,9 +2428,9 @@ contract RoleManager {
 }
 
 /**
- * @title StakedToken
+ * @title StakedTokenV3
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
- * @author Aave
+ * @author BGD Labs
  **/
 contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
@@ -2500,7 +2500,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   */
+   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -2788,6 +2788,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     emit MaxSlashablePercentageChanged(percentage);
   }
 
+  /// @dev sets the cooldown seconds
+  /// @param cooldownSeconds the new amount of cooldown seconds
   function _setCooldownSeconds(uint256 cooldownSeconds) internal {
     _cooldownSeconds = cooldownSeconds;
     emit CooldownSecondsChanged(cooldownSeconds);
@@ -2921,7 +2923,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   */
+   **/
   function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
@@ -2933,7 +2935,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
-   */
+   **/
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure
@@ -2965,10 +2967,10 @@ interface IGhoVariableDebtToken {
 /**
  * @title StakedAaveV3
  * @notice StakedTokenV3 with AAVE token as staked token
- * @author Aave
+ * @author BGD Labs
  **/
 contract StakedAaveV3 is StakedTokenV3 {
-  // GHO
+  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
   /// @notice Snapshots of the exchangeRate for a given block
@@ -3031,7 +3033,7 @@ contract StakedAaveV3 is StakedTokenV3 {
    * @param from the from address
    * @param to the to address
    * @param amount the amount to transfer
-   */
+   **/
   function _beforeTokenTransfer(
     address from,
     address to,
@@ -3104,7 +3106,7 @@ contract StakedAaveV3 is StakedTokenV3 {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   */
+   **/
   function _updateExchangeRate(uint128 newExchangeRate) internal override {
     _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
       uint128(block.number),

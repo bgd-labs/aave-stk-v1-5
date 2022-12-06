@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..a572685 100644
+index 37a034f..0a37fa7 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,50 @@
@@ -1475,7 +1475,7 @@ index 37a034f..a572685 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1583,35 +1694,87 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1583,35 +1694,91 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1514,6 +1514,10 @@ index 37a034f..a572685 100644
 +   **/
 +  function redeem(address to, uint256 amount) external;
 +
++  /**
++   * @dev Activates the cooldown period to unstake
++   * - It can't be called if the user is not staking
++   **/
 +  function cooldown() external;
 +
 +  /**
@@ -1546,9 +1550,11 @@ index 37a034f..a572685 100644
 +}
  
  /**
-  * @title StakedToken
+- * @title StakedToken
++ * @title StakedTokenV2
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-  * @author Aave
+- * @author Aave
++ * @author BGD Labs
   **/
 -contract StakedTokenBptRev2 is
 -  IStakedAave,
@@ -1573,7 +1579,7 @@ index 37a034f..a572685 100644
  
    /// @notice Seconds available to redeem once the cooldown period is fullfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1665,126 +1828,22 @@ contract StakedTokenBptRev2 is
+@@ -1665,131 +1832,24 @@ contract StakedTokenBptRev2 is
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -1618,7 +1624,9 @@ index 37a034f..a572685 100644
 -    assembly {
 -      chainId := chainid()
 -    }
--
++  /// @inheritdoc IStakedTokenV2
++  function redeem(address to, uint256 amount) external virtual override;
+ 
 -    DOMAIN_SEPARATOR = keccak256(
 -      abi.encode(
 -        EIP712_DOMAIN,
@@ -1701,12 +1709,16 @@ index 37a034f..a572685 100644
 -
 -    emit Redeem(msg.sender, to, amountToRedeem);
 -  }
+-
+-  /**
+-   * @dev Activates the cooldown period to unstake
+-   * - It can't be called if the user is not staking
+-   **/
 +  /// @inheritdoc IStakedTokenV2
-+  function redeem(address to, uint256 amount) external virtual override;
- 
-   /**
-    * @dev Activates the cooldown period to unstake
-@@ -1798,30 +1857,8 @@ contract StakedTokenBptRev2 is
+   function cooldown() external override {
+     require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+     //solium-disable-next-line
+@@ -1798,30 +1858,8 @@ contract StakedTokenBptRev2 is
      emit Cooldown(msg.sender);
    }
  
@@ -1739,7 +1751,7 @@ index 37a034f..a572685 100644
  
    /**
     * @dev Internal ERC20 _transfer of the tokenized staked tokens
-@@ -1877,7 +1914,7 @@ contract StakedTokenBptRev2 is
+@@ -1877,7 +1915,7 @@ contract StakedTokenBptRev2 is
        userBalance,
        totalSupply()
      );
@@ -1748,7 +1760,7 @@ index 37a034f..a572685 100644
  
      if (accruedRewards != 0) {
        if (updateStorage) {
-@@ -1889,56 +1926,13 @@ contract StakedTokenBptRev2 is
+@@ -1889,62 +1927,19 @@ contract StakedTokenBptRev2 is
      return unclaimedRewards;
    }
  
@@ -1807,7 +1819,14 @@ index 37a034f..a572685 100644
  
    /**
     * @dev Return the total rewards pending to claim by an staker
-@@ -1958,17 +1952,16 @@ contract StakedTokenBptRev2 is
+    * @param staker The staker address
+    * @return The rewards
+-   */
++   **/
+   function getTotalRewardsBalance(address staker)
+     external
+     view
+@@ -1958,17 +1953,16 @@ contract StakedTokenBptRev2 is
        totalStaked: totalSupply()
      });
      return
@@ -1821,14 +1840,25 @@ index 37a034f..a572685 100644
    /**
     * @dev returns the revision of the implementation contract
     * @return The revision
-    */
+-   */
 -  function getRevision() internal pure override returns (uint256) {
 -    return REVISION;
++   **/
 +  function getRevision() internal pure virtual override returns (uint256) {
 +    return REVISION();
    }
  
    /**
+@@ -1980,8 +1974,7 @@ contract StakedTokenBptRev2 is
+    * @param v signature param
+    * @param s signature param
+    * @param r signature param
+-   */
+-
++   **/
+   function permit(
+     address owner,
+     address spender,
 @@ -2013,65 +2006,10 @@ contract StakedTokenBptRev2 is
      );
  
@@ -1896,7 +1926,25 @@ index 37a034f..a572685 100644
    function _getDelegationDataByType(DelegationType delegationType)
      internal
      view
-@@ -2162,3 +2100,843 @@ contract StakedTokenBptRev2 is
+@@ -2102,7 +2040,7 @@ contract StakedTokenBptRev2 is
+    * @param v The recovery byte of the signature
+    * @param r Half of the ECDSA signature pair
+    * @param s Half of the ECDSA signature pair
+-   */
++   **/
+   function delegateByTypeBySig(
+     address delegatee,
+     DelegationType delegationType,
+@@ -2139,7 +2077,7 @@ contract StakedTokenBptRev2 is
+    * @param v The recovery byte of the signature
+    * @param r Half of the ECDSA signature pair
+    * @param s Half of the ECDSA signature pair
+-   */
++   **/
+   function delegateBySig(
+     address delegatee,
+     uint256 nonce,
+@@ -2162,3 +2100,845 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
  }
@@ -2226,9 +2274,9 @@ index 37a034f..a572685 100644
 +}
 +
 +/**
-+ * @title StakedToken
++ * @title StakedTokenV3
 + * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-+ * @author Aave
++ * @author BGD Labs
 + **/
 +contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 +  using SafeERC20 for IERC20;
@@ -2298,7 +2346,7 @@ index 37a034f..a572685 100644
 +  /**
 +   * @dev returns the revision of the implementation contract
 +   * @return The revision
-+   */
++   **/
 +  function getRevision() internal pure virtual override returns (uint256) {
 +    return REVISION();
 +  }
@@ -2586,6 +2634,8 @@ index 37a034f..a572685 100644
 +    emit MaxSlashablePercentageChanged(percentage);
 +  }
 +
++  /// @dev sets the cooldown seconds
++  /// @param cooldownSeconds the new amount of cooldown seconds
 +  function _setCooldownSeconds(uint256 cooldownSeconds) internal {
 +    _cooldownSeconds = cooldownSeconds;
 +    emit CooldownSecondsChanged(cooldownSeconds);
@@ -2719,7 +2769,7 @@ index 37a034f..a572685 100644
 +  /**
 +   * @dev Updates the exchangeRate and emits events accordingly
 +   * @param newExchangeRate the new exchange rate
-+   */
++   **/
 +  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
 +    _currentExchangeRate = newExchangeRate;
 +    emit ExchangeRateChanged(newExchangeRate);
@@ -2731,7 +2781,7 @@ index 37a034f..a572685 100644
 +   * @param totalAssets The total amount of assets staked
 +   * @param totalShares The total amount of shares
 +   * @return exchangeRate as 18 decimal precision uint128
-+   */
++   **/
 +  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
 +    internal
 +    pure
