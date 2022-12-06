@@ -8,7 +8,7 @@ import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.s
  * @title AaveDistributionManager
  * @notice Accounting contract to manage multiple staking distributions
  * @author Aave
- **/
+ */
 contract AaveDistributionManager is IAaveDistributionManager {
   struct AssetData {
     uint128 emissionPerSecond;
@@ -41,7 +41,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
   /**
    * @dev Configures the distribution of rewards for a list of assets
    * @param assetsConfigInput The list of configurations to apply
-   **/
+   */
   function configureAssets(
     DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
   ) external override {
@@ -73,7 +73,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param assetConfig Storage pointer to the distribution's config
    * @param totalStaked Current total of staked assets for this distribution
    * @return The new distribution index
-   **/
+   */
   function _updateAssetStateInternal(
     address underlyingAsset,
     AssetData storage assetConfig,
@@ -110,7 +110,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
    * @param totalStaked Total tokens staked in the distribution
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _updateUserAssetInternal(
     address user,
     address asset,
@@ -140,7 +140,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user The address of the user
    * @param stakes List of structs of the user data related with his stake
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _claimRewards(
     address user,
     DistributionTypes.UserStakeInput[] memory stakes
@@ -166,7 +166,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user The address of the user
    * @param stakes List of structs of the user data related with his stake
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _getUnclaimedRewards(
     address user,
     DistributionTypes.UserStakeInput[] memory stakes
@@ -199,7 +199,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param reserveIndex Current index of the distribution
    * @param userIndex Index stored for the user, representation his staking moment
    * @return The rewards
-   **/
+   */
   function _getRewards(
     uint256 principalUserBalance,
     uint256 reserveIndex,
@@ -217,7 +217,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param lastUpdateTimestamp Last moment this distribution was updated
    * @param totalBalance of tokens considered for the distribution
    * @return The new index.
-   **/
+   */
   function _getAssetIndex(
     uint256 currentIndex,
     uint256 emissionPerSecond,
@@ -247,7 +247,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user Address of the user
    * @param asset The address of the reference asset of the distribution
    * @return The new index
-   **/
+   */
   function getUserAssetData(address user, address asset)
     public
     view

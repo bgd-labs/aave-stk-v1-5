@@ -3,20 +3,14 @@ pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
+import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 import {IGhoVariableDebtToken} from '../src/interfaces/IGhoVariableDebtToken.sol';
-
-contract GhoDebtMock is IGhoVariableDebtToken {
-  function updateDiscountDistribution(
-    address sender,
-    address recipient,
-    uint256 senderDiscountTokenBalance,
-    uint256 recipientDiscountTokenBalance,
-    uint256 amount
-  ) public {}
-}
+import {ProposalPayloadStkAbpt, ProposalPayloadStkAave} from '../src/contracts/ProposalPayload.sol';
+import {DeployL1Proposal} from '../scripts/ProposalDeployment.s.sol';
+import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
 
 contract BaseTest is Test {
   StakedTokenV3 STAKE_CONTRACT;
@@ -25,69 +19,47 @@ contract BaseTest is Test {
   uint256 constant COOLDOWN_ADMIN = 1;
   uint256 constant CLAIM_HELPER_ROLE = 2;
 
-  address slashingAdmin = address(4);
-  address cooldownAdmin = address(5);
-  address claimHelper = address(6);
+  address slashingAdmin;
+  address cooldownAdmin;
+  address claimHelper;
 
-  function _deployImplementation(bool stkAAVE) internal returns (address) {
+  function _executeProposal(bool stkAAVE) internal {
     if (stkAAVE) {
-      GhoDebtMock ghoMock = new GhoDebtMock();
-      return
-        address(
-          new StakedAaveV3(
-            STAKE_CONTRACT.STAKED_TOKEN(),
-            STAKE_CONTRACT.REWARD_TOKEN(),
-            3000,
-            STAKE_CONTRACT.REWARDS_VAULT(),
-            STAKE_CONTRACT.EMISSION_MANAGER(),
-            3155692600, // 100 years
-            address(ghoMock)
-          )
-        );
-    }
-    return
-      address(
-        new StakedTokenV3(
-          STAKE_CONTRACT.STAKED_TOKEN(),
-          STAKE_CONTRACT.REWARD_TOKEN(),
-          3000,
-          STAKE_CONTRACT.REWARDS_VAULT(),
-          STAKE_CONTRACT.EMISSION_MANAGER(),
-          3155692600 // 100 years
-        )
+      ProposalPayloadStkAave stkAaveProposal = new ProposalPayloadStkAave();
+      uint256 proposalId = DeployL1Proposal._deployL1Proposal(
+        address(stkAaveProposal),
+        GovHelpers.LONG_EXECUTOR,
+        bytes32('1')
       );
+      GovHelpers.passVoteAndExecute(vm, proposalId);
+    } else {
+      ProposalPayloadStkAbpt stkABPTProposal = new ProposalPayloadStkAbpt();
+      uint256 proposalId = DeployL1Proposal._deployL1Proposal(
+        address(stkABPTProposal),
+        GovHelpers.SHORT_EXECUTOR,
+        bytes32('1')
+      );
+      GovHelpers.passVoteAndExecute(vm, proposalId);
+    }
   }
 
   function _setUp(bool stkAAVE) internal {
-    vm.createSelectFork(vm.rpcUrl('ethereum'), 15896416);
+    vm.createSelectFork(vm.rpcUrl('ethereum'), 16121639);
 
-    address admin = address(0);
     address stake = address(0);
     if (stkAAVE) {
-      admin = GovHelpers.LONG_EXECUTOR;
       stake = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
     } else {
-      admin = GovHelpers.SHORT_EXECUTOR;
       stake = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
     }
     STAKE_CONTRACT = StakedTokenV3(stake);
-    address stkImpl = _deployImplementation(stkAAVE);
-    vm.startPrank(admin);
-    IInitializableAdminUpgradeabilityProxy stkProxy = IInitializableAdminUpgradeabilityProxy(
-        address(STAKE_CONTRACT)
-      );
-    stkProxy.upgradeToAndCall(
-      stkImpl,
-      abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint256)',
-        slashingAdmin,
-        cooldownAdmin,
-        claimHelper,
-        3000,
-        864000
-      )
-    );
+    vm.startPrank(GovHelpers.AAVE_WHALE);
+    _executeProposal(stkAAVE);
     vm.stopPrank();
+
+    slashingAdmin = STAKE_CONTRACT.getAdmin(SLASHING_ADMIN);
+    cooldownAdmin = STAKE_CONTRACT.getAdmin(COOLDOWN_ADMIN);
+    claimHelper = STAKE_CONTRACT.getAdmin(CLAIM_HELPER_ROLE);
   }
 
   function _stake(uint256 amount) internal {
