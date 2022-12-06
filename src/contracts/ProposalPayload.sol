@@ -35,6 +35,11 @@ contract GenericProposal {
   uint128 public constant DISTRIBUTION_DURATION = 3155692600; // 100 years
 }
 
+/**
+ * @title ProposalPayloadStkAave
+ * @notice Proposal for upgrading the StkAave implementation
+ * @author BGD Labs
+ **/
 contract ProposalPayloadStkAave is GenericProposal {
   address public constant STAKE_AAVE =
     0x4da27a545c0c5B758a6BA100e3a049001de870f5;
@@ -82,6 +87,11 @@ contract ProposalPayloadStkAave is GenericProposal {
   }
 }
 
+/**
+ * @title ProposalPayloadStkAbpt
+ * @notice Proposal for upgrading the StkAbpt implementation
+ * @author BGD Labs
+ **/
 contract ProposalPayloadStkAbpt is GenericProposal {
   address public constant STAKE_ABPT =
     0xa1116930326D21fB917d5A27F1E9943A9595fb47;

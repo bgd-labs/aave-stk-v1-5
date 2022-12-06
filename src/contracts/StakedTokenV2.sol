@@ -14,7 +14,7 @@ import {AaveDistributionManager} from './AaveDistributionManager.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 
 /**
- * @title StakedToken
+ * @title StakedTokenV2
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
  **/
