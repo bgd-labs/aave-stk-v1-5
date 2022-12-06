@@ -42,14 +42,13 @@ contract GenericProposal {
  * @author BGD Labs
  */
 contract ProposalPayloadStkAave is GenericProposal {
-  address public constant STAKE_AAVE =
-    0x4da27a545c0c5B758a6BA100e3a049001de870f5;
+  address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   function execute() external {
     // 1. deploy new proxy
     ProxyAdmin newAdmin = new ProxyAdmin();
     // 2. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STAKE_AAVE).changeAdmin(
+    IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
       address(newAdmin)
     );
     // ~ ARBITRARY STEP NEEDS TO BE REMOVED ONCE GHO IS LIVE ~
@@ -74,7 +73,7 @@ contract ProposalPayloadStkAave is GenericProposal {
     );
     // 5. upgrade & initialize on proxy
     newAdmin.upgradeAndCall(
-      TransparentUpgradeableProxy(payable(STAKE_AAVE)),
+      TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
       abi.encodeWithSignature(
         'initialize(address,address,address,uint256,uint256)',
@@ -94,14 +93,13 @@ contract ProposalPayloadStkAave is GenericProposal {
  * @author BGD Labs
  */
 contract ProposalPayloadStkAbpt is GenericProposal {
-  address public constant STAKE_ABPT =
-    0xa1116930326D21fB917d5A27F1E9943A9595fb47;
+  address public constant STK_ABPT = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
 
   function execute() external {
     // 1. deploy new proxy
     ProxyAdmin newAdmin = new ProxyAdmin();
     // 2. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STAKE_ABPT).changeAdmin(
+    IInitializableAdminUpgradeabilityProxy(STK_ABPT).changeAdmin(
       address(newAdmin)
     );
     // 3. deploy newimplementation
@@ -123,7 +121,7 @@ contract ProposalPayloadStkAbpt is GenericProposal {
     );
     // 5. upgrade & initialize on proxy
     newAdmin.upgradeAndCall(
-      TransparentUpgradeableProxy(payable(STAKE_ABPT)),
+      TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
       abi.encodeWithSignature(
         'initialize(address,address,address,uint256,uint256)',
