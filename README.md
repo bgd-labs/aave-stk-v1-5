@@ -23,6 +23,8 @@ A more detailed description can be found [here](./properties.md)
 
 An export of storage layout changes can be found [here](./storage.md)
 
+The contract is based on a pull request on the [aave-stake-v2 repository](https://github.com/aave/aave-stake-v2/pull/2)
+
 ## Development
 
 ### Install

@@ -25,7 +25,7 @@ import {RoleManager} from '../utils/RoleManager.sol';
 /**
  * @title StakedToken
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
- * @author Aave
+ * @author BGD
  **/
 contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;

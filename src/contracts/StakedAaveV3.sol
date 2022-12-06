@@ -22,7 +22,7 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
 /**
  * @title StakedAaveV3
  * @notice StakedTokenV3 with AAVE token as staked token
- * @author Aave
+ * @author BGD Labs
  **/
 contract StakedAaveV3 is StakedTokenV3 {
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook

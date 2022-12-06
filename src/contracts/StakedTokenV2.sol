@@ -16,7 +16,7 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
 /**
  * @title StakedToken
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
- * @author Aave
+ * @author BGD Labs
  **/
 abstract contract StakedTokenV2 is
   IStakedTokenV2,
