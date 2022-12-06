@@ -2,6 +2,11 @@
 
 Repository contains a new revision of `StakedTokenV3` and `StakedAaveV3`.
 
+It is important to highlight that stkAAVE and stkABPT are slightly different, that's the reason why the code intended to use for each one is:
+
+- For stkAAVE: StakedAaveV3
+- For stkABPT: StakedTokenV3
+
 Thew new `StakedTokenV3` includes en enhanced mechanism to facilitate slashing of the underlying by tracking the `exchangeRate` between $stkToken \leftrightarrow Token$.
 
 The slashing itself must be performed by a slashingAdmin which initially will be the governance short executor. The slashing will result in transferring part of the underlying to a specified address and starting the slashing process by setting a `inPostSlashingPeriod` flag.
