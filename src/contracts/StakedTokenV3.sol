@@ -26,7 +26,7 @@ import {RoleManager} from '../utils/RoleManager.sol';
  * @title StakedTokenV3
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
- **/
+ */
 contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
@@ -95,14 +95,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   **/
+   */
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
 
   /**
    * @dev Called by the proxy contract
-   **/
+   */
   function initialize(
     address slashingAdmin,
     address cooldownPauseAdmin,
@@ -474,7 +474,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param from Address to redeem from
    * @param to Address to redeem to
    * @param amount Amount to redeem
-   **/
+   */
   function _redeem(
     address from,
     address to,
@@ -518,7 +518,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   **/
+   */
   function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
@@ -530,7 +530,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
-   **/
+   */
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure

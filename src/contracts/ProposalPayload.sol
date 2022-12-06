@@ -28,6 +28,7 @@ contract GenericProposal {
 
   uint256 public constant MAX_SLASHING = 3000; // 30%
 
+  // TODO: should probably be increased to at least 12 days as with 10 days, even with perfect proposal timing pplt have a >60% chance of leaving before slashing
   uint256 public constant COOLDOWN_SECONDS = 864000; // 10 days
 
   uint256 public constant UNSTAKE_WINDOW = 172800; // 2 days
@@ -39,7 +40,7 @@ contract GenericProposal {
  * @title ProposalPayloadStkAave
  * @notice Proposal for upgrading the StkAave implementation
  * @author BGD Labs
- **/
+ */
 contract ProposalPayloadStkAave is GenericProposal {
   address public constant STAKE_AAVE =
     0x4da27a545c0c5B758a6BA100e3a049001de870f5;
@@ -91,7 +92,7 @@ contract ProposalPayloadStkAave is GenericProposal {
  * @title ProposalPayloadStkAbpt
  * @notice Proposal for upgrading the StkAbpt implementation
  * @author BGD Labs
- **/
+ */
 contract ProposalPayloadStkAbpt is GenericProposal {
   address public constant STAKE_ABPT =
     0xa1116930326D21fB917d5A27F1E9943A9595fb47;

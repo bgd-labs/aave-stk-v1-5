@@ -17,7 +17,7 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
  * @title StakedTokenV2
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
- **/
+ */
 abstract contract StakedTokenV2 is
   IStakedTokenV2,
   GovernancePowerWithSnapshot,
@@ -119,7 +119,7 @@ abstract contract StakedTokenV2 is
    * @param from Address to transfer from
    * @param to Address to transfer to
    * @param amount Amount to transfer
-   **/
+   */
   function _transfer(
     address from,
     address to,
@@ -156,7 +156,7 @@ abstract contract StakedTokenV2 is
    * @param userBalance The current balance of the user
    * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
    * @return The unclaimed rewards that were added to the total accrued
-   **/
+   */
   function _updateCurrentUnclaimedRewards(
     address user,
     uint256 userBalance,
@@ -192,7 +192,7 @@ abstract contract StakedTokenV2 is
    * @dev Return the total rewards pending to claim by an staker
    * @param staker The staker address
    * @return The rewards
-   **/
+   */
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -213,7 +213,7 @@ abstract contract StakedTokenV2 is
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   **/
+   */
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -227,7 +227,7 @@ abstract contract StakedTokenV2 is
    * @param v signature param
    * @param s signature param
    * @param r signature param
-   **/
+   */
   function permit(
     address owner,
     address spender,
@@ -293,7 +293,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   **/
+   */
   function delegateByTypeBySig(
     address delegatee,
     DelegationType delegationType,
@@ -330,7 +330,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   **/
+   */
   function delegateBySig(
     address delegatee,
     uint256 nonce,
