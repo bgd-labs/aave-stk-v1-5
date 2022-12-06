@@ -1016,7 +1016,7 @@ interface IAaveDistributionManager {
  * @title AaveDistributionManager
  * @notice Accounting contract to manage multiple staking distributions
  * @author Aave
- **/
+ */
 contract AaveDistributionManager is IAaveDistributionManager {
   struct AssetData {
     uint128 emissionPerSecond;
@@ -1049,7 +1049,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
   /**
    * @dev Configures the distribution of rewards for a list of assets
    * @param assetsConfigInput The list of configurations to apply
-   **/
+   */
   function configureAssets(
     DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
   ) external override {
@@ -1081,7 +1081,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param assetConfig Storage pointer to the distribution's config
    * @param totalStaked Current total of staked assets for this distribution
    * @return The new distribution index
-   **/
+   */
   function _updateAssetStateInternal(
     address underlyingAsset,
     AssetData storage assetConfig,
@@ -1118,7 +1118,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
    * @param totalStaked Total tokens staked in the distribution
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _updateUserAssetInternal(
     address user,
     address asset,
@@ -1148,7 +1148,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user The address of the user
    * @param stakes List of structs of the user data related with his stake
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _claimRewards(
     address user,
     DistributionTypes.UserStakeInput[] memory stakes
@@ -1174,7 +1174,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user The address of the user
    * @param stakes List of structs of the user data related with his stake
    * @return The accrued rewards for the user until the moment
-   **/
+   */
   function _getUnclaimedRewards(
     address user,
     DistributionTypes.UserStakeInput[] memory stakes
@@ -1207,7 +1207,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param reserveIndex Current index of the distribution
    * @param userIndex Index stored for the user, representation his staking moment
    * @return The rewards
-   **/
+   */
   function _getRewards(
     uint256 principalUserBalance,
     uint256 reserveIndex,
@@ -1225,7 +1225,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param lastUpdateTimestamp Last moment this distribution was updated
    * @param totalBalance of tokens considered for the distribution
    * @return The new index.
-   **/
+   */
   function _getAssetIndex(
     uint256 currentIndex,
     uint256 emissionPerSecond,
@@ -1255,7 +1255,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param user Address of the user
    * @param asset The address of the reference asset of the distribution
    * @return The new index
-   **/
+   */
   function getUserAssetData(address user, address asset)
     public
     view
@@ -1764,7 +1764,7 @@ interface IStakedTokenV2 {
  * @title StakedTokenV2
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
- **/
+ */
 abstract contract StakedTokenV2 is
   IStakedTokenV2,
   GovernancePowerWithSnapshot,
@@ -1866,7 +1866,7 @@ abstract contract StakedTokenV2 is
    * @param from Address to transfer from
    * @param to Address to transfer to
    * @param amount Amount to transfer
-   **/
+   */
   function _transfer(
     address from,
     address to,
@@ -1903,7 +1903,7 @@ abstract contract StakedTokenV2 is
    * @param userBalance The current balance of the user
    * @param updateStorage Boolean flag used to update or not the stakerRewardsToClaim of the user
    * @return The unclaimed rewards that were added to the total accrued
-   **/
+   */
   function _updateCurrentUnclaimedRewards(
     address user,
     uint256 userBalance,
@@ -1939,7 +1939,7 @@ abstract contract StakedTokenV2 is
    * @dev Return the total rewards pending to claim by an staker
    * @param staker The staker address
    * @return The rewards
-   **/
+   */
   function getTotalRewardsBalance(address staker)
     external
     view
@@ -1960,7 +1960,7 @@ abstract contract StakedTokenV2 is
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   **/
+   */
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
@@ -1974,7 +1974,7 @@ abstract contract StakedTokenV2 is
    * @param v signature param
    * @param s signature param
    * @param r signature param
-   **/
+   */
   function permit(
     address owner,
     address spender,
@@ -2040,7 +2040,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   **/
+   */
   function delegateByTypeBySig(
     address delegatee,
     DelegationType delegationType,
@@ -2077,7 +2077,7 @@ abstract contract StakedTokenV2 is
    * @param v The recovery byte of the signature
    * @param r Half of the ECDSA signature pair
    * @param s Half of the ECDSA signature pair
-   **/
+   */
   function delegateBySig(
     address delegatee,
     uint256 nonce,
@@ -2429,7 +2429,7 @@ contract RoleManager {
  * @title StakedTokenV3
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
- **/
+ */
 contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
@@ -2498,14 +2498,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
-   **/
+   */
   function getRevision() internal pure virtual override returns (uint256) {
     return REVISION();
   }
 
   /**
    * @dev Called by the proxy contract
-   **/
+   */
   function initialize(
     address slashingAdmin,
     address cooldownPauseAdmin,
@@ -2877,7 +2877,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param from Address to redeem from
    * @param to Address to redeem to
    * @param amount Amount to redeem
-   **/
+   */
   function _redeem(
     address from,
     address to,
@@ -2921,7 +2921,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
-   **/
+   */
   function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
@@ -2933,7 +2933,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
-   **/
+   */
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure
