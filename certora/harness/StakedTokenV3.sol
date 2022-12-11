@@ -2,25 +2,25 @@
 pragma solidity ^0.8.0;
 
 // most imports are only here to force import order for better (i.e smaller) diff on flattening
-import {Context} from '../../../src/lib/Context.sol';
-import {IERC20} from '../../../src/interfaces/IERC20.sol';
-import {ERC20} from '../../../src/lib/ERC20.sol';
-import {ITransferHook} from '../../../src/interfaces/ITransferHook.sol';
-import {DistributionTypes} from '../../../src/lib/DistributionTypes.sol';
-import {Address} from '../../../src/lib/Address.sol';
-import {SafeERC20} from '../../../src/lib/SafeERC20.sol';
-import {VersionedInitializable} from '../../../src/utils/VersionedInitializable.sol';
-import {IAaveDistributionManager} from '../../../src/interfaces/IAaveDistributionManager.sol';
+import {Context} from '../../src/lib/Context.sol';
+import {IERC20} from '../../src/interfaces/IERC20.sol';
+import {ERC20} from '../../src/lib/ERC20.sol';
+import {ITransferHook} from '../../src/interfaces/ITransferHook.sol';
+import {DistributionTypes} from '../../src/lib/DistributionTypes.sol';
+import {Address} from '../../src/lib/Address.sol';
+import {SafeERC20} from '../../src/lib/SafeERC20.sol';
+import {VersionedInitializable} from '../../src/utils/VersionedInitializable.sol';
+import {IAaveDistributionManager} from '../../src/interfaces/IAaveDistributionManager.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
-import {IGovernancePowerDelegationToken} from '../../../src/interfaces/IGovernancePowerDelegationToken.sol';
-import {GovernancePowerDelegationERC20} from '../../../src/lib/GovernancePowerDelegationERC20.sol';
-import {GovernancePowerWithSnapshot} from '../../../src/lib/GovernancePowerWithSnapshot.sol';
-import {IERC20WithPermit} from '../../../src/interfaces/IERC20WithPermit.sol';
-import {IStakedTokenV2} from '../../../src/interfaces/IStakedTokenV2.sol';
+import {IGovernancePowerDelegationToken} from '../../src/interfaces/IGovernancePowerDelegationToken.sol';
+import {GovernancePowerDelegationERC20} from '../../src/lib/GovernancePowerDelegationERC20.sol';
+import {GovernancePowerWithSnapshot} from '../../src/lib/GovernancePowerWithSnapshot.sol';
+import {IERC20WithPermit} from '../../src/interfaces/IERC20WithPermit.sol';
+import {IStakedTokenV2} from '../../src/interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
-import {IStakedTokenV3} from '../../../src/interfaces/IStakedTokenV3.sol';
-import {PercentageMath} from '../../../src/lib/PercentageMath.sol';
-import {RoleManager} from '../../../src/utils/RoleManager.sol';
+import {IStakedTokenV3} from '../../src/interfaces/IStakedTokenV3.sol';
+import {PercentageMath} from '../../src/lib/PercentageMath.sol';
+import {RoleManager} from '../../src/utils/RoleManager.sol';
 
 /**
  * @title StakedTokenV3
@@ -86,12 +86,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       emissionManager,
       distributionDuration
     )
+  /*solhint-disable no-empty-blocks*/
   {}
 
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
    */
+  /*solhint-disable func-name-mixedcase */
   function REVISION() public pure virtual override returns (uint256) {
     return 3;
   }
@@ -340,6 +342,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _cooldownSeconds;
   }
 
+  /*solhint-disable not-rely-on-time*/
   /// @inheritdoc IStakedTokenV2
   function getNextCooldownTimestamp(
     uint256 fromCooldownTimestamp,
@@ -423,7 +426,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       : amount;
 
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
-    REWARD_TOKEN.safeTransferFrom(../LT, to, amountToClaim);
+    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
     emit RewardsClaimed(from, to, amountToClaim);
     return amountToClaim;
   }
@@ -567,7 +570,4 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
   }
 
-  function getCooldownSeconds() view returns (uint256) {
-    returns _cooldownSeconds;
-  }
 }

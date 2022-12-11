@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-import {DistributionTypes} from '../../../src/lib/DistributionTypes.sol';
-import {IAaveDistributionManager} from '../../../src/interfaces/IAaveDistributionManager.sol';
+import {DistributionTypes} from '../../src/lib/DistributionTypes.sol';
+import {IAaveDistributionManager} from '../../src/interfaces/IAaveDistributionManager.sol';
 
 /**
  * @title AaveDistributionManager
@@ -16,7 +16,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     uint256 index;
     mapping(address => uint256) users;
   }
-
+  /*solhint-disable var-name-mixedcase*/
   uint256 public immutable DISTRIBUTION_END;
 
   address public immutable EMISSION_MANAGER;
@@ -33,6 +33,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     uint256 index
   );
 
+  /*solhint-disable not-rely-on-time*/
   constructor(address emissionManager, uint256 distributionDuration) {
     DISTRIBUTION_END = block.timestamp + distributionDuration;
     EMISSION_MANAGER = emissionManager;

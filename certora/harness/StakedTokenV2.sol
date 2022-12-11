@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../../../src/interfaces/IERC20.sol';
-import {IStakedTokenV2} from '../../../src/interfaces/IStakedTokenV2.sol';
-import {ITransferHook} from '../../../src/interfaces/ITransferHook.sol';
+import {IERC20} from '../../src/interfaces/IERC20.sol';
+import {IStakedTokenV2} from '../../src/interfaces/IStakedTokenV2.sol';
+import {ITransferHook} from '../../src/interfaces/ITransferHook.sol';
 
-import {ERC20} from '../../../src/lib/ERC20.sol';
-import {DistributionTypes} from '../../../src/lib/DistributionTypes.sol';
-import {SafeERC20} from '../../../src/lib/SafeERC20.sol';
+import {ERC20} from '../../src/lib/ERC20.sol';
+import {DistributionTypes} from '../../src/lib/DistributionTypes.sol';
+import {SafeERC20} from '../../src/lib/SafeERC20.sol';
 
-import {VersionedInitializable} from '../../../src/utils/VersionedInitializable.sol';
+import {VersionedInitializable} from '../../src/utils/VersionedInitializable.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
-import {GovernancePowerWithSnapshot} from '../../../src/lib/GovernancePowerWithSnapshot.sol';
+import {GovernancePowerWithSnapshot} from '../../src/lib/GovernancePowerWithSnapshot.sol';
 
 /**
  * @title StakedTokenV2
@@ -26,10 +26,12 @@ abstract contract StakedTokenV2 is
 {
   using SafeERC20 for IERC20;
 
+  /* solhint-disable func-name-mixedcase */
   function REVISION() public pure virtual returns (uint256) {
     return 2;
   }
 
+  /* solhint-disable var-name-mixedcase */
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
 
@@ -101,6 +103,7 @@ abstract contract StakedTokenV2 is
   function redeem(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
+  /*solhint-disable not-rely-on-time*/
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
     //solium-disable-next-line

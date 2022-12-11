@@ -3,7 +3,7 @@ then
     RULE="--rule $1"
 fi
 
-certoraRun ../src/Contracts/StakedAaveV3.sol:StakedAaveV3 \
+certoraRun harness/StakedAaveV3.sol:StakedAaveV3 \
     harness/mocks/DummyERC20Impl.sol \
     harness/mocks/AaveGovernance.sol \
     harness/mocks/GhoVariableDebt_Mock.sol \

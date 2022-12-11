@@ -2,21 +2,21 @@
 pragma solidity ^0.8.0;
 
 // most imports are only here to force import order for better (i.e smaller) diff on flattening
-import {Context} from '../../../src/lib/Context.sol';
-import {IERC20} from ../'../../src/interfaces/IERC20.sol';
-import {ERC20} from '../../../src/lib/ERC20.sol';
-import {ITransferHook} from '../../../src/interfaces/ITransferHook.sol';
-import {DistributionTypes} from '../../../src/lib/DistributionTypes.sol';
-import {Address} from '../../../src/lib/Address.sol';
-import {SafeERC20} from '../../../src/lib/SafeERC20.sol';
-import {VersionedInitializable} from '../../../src/utils/VersionedInitializable.sol';
-import {IAaveDistributionManager} from '../../../src/interfaces/IAaveDistributionManager.sol';
+import {Context} from '../../src/lib/Context.sol';
+import {IERC20} from '../../src/interfaces/IERC20.sol';
+import {ERC20} from '../../src/lib/ERC20.sol';
+import {ITransferHook} from '../../src/interfaces/ITransferHook.sol';
+import {DistributionTypes} from '../../src/lib/DistributionTypes.sol';
+import {Address} from '../../src/lib/Address.sol';
+import {SafeERC20} from '../../src/lib/SafeERC20.sol';
+import {VersionedInitializable} from '../../src/utils/VersionedInitializable.sol';
+import {IAaveDistributionManager} from '../../src/interfaces/IAaveDistributionManager.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
-import {IGovernancePowerDelegationToken} from '../../../src/interfaces/IGovernancePowerDelegationToken.sol';
-import {GovernancePowerDelegationERC20} from '../../../src/lib/GovernancePowerDelegationERC20.sol';
-import {GovernancePowerWithSnapshot} from '../../../src/lib/GovernancePowerWithSnapshot.sol';
+import {IGovernancePowerDelegationToken} from '../../src/interfaces/IGovernancePowerDelegationToken.sol';
+import {GovernancePowerDelegationERC20} from '../../src/lib/GovernancePowerDelegationERC20.sol';
+import {GovernancePowerWithSnapshot} from '../../src/lib/GovernancePowerWithSnapshot.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
-import {IGhoVariableDebtToken} from '../../../src/interfaces/IGhoVariableDebtToken.sol';
+import {IGhoVariableDebtToken} from '../../src/interfaces/IGhoVariableDebtToken.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 
 /**
@@ -26,12 +26,14 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
  */
 contract StakedAaveV3 is StakedTokenV3 {
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
+  /* solhint-disable var-name-mixedcase */ 
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
   /// @notice Snapshots of the exchangeRate for a given block
   mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
   uint120 internal _exchangeRateSnapshotsCount;
 
+  /* solhint-disable func-name-mixedcase */
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
   }
