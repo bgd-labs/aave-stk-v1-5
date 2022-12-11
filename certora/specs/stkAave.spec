@@ -1,29 +1,11 @@
-using DummyERC20Impl as stake_token
 
-methods {
+import "base.spec"
 
-    stake_token.balanceOf(address) returns (uint256) envfree
-
-    // public variables
-    REWARDS_VAULT() returns (address) envfree
-    UNSTAKE_WINDOW() returns (uint256) envfree
-
-    // envfree 
-    balanceOf(address) returns (uint256) envfree
-    totalSupply() returns (uint256) envfree
-    stakerRewardsToClaim(address) returns (uint256) envfree
-    stakersCooldowns(address) returns (uint256) envfree
-    getCooldownSeconds() returns (uint256) envfree
-
-    // view but not envfree - uses block.timestamp
-    getNextCooldownTimestamp(uint256,uint256,address,uint256)
-    
-    // state changing operations
-    stake(address,uint256)
-    redeem(address,uint256)
-}
-
-definition AAVE_MAX_SUPPLY() returns uint256 = 16000000 * 10^18;
+/* 
+    This is a draft spec, written on a previous incomplete version of the code
+   and it contains imprecise properties.
+   probably will be deleted later
+*/
 
 // after staking the accrued rewards only go up
 rule rewardsAfterStakingOnlyGoUp(address onBehalfOf, uint256 amount) {
