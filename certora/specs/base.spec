@@ -22,6 +22,7 @@ methods {
     getNextCooldownTimestamp(uint256,uint256,address,uint256)
     
     // state changing operations
+    initialize(address,address,address,uint256,uint256)
     stake(address,uint256)
     redeem(address,uint256)
     slash(address,uint256) returns (uint256)
