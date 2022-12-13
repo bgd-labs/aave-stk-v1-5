@@ -18,4 +18,4 @@ certoraRun harness/StakedAaveV3.sol \
     --optimistic_loop \
     --loop_iter 3 \
     --send_only \
-    --msg "redeem" 
+    --msg "slashing" 

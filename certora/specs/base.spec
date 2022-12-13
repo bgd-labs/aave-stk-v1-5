@@ -31,3 +31,8 @@ methods {
 
 definition AAVE_MAX_SUPPLY() returns uint256 = 16000000 * 10^18;
 definition EXCHANGE_RATE_FACTOR() returns uint256 = 10^18;
+definition PERCENTAGE_FACTOR() returns uint256 = 10^4;
+
+// a reasonable assumption that slashing is below 99%
+definition MAX_EXCHANGE_RATE() returns uint256 = 100 * 10^18;
+definition MAX_PERCENTAGE() returns uint256 = 100 * PERCENTAGE_FACTOR();
