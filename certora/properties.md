@@ -17,7 +17,7 @@
 - [v] after `stake()`: accruedRewards only go up
 - [v] after `stake()`: balanceOf[user] is greater or equal to deposit amount
 - [v] after `stake()`: staked token is transferred to the vault
-- [ ] after `stake()`: cooldown is updated
+- [v] after `stake()`: cooldown is updated
 
 #### redeem
 - [v] reverse properties on `redeem()`

@@ -121,3 +121,12 @@ $$
 ## Changed events
 
 - `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616 standard
+
+
+## invariants:
+
+need to track
+ - inPostSlashingPeriod
+ - slash: we know it's slash when inPostSlashingPeriod goes from F to T
+ - how to know we're in returnFunds: exchangeRate goes down. and staked token balance goes up
+ - 

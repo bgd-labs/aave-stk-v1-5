@@ -75,3 +75,33 @@ rule integrityOfSlashing(address to, uint256 amount){
     // doesn't work - should be proven with invariant or dedicated rule for exchange rate change
     assert getExchangeRate() == (balanceStakeTokenVaultBefore - amountToSlash) / totalSupply();
 }
+
+rule integrityOfReturnFunds(uint256 amount){
+    env e;
+    require(amount < AAVE_MAX_SUPPLY());
+    require(e.msg.sender != currentContract);
+
+    uint256 balanceStakeTokenSenderBefore = stake_token.balanceOf(e.msg.sender);
+    uint256 balanceStakeTokenVaultBefore = stake_token.balanceOf(currentContract);
+    require(balanceStakeTokenSenderBefore < AAVE_MAX_SUPPLY());
+    require(balanceStakeTokenVaultBefore < AAVE_MAX_SUPPLY());
+    returnFunds(e, amount);
+    uint256 balanceStakeTokenSenderAfter = stake_token.balanceOf(e.msg.sender);
+    uint256 balanceStakeTokenVaultAfter = stake_token.balanceOf(currentContract);
+
+    assert balanceStakeTokenSenderAfter == balanceStakeTokenSenderBefore - amount;
+    assert balanceStakeTokenVaultAfter == balanceStakeTokenVaultBefore + amount;
+}
+
+rule noEntryUntilSlashingSettled(){
+    assert false;
+}
+
+// transfer tokens to the contract and assert the exchange rate doesn't change
+rule airdropNotMutualized(uint256 amount){
+    env e;
+    uint256 exchangeRateBefore = getExchangeRate();
+    stake_token.transfer(e, currentContract, amount);
+    uint256 exchangeRateAfter = getExchangeRate();
+    assert exchangeRateBefore == exchangeRateAfter;
+}

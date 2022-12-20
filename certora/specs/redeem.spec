@@ -46,3 +46,19 @@ rule integrityOfRedeem(address to, uint256 amount){
     }
 
 }
+
+rule redeemDuringPostSlashing(address to, uint256 amount){
+    env e;
+
+    require(inPostSlashingPeriod());
+    require(amount > 0);
+    require(amount <= balanceOf(e.msg.sender));
+
+    uint256 underlyingToRedeem = amount * EXCHANGE_RATE_FACTOR() / getExchangeRate();
+    require(stake_token.balanceOf(currentContract) >= underlyingToRedeem);
+
+    redeem@withrevert(e, to, amount);
+
+    assert !lastReverted;
+
+}

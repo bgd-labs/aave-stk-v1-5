@@ -31,3 +31,18 @@ rule noStakingPostSlashingPeriod(address onBehalfOf, uint256 amount) {
     stake@withrevert(e, onBehalfOf, amount);
     assert lastReverted, "shouldn not be able to stake in post slashing period";
 }
+
+// should be updated for exchange rate
+rule stakeTokenBalanceAtLeastTotalSupply(method f) {
+    env e;
+    calldataarg args;
+    require(e.msg.sender != currentContract);
+    require(REWARDS_VAULT() != currentContract);
+    uint256 totalBefore = totalSupply();
+    uint256 stakeTokenBalanceBefore = stake_token.balanceOf(currentContract);
+    require(stakeTokenBalanceBefore >= totalBefore);
+    f(e, args);
+    uint256 totalAfter = totalSupply();
+    uint256 stakeTokenBalanceAfter = stake_token.balanceOf(currentContract);
+    assert stakeTokenBalanceAfter >= totalAfter;
+}
