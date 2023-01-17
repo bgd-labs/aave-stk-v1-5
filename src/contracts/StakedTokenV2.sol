@@ -40,7 +40,7 @@ abstract contract StakedTokenV2 is
   address public immutable REWARDS_VAULT;
 
   mapping(address => uint256) public stakerRewardsToClaim;
-  mapping(address => uint256) public stakersCooldowns;
+  mapping(address => CooldownSnapshot) public stakersCooldowns;
 
   /// @dev End of Storage layout from StakedToken v1
 
@@ -78,7 +78,7 @@ abstract contract StakedTokenV2 is
     address indexed to,
     uint256 amount
   );
-  event Cooldown(address indexed user);
+  event Cooldown(address indexed user, uint256 amount);
 
   constructor(
     IERC20 stakedToken,
@@ -101,24 +101,10 @@ abstract contract StakedTokenV2 is
   function redeem(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
-  function cooldown() external override {
-    require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
-    //solium-disable-next-line
-    stakersCooldowns[msg.sender] = block.timestamp;
-
-    emit Cooldown(msg.sender);
-  }
+  function cooldown() external virtual override;
 
   /// @inheritdoc IStakedTokenV2
   function claimRewards(address to, uint256 amount) external virtual override;
-
-  /// @inheritdoc IStakedTokenV2
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public view virtual returns (uint256);
 
   /// @inheritdoc IStakedTokenV2
   function getTotalRewardsBalance(address staker)
@@ -258,42 +244,6 @@ abstract contract StakedTokenV2 is
     require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
     _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
     _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
-  }
-
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   */
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
-    // Sender
-    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
-
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
-
-      uint256 previousSenderCooldown = stakersCooldowns[from];
-      stakersCooldowns[to] = getNextCooldownTimestamp(
-        previousSenderCooldown,
-        amount,
-        to,
-        balanceOfTo
-      );
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        stakersCooldowns[from] = 0;
-      }
-    }
-
-    super._transfer(from, to, amount);
   }
 
   /**
