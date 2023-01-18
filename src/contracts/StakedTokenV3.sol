@@ -503,7 +503,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     uint256 amountToRedeem = (amount > maxBalance) ? maxBalance : amount;
 
-    _updateCurrentUnclaimedRewards(from, maxBalance, true);
+    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
     uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
       _currentExchangeRate;
