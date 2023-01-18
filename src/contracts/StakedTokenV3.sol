@@ -561,7 +561,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       if (previousSenderCooldown.timestamp != 0) {
         // if cooldown was set and whole balance of sender was transferred - clear cooldown
         if (balanceOfFrom == amount) {
-          stakersCooldowns[from] = CooldownSnapshot(0, 0);
+          delete stakersCooldowns[from];
         } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
           stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
         }
