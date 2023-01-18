@@ -1713,6 +1713,11 @@ interface IERC20WithPermit is IERC20 {
 }
 
 interface IStakedTokenV2 {
+  struct CooldownSnapshot {
+    uint72 timestamp;
+    uint184 amount;
+  }
+
   /**
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares
@@ -1739,27 +1744,6 @@ interface IStakedTokenV2 {
    * @param amount Amount to stake
    */
   function claimRewards(address to, uint256 amount) external;
-
-  /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
-   */
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) external view returns (uint256);
 
   /**
    * @dev Return the total rewards pending to claim by an staker
@@ -1799,7 +1783,7 @@ abstract contract StakedTokenV2 is
   address public immutable REWARDS_VAULT;
 
   mapping(address => uint256) public stakerRewardsToClaim;
-  mapping(address => uint256) public stakersCooldowns;
+  mapping(address => CooldownSnapshot) public stakersCooldowns;
 
   /// @dev End of Storage layout from StakedToken v1
 
@@ -1837,7 +1821,7 @@ abstract contract StakedTokenV2 is
     address indexed to,
     uint256 amount
   );
-  event Cooldown(address indexed user);
+  event Cooldown(address indexed user, uint256 amount);
 
   constructor(
     IERC20 stakedToken,
@@ -1860,24 +1844,10 @@ abstract contract StakedTokenV2 is
   function redeem(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
-  function cooldown() external override {
-    require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
-    //solium-disable-next-line
-    stakersCooldowns[msg.sender] = block.timestamp;
-
-    emit Cooldown(msg.sender);
-  }
+  function cooldown() external virtual override;
 
   /// @inheritdoc IStakedTokenV2
   function claimRewards(address to, uint256 amount) external virtual override;
-
-  /// @inheritdoc IStakedTokenV2
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public view virtual returns (uint256);
 
   /// @inheritdoc IStakedTokenV2
   function getTotalRewardsBalance(address staker)
@@ -2017,42 +1987,6 @@ abstract contract StakedTokenV2 is
     require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
     _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
     _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
-  }
-
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   */
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
-    // Sender
-    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
-
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
-
-      uint256 previousSenderCooldown = stakersCooldowns[from];
-      stakersCooldowns[to] = getNextCooldownTimestamp(
-        previousSenderCooldown,
-        amount,
-        to,
-        balanceOfTo
-      );
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        stakersCooldowns[from] = 0;
-      }
-    }
-
-    super._transfer(from, to, amount);
   }
 
   /**
@@ -2569,6 +2503,18 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _stake(msg.sender, to, amount);
   }
 
+  /// @inheritdoc IStakedTokenV2
+  function cooldown() external override(IStakedTokenV2, StakedTokenV2) {
+    uint256 amount = balanceOf(msg.sender);
+    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+    stakersCooldowns[msg.sender] = CooldownSnapshot({
+      timestamp: uint72(block.timestamp),
+      amount: uint184(amount)
+    });
+
+    emit Cooldown(msg.sender, amount);
+  }
+
   /// @inheritdoc IStakedTokenV3
   function stakeWithPermit(
     address from,
@@ -2753,42 +2699,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     return _cooldownSeconds;
   }
 
-  /// @inheritdoc IStakedTokenV2
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
-    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-    if (toCooldownTimestamp == 0) {
-      return 0;
-    }
-
-    uint256 minimalValidCooldownTimestamp = block.timestamp -
-      _cooldownSeconds -
-      UNSTAKE_WINDOW;
-
-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-      toCooldownTimestamp = 0;
-    } else {
-      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
-        fromCooldownTimestamp)
-        ? block.timestamp
-        : fromCooldownTimestamp;
-
-      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
-        return toCooldownTimestamp;
-      } else {
-        toCooldownTimestamp =
-          ((amountToReceive * adjustedFromCooldownTimestamp) +
-            (toBalance * toCooldownTimestamp)) /
-          (amountToReceive + toBalance);
-      }
-    }
-    return toCooldownTimestamp;
-  }
-
   /**
    * @dev sets the max slashable percentage
    * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
@@ -2899,8 +2809,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       emit RewardsAccrued(to, accruedRewards);
     }
 
-    stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
-
     uint256 sharesToMint = previewStake(amount);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
@@ -2922,25 +2830,28 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 amount
   ) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
-    //solium-disable-next-line
-    uint256 cooldownStartTimestamp = stakersCooldowns[from];
 
+    CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
     if (!inPostSlashingPeriod) {
       require(
-        (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
+        (block.timestamp > cooldownSnapshot.timestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
-        (block.timestamp - (cooldownStartTimestamp + _cooldownSeconds) <=
+        (block.timestamp - (cooldownSnapshot.timestamp + _cooldownSeconds) <=
           UNSTAKE_WINDOW),
         'UNSTAKE_WINDOW_FINISHED'
       );
     }
+
     uint256 balanceOfFrom = balanceOf(from);
+    uint256 maxBalance = inPostSlashingPeriod
+      ? balanceOfFrom
+      : cooldownSnapshot.amount;
 
-    uint256 amountToRedeem = (amount > balanceOfFrom) ? balanceOfFrom : amount;
+    uint256 amountToRedeem = (amount > maxBalance) ? maxBalance : amount;
 
-    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
+    _updateCurrentUnclaimedRewards(from, maxBalance, true);
 
     uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
       _currentExchangeRate;
@@ -2948,7 +2859,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _burn(from, amountToRedeem);
 
     if (balanceOfFrom - amountToRedeem == 0) {
-      stakersCooldowns[from] = 0;
+      stakersCooldowns[from] = CooldownSnapshot(0, 0);
     }
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
@@ -2978,6 +2889,37 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     returns (uint128)
   {
     return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
+  }
+
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
+    uint256 balanceOfFrom = balanceOf(from);
+    // Sender
+    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
+
+    // Recipient
+    if (from != to) {
+      uint256 balanceOfTo = balanceOf(to);
+      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
+
+      CooldownSnapshot memory previousSenderCooldown = stakersCooldowns[from];
+      if (previousSenderCooldown.timestamp != 0) {
+        // if cooldown was set and whole balance of sender was transferred - clear cooldown
+        if (balanceOfFrom == amount) {
+          stakersCooldowns[from] = CooldownSnapshot(0, 0);
+        } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
+          stakersCooldowns[from] = CooldownSnapshot({
+            timestamp: previousSenderCooldown.timestamp,
+            amount: uint184(balanceOfFrom - amount)
+          });
+        }
+      }
+    }
+
+    super._transfer(from, to, amount);
   }
 }
 

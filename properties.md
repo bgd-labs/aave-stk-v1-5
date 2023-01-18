@@ -19,6 +19,8 @@ With the new iteration the StakedTokenV3 adds enhanced mechanics for slashing in
 Therefore a new `exchangeRate` is introduced which will reflect the ratio between stkToken and Token.
 Initially this exchange rate will be initialized as `1e18` which reflects a `1:1` peg.
 
+To account for a [vulnerability discovered by certora](https://github.com/bgd-labs/aave-stk-slashing-mgmt/issues/6) which would allow for gaming the cooldown eventually leading to prolonged withdrawal windows, this revision also contains refined cooldown mechanics. The cooldown no longer allows for redeeming `balanceOf(account)` at redeem, but is limited to `balanceOf(account)` at cooldown start.
+
 In the case of StakedAaveV3 it also adds a hook for managing GHO discounts.
 
 The new iteration will update the revision of:
@@ -62,6 +64,10 @@ $_{t1}$: the state of the system after a transaction.
 
 - initializer and constructor only initialize variables not previously initialized
 
+## Cooldown
+
+- `cooldown` should persist the accounts current `balance` and the `block.timestamp` within `stakersCooldowns[account]`
+
 ## Exchange rate
 
 The exchange rate is initialized as $1e18$ and only adjusted up & down based on `slash` and `returnFunds` actions.
@@ -92,13 +98,28 @@ $$
 stkAmount_{t1} = {amount * exchangeRate_{t0} \over 1e18}
 $$
 
+- staking with a pending cooldown will no longer adjust the cooldown time
+
 ### Redeeming
+
+- the redeemable amount is determined as
+
+  - `stakersCooldowns[account].amount` or
+  - `balanceOf(account)` in case of an unsetteled slashing event (`inPostSlashingPeriod == true`)
 
 - the redeemable amount should be scaled down, so the pool always guarantees fair exit
 
 $$
 amount_{t1} = {amount * 1e18 \over exchangeRate_{t0}}
 $$
+
+### Transfers
+
+Transfers need to account for pending cooldown so you cannot use `transfer in/out` to game the cooldown.
+Therefore:
+
+- `transfer in` does not affect the `stakersCooldowns[account]`. If an account activated cooldown for `x` and receives `y` he should still only be eligible to redeem `x` as it was persisted into `stakersCooldowns[account].amount`
+- `transfer out` needs to account for reduced funds on `redeem` as otherwise one could `bank` different exit windows on different `accounts` and use transfers for an early exit. Therefore given `cooldown()` at`t0` and end of withdrawal window `t1` the `stakersCooldowns[account].amount` needs to be down adjusted to the lowest `balanceOf` within the range of `t0` and `t1`. To archive this `transfer out` will discount the `stakersCooldowns[account].amount` to `min(stakersCooldowns[account].amount, balanceOf(account))`.
 
 ### Return funds
 
@@ -121,3 +142,4 @@ $$
 ## Changed events
 
 - `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616 standard
+- `Cooldown` now emits both `account, amount` as the cooldown is for a specific amount

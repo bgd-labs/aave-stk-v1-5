@@ -13,7 +13,7 @@
 | ______gap                        | uint256[50]                                                                            | 10   | 0      | 1600  | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | assets                           | mapping(address => struct AaveDistributionManager.AssetData)                           | 60   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | stakerRewardsToClaim             | mapping(address => uint256)                                                            | 61   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| stakersCooldowns                 | mapping(address => uint256)                                                            | 62   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| stakersCooldowns                 | mapping(address => struct IStakedTokenV2.CooldownSnapshot)                             | 62   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _votingDelegates                 | mapping(address => address)                                                            | 63   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _propositionPowerSnapshots       | mapping(address => mapping(uint256 => struct GovernancePowerDelegationERC20.Snapshot)) | 64   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _propositionPowerSnapshotsCounts | mapping(address => uint256)                                                            | 65   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
