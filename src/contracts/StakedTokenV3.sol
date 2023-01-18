@@ -511,7 +511,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _burn(from, amountToRedeem);
 
     if (balanceOfFrom - amountToRedeem == 0) {
-      stakersCooldowns[from] = CooldownSnapshot(0, 0);
+      delete stakersCooldowns[from];
     }
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
@@ -563,10 +563,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
         if (balanceOfFrom == amount) {
           stakersCooldowns[from] = CooldownSnapshot(0, 0);
         } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
-          stakersCooldowns[from] = CooldownSnapshot({
-            timestamp: previousSenderCooldown.timestamp,
-            amount: uint184(balanceOfFrom - amount)
-          });
+          stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
         }
       }
     }
