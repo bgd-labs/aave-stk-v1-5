@@ -39,6 +39,28 @@ contract ExchangeRateMock {
 }
 
 contract ExchangeRateTest is Test, ExchangeRateMock {
+  function test_returnFundsRepro() public {
+    uint256 amount = 2;
+    uint256 shares = 2999999999999999997;
+    _currentExchangeRate = 1 ether;
+
+    _updateExchangeRate(_getExchangeRate(shares + amount, shares));
+
+    assertLe(previewRedeem(shares), shares + amount);
+  }
+
+  function test_slashRepro() public {
+    uint256 amount = 1;
+    uint256 shares = 2000000000000000002;
+    _currentExchangeRate = 1 ether;
+    uint256 assets = previewRedeem(shares);
+
+    _updateExchangeRate(_getExchangeRate(assets - amount, shares));
+
+    assertLe(previewRedeem(shares), assets - amount);
+  }
+
+  // FUZZ
   /**
    * Quantifying issue on returnFunds
    * function returnFunds(uint256 amount) external override
@@ -53,7 +75,6 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
 
     _updateExchangeRate(_getExchangeRate(shares + amount, shares));
 
-    console.log(_currentExchangeRate);
     assertLe(previewRedeem(shares), shares + amount);
   }
 
@@ -72,7 +93,6 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
 
     _updateExchangeRate(_getExchangeRate(shares - amount, shares));
 
-    console.log(_currentExchangeRate);
     assertLe(previewRedeem(shares), shares - amount);
   }
 }
