@@ -21,6 +21,7 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
+import {SafeCast} from '../lib/SafeCast.sol';
 
 /**
  * @title StakedTokenV3
@@ -30,6 +31,7 @@ import {RoleManager} from '../utils/RoleManager.sol';
 contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
 
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
@@ -42,7 +44,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /// @notice The maximum amount of funds that can be slashed at any given time
   uint256 internal _maxSlashablePercentage;
   /// @notice Mirror of latest snapshot value for cheaper access
-  uint128 internal _currentExchangeRate;
+  uint216 internal _currentExchangeRate;
   /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
   bool public inPostSlashingPeriod;
 
@@ -263,7 +265,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /// @inheritdoc IStakedTokenV3
-  function getExchangeRate() public view override returns (uint128) {
+  function getExchangeRate() public view override returns (uint216) {
     return _currentExchangeRate;
   }
 
@@ -523,7 +525,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
+  function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }
@@ -533,15 +535,16 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev always rounds up to ensure 100% backing of shares by rounding in favor of the contract
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
-   * @return exchangeRate as 18 decimal precision uint128
+   * @return exchangeRate as 18 decimal precision uint216
    */
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure
-    returns (uint128)
+    returns (uint216)
   {
     return
-      uint128(((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets);
+      (((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets)
+        .toUint216();
   }
 
   function _transfer(

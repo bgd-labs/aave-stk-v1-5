@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
-import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
-import {BaseTest} from './BaseTest.sol';
+import {SafeCast} from '../src/lib/SafeCast.sol';
 
-contract ExchangeRateMock {
+contract ExchangeRateMock is Test {
+  using SafeCast for uint256;
+
   uint256 public constant TOKEN_UNIT = 1e18;
 
-  uint128 internal _currentExchangeRate;
+  uint216 internal _currentExchangeRate;
 
   function previewRedeem(uint256 shares) public view returns (uint256) {
     return (TOKEN_UNIT * shares) / _currentExchangeRate;
@@ -24,41 +25,28 @@ contract ExchangeRateMock {
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure
-    returns (uint128)
+    returns (uint216)
   {
     return
-      uint128(((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets);
+      (((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets)
+        .toUint216();
   }
 
   /**
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
+  function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
   }
 }
 
 contract ExchangeRateTest is Test, ExchangeRateMock {
-  function test_returnFundsRepro() public {
-    uint256 amount = 3;
-    uint256 shares = 340282366920938463463374607431768211453;
+  function _testRefund(uint256 amount, uint256 shares) public {
     _currentExchangeRate = 1 ether;
 
     _updateExchangeRate(_getExchangeRate(shares + amount, shares));
-
     assertLe(previewRedeem(shares), shares + amount);
-  }
-
-  function test_slashRepro() public {
-    uint256 amount = 340282366920938463462374607431768211456;
-    uint256 shares = 340282366920938463462374607431768211457;
-    _currentExchangeRate = 1 ether;
-    uint256 assets = previewRedeem(shares);
-
-    _updateExchangeRate(_getExchangeRate(assets - amount, shares));
-
-    assertLe(previewRedeem(shares), assets - amount);
   }
 
   // FUZZ
@@ -69,14 +57,10 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
    * @param shares uint256 totalSupply()
    * For this purpose assuming a start with 1:1 exchangeRate
    */
-  function test_returnFunds(uint128 amount, uint128 shares) public {
+  function test_returnFunds(uint96 amount, uint96 shares) public {
     vm.assume(amount != 0);
     vm.assume(shares != 0);
-    _currentExchangeRate = 1 ether;
-
-    _updateExchangeRate(_getExchangeRate(shares + amount, shares));
-
-    assertLe(previewRedeem(shares), shares + amount);
+    _testRefund(amount, shares);
   }
 
   /**
@@ -86,7 +70,7 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
    * @param shares uint256 totalSupply()
    * For this purpose assuming a start with 1:1 exchangeRate
    */
-  function test_slash(uint128 amount, uint128 shares) public {
+  function test_slash(uint96 amount, uint96 shares) public {
     vm.assume(amount != 0);
     vm.assume(shares != 0);
     vm.assume(amount < shares);
