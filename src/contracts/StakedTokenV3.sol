@@ -540,7 +540,8 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     pure
     returns (uint128)
   {
-    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
+    return
+      uint128(((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets);
   }
 
   function _transfer(

@@ -26,7 +26,8 @@ contract ExchangeRateMock {
     pure
     returns (uint128)
   {
-    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
+    return
+      uint128(((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets);
   }
 
   /**
@@ -40,8 +41,8 @@ contract ExchangeRateMock {
 
 contract ExchangeRateTest is Test, ExchangeRateMock {
   function test_returnFundsRepro() public {
-    uint256 amount = 2;
-    uint256 shares = 2999999999999999997;
+    uint256 amount = 3;
+    uint256 shares = 340282366920938463463374607431768211453;
     _currentExchangeRate = 1 ether;
 
     _updateExchangeRate(_getExchangeRate(shares + amount, shares));
@@ -50,8 +51,8 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
   }
 
   function test_slashRepro() public {
-    uint256 amount = 1;
-    uint256 shares = 2000000000000000002;
+    uint256 amount = 340282366920938463462374607431768211456;
+    uint256 shares = 340282366920938463462374607431768211457;
     _currentExchangeRate = 1 ether;
     uint256 assets = previewRedeem(shares);
 
