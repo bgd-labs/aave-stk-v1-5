@@ -42,11 +42,20 @@ contract ExchangeRateMock is Test {
 }
 
 contract ExchangeRateTest is Test, ExchangeRateMock {
-  function _testRefund(uint256 amount, uint256 shares) public {
+  /**
+   * Test to account for https://github.com/bgd-labs/aave-stk-slashing-mgmt/issues/8
+   */
+  function test_firstDepositor() public {
     _currentExchangeRate = 1 ether;
+    uint256 initialAmount = 1000;
+    uint256 refundAmount = 501 ether;
 
-    _updateExchangeRate(_getExchangeRate(shares + amount, shares));
-    assertLe(previewRedeem(shares), shares + amount);
+    _updateExchangeRate(
+      _getExchangeRate(initialAmount + refundAmount, initialAmount)
+    );
+    _testRefund(refundAmount, initialAmount);
+
+    assertLe(previewRedeem(initialAmount), refundAmount + initialAmount);
   }
 
   // FUZZ
@@ -79,5 +88,12 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
     _updateExchangeRate(_getExchangeRate(shares - amount, shares));
 
     assertLe(previewRedeem(shares), shares - amount);
+  }
+
+  function _testRefund(uint256 amount, uint256 shares) public {
+    _currentExchangeRate = 1 ether;
+
+    _updateExchangeRate(_getExchangeRate(shares + amount, shares));
+    assertLe(previewRedeem(shares), shares + amount);
   }
 }

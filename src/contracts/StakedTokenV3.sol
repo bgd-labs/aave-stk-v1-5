@@ -36,7 +36,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
-  uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
+  uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant TOKEN_UNIT = 1e18;
 
   /// @notice Seconds between starting cooldown and being able to withdraw

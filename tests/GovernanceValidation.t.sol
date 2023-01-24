@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
-import {GovHelpers, IAaveGovernanceV2} from 'aave-helpers/GovHelpers.sol';
+import {AaveGovernanceV2, IAaveGovernanceV2, IGovernanceStrategy} from 'aave-address-book/AaveGovernanceV2.sol';
+import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 import {BaseTest} from './BaseTest.sol';
@@ -70,25 +71,33 @@ contract GovernanceValidation is BaseTest {
     assertEq(proposal.forVotes, amount);
   }
 
+  // FUZZ
   /**
-   * @dev Uver votes on proposal after 10% being slashed
+   * @dev User votes on proposal after 10% being slashed
    */
-  function test_voteAfterSlash() public {
-    uint256 amount = 10 ether;
-
+  function test_voteAfterSlash(uint256 amount) public {
+    uint256 slashingPercent = 10;
+    vm.assume(amount < type(uint128).max);
+    vm.assume(amount > 1 ether);
     _stake(amount);
 
     address receiver = address(42);
-    uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * 10) / 100;
+    uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * slashingPercent) /
+      100;
     vm.startPrank(STAKE_CONTRACT.getAdmin(SLASHING_ADMIN));
     STAKE_CONTRACT.slash(receiver, amountToSlash);
     vm.stopPrank();
 
-    uint256 proposalId = _createDummyProposal();
-    GovHelpers.GOV.submitVote(proposalId, true);
-    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GovHelpers
-      .getProposalById(proposalId);
+    IGovernanceStrategy strategy = IGovernanceStrategy(
+      AaveGovernanceV2.GOV.getGovernanceStrategy()
+    );
+    uint256 power = strategy.getVotingPowerAt(address(this), block.number);
 
-    assertEq(proposal.forVotes, (amount * 90) / 100);
+    assertLe(power, (amount * (100 - slashingPercent)) / 100);
+    assertApproxEqRel(
+      power,
+      (amount * (100 - slashingPercent)) / 100,
+      0.001e18
+    ); // allow for 0.1% derivation
   }
 }
