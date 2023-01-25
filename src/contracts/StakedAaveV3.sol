@@ -30,9 +30,9 @@ contract StakedAaveV3 is StakedTokenV3 {
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
+  uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
   mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
-  uint120 internal _exchangeRateSnapshotsCount;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
