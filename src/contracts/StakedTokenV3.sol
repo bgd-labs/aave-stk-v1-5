@@ -499,11 +499,12 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     }
 
     uint256 balanceOfFrom = balanceOf(from);
-    uint256 maxBalance = inPostSlashingPeriod
+    uint256 maxRedeemable = inPostSlashingPeriod
       ? balanceOfFrom
       : cooldownSnapshot.amount;
+    require(maxRedeemable != 0, 'INVALID_ZERO_MAX_REDEEMABLE');
 
-    uint256 amountToRedeem = (amount > maxBalance) ? maxBalance : amount;
+    uint256 amountToRedeem = (amount > maxRedeemable) ? maxRedeemable : amount;
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
@@ -512,8 +513,14 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _burn(from, amountToRedeem);
 
-    if (balanceOfFrom - amountToRedeem == 0) {
-      delete stakersCooldowns[from];
+    if (cooldownSnapshot.timestamp != 0) {
+      if (cooldownSnapshot.amount - amountToRedeem == 0) {
+        delete stakersCooldowns[from];
+      } else {
+        stakersCooldowns[from].amount =
+          stakersCooldowns[from].amount -
+          amountToRedeem.toUint184();
+      }
     }
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);

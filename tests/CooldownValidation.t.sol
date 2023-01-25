@@ -105,6 +105,37 @@ contract CooldownValidation is BaseTest {
   }
 
   /**
+   * Only able to redeem up to initial cooldown amount
+   */
+  function test_redeemMore() public {
+    uint256 amount = 10 ether;
+    address user1 = address(41);
+    address user2 = address(42);
+
+    vm.startPrank(user1);
+    _stake(amount, user1);
+    STAKE_CONTRACT.cooldown();
+
+    vm.stopPrank();
+    vm.startPrank(user2);
+    _stake(amount, user2);
+    STAKE_CONTRACT.transfer(user1, amount);
+    vm.stopPrank();
+    vm.warp(block.timestamp + STAKE_CONTRACT.getCooldownSeconds() + 1);
+
+    vm.startPrank(user1);
+    STAKE_CONTRACT.redeem(user1, 6 ether);
+    assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(user1), 6 ether);
+    STAKE_CONTRACT.redeem(user1, 6 ether);
+    assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(user1), 10 ether); // 10 instead of 12 as max is adjusted
+    try STAKE_CONTRACT.redeem(user1, 1) {} catch Error(string memory reason) {
+      require(
+        keccak256(bytes(reason)) == keccak256(bytes('UNSTAKE_WINDOW_FINISHED'))
+      );
+    }
+  }
+
+  /**
    * Sending tokens while in cooldown shouldn't affect cooldown amount as long as balanceOf is above cooldown amount
    */
   function test_transferAboveCooldown() public {
