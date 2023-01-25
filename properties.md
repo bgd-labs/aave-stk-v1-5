@@ -68,6 +68,8 @@ $_{t1}$: the state of the system after a transaction.
 
 - `cooldown` should persist the accounts current `balance` and the `block.timestamp` within `stakersCooldowns[account]`
 
+- calling `cooldown` whilst in an active cooldown will reset the cooldown
+
 ## Exchange rate
 
 The exchange rate is initialized as $1e18$ and only adjusted up & down based on `slash` and `returnFunds` actions.
