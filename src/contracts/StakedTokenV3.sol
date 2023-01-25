@@ -37,7 +37,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
-  uint256 public constant TOKEN_UNIT = 1e18;
+  uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
@@ -146,7 +146,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV3
   function previewStake(uint256 assets) public view returns (uint256) {
-    return (assets * _currentExchangeRate) / TOKEN_UNIT;
+    return (assets * _currentExchangeRate) / EXCHANGE_RATE_UNIT;
   }
 
   /// @inheritdoc IStakedTokenV2
@@ -276,7 +276,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     returns (uint256)
   {
-    return (TOKEN_UNIT * shares) / _currentExchangeRate;
+    return (EXCHANGE_RATE_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -508,7 +508,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
+    uint256 underlyingToRedeem = (amountToRedeem * EXCHANGE_RATE_UNIT) /
       _currentExchangeRate;
 
     _burn(from, amountToRedeem);
@@ -550,7 +550,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     returns (uint216)
   {
     return
-      (((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets)
+      (((totalShares * EXCHANGE_RATE_UNIT) + totalAssets - 1) / totalAssets)
         .toUint216();
   }
 
