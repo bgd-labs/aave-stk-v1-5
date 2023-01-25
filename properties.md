@@ -121,7 +121,7 @@ Transfers need to account for pending cooldown so you cannot use `transfer in/ou
 Therefore:
 
 - `transfer in` does not affect the `stakersCooldowns[account]`. If an account activated cooldown for `x` and receives `y` he should still only be eligible to redeem `x` as it was persisted into `stakersCooldowns[account].amount`
-- `transfer out` needs to account for reduced funds on `redeem` as otherwise one could `bank` different exit windows on different `accounts` and use transfers for an early exit. Therefore given `cooldown()` at`t0` and end of withdrawal window `t1` the `stakersCooldowns[account].amount` needs to be down adjusted to the lowest `balanceOf` within the range of `t0` and `t1`. To archive this `transfer out` will discount the `stakersCooldowns[account].amount` to `min(stakersCooldowns[account].amount, balanceOf(account))`.
+- `transfer out` needs to account for reduced funds on `redeem` as otherwise one could `bank` different exit windows on different `accounts` and use transfers for an early exit. Therefore given `cooldown()` at`t0` and end of withdrawal window `t1` the `stakersCooldowns[account].amount` needs to be down adjusted to the lowest `balanceOf` within the range of `t0` and `t1`. To archive this `transfer out` will discount the `stakersCooldowns[account].amount` to `min(stakersCooldowns[account].amount, balanceOf(account))`. In practice that means when calling `cooldown` with a balanceOf `100`, receiving `50`, sending `70` and receiving another `50` the `stakersCooldowns[account].amount` will be discounted to `80` as the minimum within `t0-t1` was `100 + 50 - 70 = 80`.
 
 ### Return funds
 
