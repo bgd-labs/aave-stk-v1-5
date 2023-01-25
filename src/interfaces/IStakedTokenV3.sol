@@ -96,6 +96,12 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function previewStake(uint256 assets) external view returns (uint256);
 
   /**
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
+   */
+  function cooldownOnBehalfOf(address from) external;
+
+  /**
    * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
    * @param to The address to receiving the shares
    * @param amount The amount to be staked

@@ -159,14 +159,23 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV2
   function cooldown() external override(IStakedTokenV2, StakedTokenV2) {
-    uint256 amount = balanceOf(msg.sender);
+    _cooldown(msg.sender);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function cooldownOnBehalfOf(address from) external override onlyClaimHelper {
+    _cooldown(from);
+  }
+
+  function _cooldown(address from) internal {
+    uint256 amount = balanceOf(from);
     require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
-    stakersCooldowns[msg.sender] = CooldownSnapshot({
+    stakersCooldowns[from] = CooldownSnapshot({
       timestamp: uint72(block.timestamp),
       amount: uint184(amount)
     });
 
-    emit Cooldown(msg.sender, amount);
+    emit Cooldown(from, amount);
   }
 
   /// @inheritdoc IStakedTokenV3
