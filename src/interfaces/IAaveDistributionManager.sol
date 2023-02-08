@@ -5,6 +5,6 @@ import {DistributionTypes} from '../lib/DistributionTypes.sol';
 
 interface IAaveDistributionManager {
   function configureAssets(
-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
   ) external;
 }

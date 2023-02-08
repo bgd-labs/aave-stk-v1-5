@@ -28,7 +28,12 @@ import {SafeCast} from '../lib/SafeCast.sol';
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
  */
-contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
+contract StakedTokenV3 is
+  StakedTokenV2,
+  IStakedTokenV3,
+  RoleManager,
+  IAaveDistributionManager
+{
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
   using SafeCast for uint256;
@@ -142,6 +147,19 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _setMaxSlashablePercentage(maxSlashablePercentage);
     _setCooldownSeconds(cooldownSeconds);
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
+  }
+
+  /// @inheritdoc IAaveDistributionManager
+  function configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) external override {
+    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+
+    for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+      assetsConfigInput[i].totalStaked = totalSupply();
+    }
+
+    _configureAssets(assetsConfigInput);
   }
 
   /// @inheritdoc IStakedTokenV3

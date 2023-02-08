@@ -9,7 +9,7 @@ import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.s
  * @notice Accounting contract to manage multiple staking distributions
  * @author Aave
  */
-contract AaveDistributionManager is IAaveDistributionManager {
+contract AaveDistributionManager {
   struct AssetData {
     uint128 emissionPerSecond;
     uint128 lastUpdateTimestamp;
@@ -42,11 +42,9 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @dev Configures the distribution of rewards for a list of assets
    * @param assetsConfigInput The list of configurations to apply
    */
-  function configureAssets(
-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-  ) external override {
-    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
-
+  function _configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) internal {
     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
       AssetData storage assetConfig = assets[
         assetsConfigInput[i].underlyingAsset
