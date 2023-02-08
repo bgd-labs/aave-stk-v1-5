@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
-import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
 
 /**
  * @title AaveDistributionManager
