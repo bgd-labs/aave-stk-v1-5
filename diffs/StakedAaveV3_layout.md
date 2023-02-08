@@ -13,7 +13,7 @@
 | ______gap                        | uint256[50]                                                                            | 10   | 0      | 1600  | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | assets                           | mapping(address => struct AaveDistributionManager.AssetData)                           | 60   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | stakerRewardsToClaim             | mapping(address => uint256)                                                            | 61   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| stakersCooldowns                 | mapping(address => uint256)                                                            | 62   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| stakersCooldowns                 | mapping(address => struct IStakedTokenV2.CooldownSnapshot)                             | 62   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _votingDelegates                 | mapping(address => address)                                                            | 63   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _propositionPowerSnapshots       | mapping(address => mapping(uint256 => struct GovernancePowerDelegationERC20.Snapshot)) | 64   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _propositionPowerSnapshotsCounts | mapping(address => uint256)                                                            | 65   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
@@ -24,7 +24,7 @@
 | _pendingAdmins                   | mapping(uint256 => address)                                                            | 70   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _cooldownSeconds                 | uint256                                                                                | 71   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _maxSlashablePercentage          | uint256                                                                                | 72   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _currentExchangeRate             | uint128                                                                                | 73   | 0      | 16    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| inPostSlashingPeriod             | bool                                                                                   | 73   | 16     | 1     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _exchangeRateSnapshots           | mapping(uint256 => struct GovernancePowerDelegationERC20.Snapshot)                     | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _exchangeRateSnapshotsCount      | uint120                                                                                | 75   | 0      | 15    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _currentExchangeRate             | uint216                                                                                | 73   | 0      | 27    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| inPostSlashingPeriod             | bool                                                                                   | 73   | 27     | 1     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _exchangeRateSnapshotsCount      | uint32                                                                                 | 73   | 28     | 4     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _exchangeRateSnapshots           | mapping(uint256 => struct IStakedTokenV3.ExchangeRateSnapshot)                         | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |

@@ -2,6 +2,11 @@
 pragma solidity ^0.8.0;
 
 interface IStakedTokenV2 {
+  struct CooldownSnapshot {
+    uint72 timestamp;
+    uint184 amount;
+  }
+
   /**
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares
@@ -28,27 +33,6 @@ interface IStakedTokenV2 {
    * @param amount Amount to stake
    */
   function claimRewards(address to, uint256 amount) external;
-
-  /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
-   */
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) external view returns (uint256);
 
   /**
    * @dev Return the total rewards pending to claim by an staker

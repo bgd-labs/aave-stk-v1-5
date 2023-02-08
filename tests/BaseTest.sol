@@ -63,9 +63,18 @@ contract BaseTest is Test {
   }
 
   function _stake(uint256 amount) internal {
-    deal(address(STAKE_CONTRACT.STAKED_TOKEN()), address(this), amount);
+    _stake(amount, address(this));
+  }
+
+  function _stake(uint256 amount, address user) internal {
+    deal(address(STAKE_CONTRACT.STAKED_TOKEN()), user, amount);
     STAKE_CONTRACT.STAKED_TOKEN().approve(address(STAKE_CONTRACT), amount);
-    STAKE_CONTRACT.stake(address(this), amount);
+    STAKE_CONTRACT.stake(user, amount);
+  }
+
+  function _redeem(uint256 amount) internal {
+    STAKE_CONTRACT.redeem(address(this), amount);
+    assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(address(this)), amount);
   }
 
   function _slash20() internal {

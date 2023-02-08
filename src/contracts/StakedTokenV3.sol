@@ -21,28 +21,35 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
+import {SafeCast} from '../lib/SafeCast.sol';
 
 /**
  * @title StakedTokenV3
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
  */
-contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
+contract StakedTokenV3 is
+  StakedTokenV2,
+  IStakedTokenV3,
+  RoleManager,
+  IAaveDistributionManager
+{
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
 
   uint256 public constant SLASH_ADMIN_ROLE = 0;
   uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
   uint256 public constant CLAIM_HELPER_ROLE = 2;
-  uint128 public constant INITIAL_EXCHANGE_RATE = 1e18;
-  uint256 public constant TOKEN_UNIT = 1e18;
+  uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
+  uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
   /// @notice The maximum amount of funds that can be slashed at any given time
   uint256 internal _maxSlashablePercentage;
   /// @notice Mirror of latest snapshot value for cheaper access
-  uint128 internal _currentExchangeRate;
+  uint216 internal _currentExchangeRate;
   /// @notice Flag determining if there's an ongoing slashing event that needs to be settled
   bool public inPostSlashingPeriod;
 
@@ -142,9 +149,22 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
   }
 
+  /// @inheritdoc IAaveDistributionManager
+  function configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) external override {
+    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+
+    for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+      assetsConfigInput[i].totalStaked = totalSupply();
+    }
+
+    _configureAssets(assetsConfigInput);
+  }
+
   /// @inheritdoc IStakedTokenV3
   function previewStake(uint256 assets) public view returns (uint256) {
-    return (assets * _currentExchangeRate) / TOKEN_UNIT;
+    return (assets * _currentExchangeRate) / EXCHANGE_RATE_UNIT;
   }
 
   /// @inheritdoc IStakedTokenV2
@@ -153,6 +173,27 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override(IStakedTokenV2, StakedTokenV2)
   {
     _stake(msg.sender, to, amount);
+  }
+
+  /// @inheritdoc IStakedTokenV2
+  function cooldown() external override(IStakedTokenV2, StakedTokenV2) {
+    _cooldown(msg.sender);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function cooldownOnBehalfOf(address from) external override onlyClaimHelper {
+    _cooldown(from);
+  }
+
+  function _cooldown(address from) internal {
+    uint256 amount = balanceOf(from);
+    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+    stakersCooldowns[from] = CooldownSnapshot({
+      timestamp: uint72(block.timestamp),
+      amount: uint184(amount)
+    });
+
+    emit Cooldown(from, amount);
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -251,7 +292,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /// @inheritdoc IStakedTokenV3
-  function getExchangeRate() public view override returns (uint128) {
+  function getExchangeRate() public view override returns (uint216) {
     return _currentExchangeRate;
   }
 
@@ -262,7 +303,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     override
     returns (uint256)
   {
-    return (TOKEN_UNIT * shares) / _currentExchangeRate;
+    return (EXCHANGE_RATE_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -337,42 +378,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   /// @inheritdoc IStakedTokenV3
   function getCooldownSeconds() external view returns (uint256) {
     return _cooldownSeconds;
-  }
-
-  /// @inheritdoc IStakedTokenV2
-  function getNextCooldownTimestamp(
-    uint256 fromCooldownTimestamp,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public view override(IStakedTokenV2, StakedTokenV2) returns (uint256) {
-    uint256 toCooldownTimestamp = stakersCooldowns[toAddress];
-    if (toCooldownTimestamp == 0) {
-      return 0;
-    }
-
-    uint256 minimalValidCooldownTimestamp = block.timestamp -
-      _cooldownSeconds -
-      UNSTAKE_WINDOW;
-
-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-      toCooldownTimestamp = 0;
-    } else {
-      uint256 adjustedFromCooldownTimestamp = (minimalValidCooldownTimestamp >
-        fromCooldownTimestamp)
-        ? block.timestamp
-        : fromCooldownTimestamp;
-
-      if (adjustedFromCooldownTimestamp < toCooldownTimestamp) {
-        return toCooldownTimestamp;
-      } else {
-        toCooldownTimestamp =
-          ((amountToReceive * adjustedFromCooldownTimestamp) +
-            (toBalance * toCooldownTimestamp)) /
-          (amountToReceive + toBalance);
-      }
-    }
-    return toCooldownTimestamp;
   }
 
   /**
@@ -485,8 +490,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       emit RewardsAccrued(to, accruedRewards);
     }
 
-    stakersCooldowns[to] = getNextCooldownTimestamp(0, amount, to, balanceOfTo);
-
     uint256 sharesToMint = previewStake(amount);
 
     STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
@@ -508,33 +511,43 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 amount
   ) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
-    //solium-disable-next-line
-    uint256 cooldownStartTimestamp = stakersCooldowns[from];
 
+    CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
     if (!inPostSlashingPeriod) {
       require(
-        (block.timestamp > cooldownStartTimestamp + _cooldownSeconds),
+        (block.timestamp > cooldownSnapshot.timestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
-        (block.timestamp - (cooldownStartTimestamp + _cooldownSeconds) <=
+        (block.timestamp - (cooldownSnapshot.timestamp + _cooldownSeconds) <=
           UNSTAKE_WINDOW),
         'UNSTAKE_WINDOW_FINISHED'
       );
     }
-    uint256 balanceOfFrom = balanceOf(from);
 
-    uint256 amountToRedeem = (amount > balanceOfFrom) ? balanceOfFrom : amount;
+    uint256 balanceOfFrom = balanceOf(from);
+    uint256 maxRedeemable = inPostSlashingPeriod
+      ? balanceOfFrom
+      : cooldownSnapshot.amount;
+    require(maxRedeemable != 0, 'INVALID_ZERO_MAX_REDEEMABLE');
+
+    uint256 amountToRedeem = (amount > maxRedeemable) ? maxRedeemable : amount;
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * TOKEN_UNIT) /
+    uint256 underlyingToRedeem = (amountToRedeem * EXCHANGE_RATE_UNIT) /
       _currentExchangeRate;
 
     _burn(from, amountToRedeem);
 
-    if (balanceOfFrom - amountToRedeem == 0) {
-      stakersCooldowns[from] = 0;
+    if (cooldownSnapshot.timestamp != 0) {
+      if (cooldownSnapshot.amount - amountToRedeem == 0) {
+        delete stakersCooldowns[from];
+      } else {
+        stakersCooldowns[from].amount =
+          stakersCooldowns[from].amount -
+          amountToRedeem.toUint184();
+      }
     }
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
@@ -546,7 +559,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal virtual {
+  function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }
@@ -556,13 +569,43 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @dev always rounds up to ensure 100% backing of shares by rounding in favor of the contract
    * @param totalAssets The total amount of assets staked
    * @param totalShares The total amount of shares
-   * @return exchangeRate as 18 decimal precision uint128
+   * @return exchangeRate as 18 decimal precision uint216
    */
   function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
     internal
     pure
-    returns (uint128)
+    returns (uint216)
   {
-    return uint128(((totalShares * TOKEN_UNIT) + TOKEN_UNIT) / totalAssets);
+    return
+      (((totalShares * EXCHANGE_RATE_UNIT) + totalAssets - 1) / totalAssets)
+        .toUint216();
+  }
+
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
+    uint256 balanceOfFrom = balanceOf(from);
+    // Sender
+    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
+
+    // Recipient
+    if (from != to) {
+      uint256 balanceOfTo = balanceOf(to);
+      _updateCurrentUnclaimedRewards(to, balanceOfTo, true);
+
+      CooldownSnapshot memory previousSenderCooldown = stakersCooldowns[from];
+      if (previousSenderCooldown.timestamp != 0) {
+        // if cooldown was set and whole balance of sender was transferred - clear cooldown
+        if (balanceOfFrom == amount) {
+          delete stakersCooldowns[from];
+        } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
+          stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
+        }
+      }
+    }
+
+    super._transfer(from, to, amount);
   }
 }

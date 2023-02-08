@@ -18,6 +18,7 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IGhoVariableDebtToken} from '../interfaces/IGhoVariableDebtToken.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
+import {SafeCast} from '../lib/SafeCast.sol';
 
 /**
  * @title StakedAaveV3
@@ -25,12 +26,13 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
  * @author BGD Labs
  */
 contract StakedAaveV3 is StakedTokenV3 {
+  using SafeCast for uint256;
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
 
+  uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => Snapshot) public _exchangeRateSnapshots;
-  uint120 internal _exchangeRateSnapshotsCount;
+  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
@@ -150,8 +152,8 @@ contract StakedAaveV3 is StakedTokenV3 {
         snapshotsCounts,
         user,
         blockNumber
-      ) * TOKEN_UNIT) /
-      _binarySearch(
+      ) * EXCHANGE_RATE_UNIT) /
+      _binarySearchExchangeRate(
         _exchangeRateSnapshots,
         _exchangeRateSnapshotsCount,
         blockNumber
@@ -162,12 +164,40 @@ contract StakedAaveV3 is StakedTokenV3 {
    * @dev Updates the exchangeRate and emits events accordingly
    * @param newExchangeRate the new exchange rate
    */
-  function _updateExchangeRate(uint128 newExchangeRate) internal override {
-    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = Snapshot(
-      uint128(block.number),
+  function _updateExchangeRate(uint216 newExchangeRate) internal override {
+    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = ExchangeRateSnapshot(
+      block.number.toUint40(),
       newExchangeRate
     );
     ++_exchangeRateSnapshotsCount;
     super._updateExchangeRate(newExchangeRate);
+  }
+
+  function _binarySearchExchangeRate(
+    mapping(uint256 => ExchangeRateSnapshot) storage snapshots,
+    uint256 snapshotsCount,
+    uint256 blockNumber
+  ) internal view returns (uint256) {
+    unchecked {
+      // First check most recent balance
+      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
+        return snapshots[snapshotsCount - 1].value;
+      }
+
+      uint256 lower = 0;
+      uint256 upper = snapshotsCount - 1;
+      while (upper > lower) {
+        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+        ExchangeRateSnapshot memory snapshot = snapshots[center];
+        if (snapshot.blockNumber == blockNumber) {
+          return snapshot.value;
+        } else if (snapshot.blockNumber < blockNumber) {
+          lower = center;
+        } else {
+          upper = center - 1;
+        }
+      }
+      return snapshots[lower].value;
+    }
   }
 }

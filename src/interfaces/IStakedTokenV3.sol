@@ -4,6 +4,11 @@ pragma solidity ^0.8.0;
 import {IStakedTokenV2} from './IStakedTokenV2.sol';
 
 interface IStakedTokenV3 is IStakedTokenV2 {
+  struct ExchangeRateSnapshot {
+    uint40 blockNumber;
+    uint216 value;
+  }
+
   event Staked(
     address indexed from,
     address indexed to,
@@ -20,15 +25,15 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   event Slashed(address indexed destination, uint256 amount);
   event SlashingExitWindowDurationChanged(uint256 windowSeconds);
   event CooldownSecondsChanged(uint256 cooldownSeconds);
-  event ExchangeRateChanged(uint128 exchangeRate);
+  event ExchangeRateChanged(uint216 exchangeRate);
   event FundsReturned(uint256 amount);
   event SlashingSettled();
 
   /**
    * @dev Returns the current exchange rate
-   * @return exchangeRate as 18 decimal precision uint128
+   * @return exchangeRate as 18 decimal precision uint216
    */
-  function getExchangeRate() external view returns (uint128);
+  function getExchangeRate() external view returns (uint216);
 
   /**
    * @dev Executes a slashing of the underlying of a certain amount, transferring the seized funds
@@ -89,6 +94,12 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @return shares the number of shares that would be received
    */
   function previewStake(uint256 assets) external view returns (uint256);
+
+  /**
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
+   */
+  function cooldownOnBehalfOf(address from) external;
 
   /**
    * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
