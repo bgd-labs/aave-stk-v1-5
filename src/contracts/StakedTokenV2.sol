@@ -26,10 +26,6 @@ abstract contract StakedTokenV2 is
 {
   using SafeERC20 for IERC20;
 
-  function REVISION() public pure virtual returns (uint256) {
-    return 2;
-  }
-
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
 
@@ -122,14 +118,6 @@ abstract contract StakedTokenV2 is
     return
       stakerRewardsToClaim[staker] +
       _getUnclaimedRewards(staker, userStakeInputs);
-  }
-
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
   }
 
   /**
