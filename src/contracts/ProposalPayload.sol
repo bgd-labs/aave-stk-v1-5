@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
+import {AaveMisc} from 'aave-address-book/AaveMisc.sol';
 import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
+import {ProxyAdmin} from 'solidity-utils/contracts/transparent-proxy/ProxyAdmin.sol';
+import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 import {StakedAaveV3} from './StakedAaveV3.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
@@ -47,13 +49,13 @@ contract ProposalPayloadStkAave is GenericProposal {
   function execute() external {
     // 1. deploy new proxy
     ProxyAdmin newAdmin = new ProxyAdmin();
-    // 2. move ownership of current token to new proxy
+    // 1. move ownership of current token to new proxy
     IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
       address(newAdmin)
     );
     // ~ ARBITRARY STEP NEEDS TO BE REMOVED ONCE GHO IS LIVE ~
     GhoDebtMock ghoMock = new GhoDebtMock();
-    // 3. deploy newimplementation
+    // 2. deploy newimplementation
     StakedAaveV3 newImpl = new StakedAaveV3(
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
@@ -63,7 +65,7 @@ contract ProposalPayloadStkAave is GenericProposal {
       DISTRIBUTION_DURATION,
       address(ghoMock)
     );
-    // 4. initialize for safety reasons
+    // 3. initialize for safety reasons
     newImpl.initialize(
       SLASHING_ADMIN,
       COOLDOWN_ADMIN,
@@ -71,7 +73,7 @@ contract ProposalPayloadStkAave is GenericProposal {
       MAX_SLASHING,
       COOLDOWN_SECONDS
     );
-    // 5. upgrade & initialize on proxy
+    // // 4. upgrade & initialize on proxy
     newAdmin.upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
@@ -96,13 +98,11 @@ contract ProposalPayloadStkAbpt is GenericProposal {
   address public constant STK_ABPT = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
 
   function execute() external {
-    // 1. deploy new proxy
-    ProxyAdmin newAdmin = new ProxyAdmin();
-    // 2. move ownership of current token to new proxy
+    // 1. move ownership of current token to new proxy
     IInitializableAdminUpgradeabilityProxy(STK_ABPT).changeAdmin(
-      address(newAdmin)
+      AaveMisc.PROXY_ADMIN_ETHEREUM
     );
-    // 3. deploy newimplementation
+    // 2. deploy newimplementation
     StakedTokenV3 newImpl = new StakedTokenV3(
       IERC20(0x41A08648C3766F9F9d85598fF102a08f4ef84F84),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
@@ -111,7 +111,7 @@ contract ProposalPayloadStkAbpt is GenericProposal {
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
       DISTRIBUTION_DURATION
     );
-    // 4. initialize for safety reasons
+    // 3. initialize for safety reasons
     newImpl.initialize(
       SLASHING_ADMIN,
       COOLDOWN_ADMIN,
@@ -119,8 +119,8 @@ contract ProposalPayloadStkAbpt is GenericProposal {
       MAX_SLASHING,
       COOLDOWN_SECONDS
     );
-    // 5. upgrade & initialize on proxy
-    newAdmin.upgradeAndCall(
+    // 4. upgrade & initialize on proxy
+    ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
       abi.encodeWithSignature(

@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import {AaveMisc} from 'aave-address-book/AaveMisc.sol';
+import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
@@ -28,7 +30,7 @@ contract BaseTest is Test {
       ProposalPayloadStkAave stkAaveProposal = new ProposalPayloadStkAave();
       uint256 proposalId = DeployL1Proposal._deployL1Proposal(
         address(stkAaveProposal),
-        GovHelpers.LONG_EXECUTOR,
+        AaveGovernanceV2.LONG_EXECUTOR,
         bytes32('1')
       );
       GovHelpers.passVoteAndExecute(vm, proposalId);
@@ -36,7 +38,7 @@ contract BaseTest is Test {
       ProposalPayloadStkAbpt stkABPTProposal = new ProposalPayloadStkAbpt();
       uint256 proposalId = DeployL1Proposal._deployL1Proposal(
         address(stkABPTProposal),
-        GovHelpers.SHORT_EXECUTOR,
+        AaveGovernanceV2.SHORT_EXECUTOR,
         bytes32('1')
       );
       GovHelpers.passVoteAndExecute(vm, proposalId);
@@ -44,7 +46,7 @@ contract BaseTest is Test {
   }
 
   function _setUp(bool stkAAVE) internal {
-    vm.createSelectFork(vm.rpcUrl('ethereum'), 16121639);
+    vm.createSelectFork(vm.rpcUrl('ethereum'), 16691814);
 
     address stake = address(0);
     if (stkAAVE) {
@@ -53,7 +55,7 @@ contract BaseTest is Test {
       stake = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
     }
     STAKE_CONTRACT = StakedTokenV3(stake);
-    vm.startPrank(GovHelpers.AAVE_WHALE);
+    vm.startPrank(AaveMisc.ECOSYSTEM_RESERVE);
     _executeProposal(stkAAVE);
     vm.stopPrank();
 
