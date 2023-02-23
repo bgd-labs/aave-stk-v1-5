@@ -199,7 +199,6 @@ contract StakedTokenV3 is
   /// @inheritdoc IStakedTokenV3
   function stakeWithPermit(
     address from,
-    address to,
     uint256 amount,
     uint256 deadline,
     uint8 v,
@@ -215,7 +214,7 @@ contract StakedTokenV3 is
       r,
       s
     );
-    _stake(from, to, amount);
+    _stake(from, from, amount);
   }
 
   /// @inheritdoc IStakedTokenV2
