@@ -29,7 +29,7 @@ abstract contract StakedTokenV2 is
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
 
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  /// @notice Seconds available to redeem once the cooldown period is fulfilled
   uint256 public immutable UNSTAKE_WINDOW;
 
   /// @notice Address to pull from the rewards, needs to have approved this contract
