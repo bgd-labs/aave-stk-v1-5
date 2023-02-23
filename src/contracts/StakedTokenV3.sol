@@ -335,6 +335,7 @@ contract StakedTokenV3 is
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
     uint256 currentShares = totalSupply();
+    require(currentShares != 0, 'EMPTY_POOL');
     uint256 assets = previewRedeem(currentShares);
     _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
