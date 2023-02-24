@@ -60,6 +60,8 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   {
     require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');
     GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
+    // brick initialize
+    lastInitializedRevision = REVISION();
   }
 
   /**
@@ -105,7 +107,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   /// @inheritdoc IStakedAaveV3
   function stakeWithPermit(
     address from,
-    address to,
     uint256 amount,
     uint256 deadline,
     uint8 v,
@@ -121,7 +122,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
       r,
       s
     );
-    _stake(from, to, amount);
+    _stake(from, from, amount);
   }
 
   /**
