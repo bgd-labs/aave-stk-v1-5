@@ -45,7 +45,7 @@ contract SlashingValidation is BaseTest {
     assertEq(STAKE_CONTRACT.getExchangeRate(), 1 ether);
   }
 
-  function test_slashExchangeRate() internal {
+  function test_slashExchangeRate() public {
     address receiver = address(42);
     uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * 2) / 10;
 
@@ -55,7 +55,7 @@ contract SlashingValidation is BaseTest {
     vm.stopPrank();
 
     assertEq(STAKE_CONTRACT.STAKED_TOKEN().balanceOf(receiver), amountToSlash);
-    assertEq(STAKE_CONTRACT.getExchangeRate(), 0.8 ether);
+    assertEq(STAKE_CONTRACT.getExchangeRate(), 1.25 ether);
   }
 
   /**
