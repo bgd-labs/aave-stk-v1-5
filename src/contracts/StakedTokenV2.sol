@@ -26,14 +26,10 @@ abstract contract StakedTokenV2 is
 {
   using SafeERC20 for IERC20;
 
-  function REVISION() public pure virtual returns (uint256) {
-    return 2;
-  }
-
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
 
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  /// @notice Seconds available to redeem once the cooldown period is fulfilled
   uint256 public immutable UNSTAKE_WINDOW;
 
   /// @notice Address to pull from the rewards, needs to have approved this contract
@@ -125,14 +121,6 @@ abstract contract StakedTokenV2 is
   }
 
   /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
-  }
-
-  /**
    * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
    * @param owner the owner of the funds
    * @param spender the spender
@@ -173,7 +161,9 @@ abstract contract StakedTokenV2 is
     );
 
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce + 1;
+    unchecked {
+      _nonces[owner] = currentValidNonce + 1;
+    }
     _approve(owner, spender, value);
   }
 
