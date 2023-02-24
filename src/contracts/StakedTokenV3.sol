@@ -340,6 +340,7 @@ contract StakedTokenV3 is
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
+    require(amount >= 1 ether, 'SPAM_PREVENTION');
     uint256 currentShares = totalSupply();
     require(currentShares >= MINIMUM_SHARES, 'SHARES_LT_MINIMUM');
     uint256 assets = previewRedeem(currentShares);
