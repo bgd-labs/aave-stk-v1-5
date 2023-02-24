@@ -47,11 +47,9 @@ contract ProposalPayloadStkAave is GenericProposal {
   address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   function execute() external {
-    // 1. deploy new proxy
-    ProxyAdmin newAdmin = new ProxyAdmin();
     // 1. move ownership of current token to new proxy
     IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
-      address(newAdmin)
+      address(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG)
     );
     // ~ ARBITRARY STEP NEEDS TO BE REMOVED ONCE GHO IS LIVE ~
     GhoDebtMock ghoMock = new GhoDebtMock();
@@ -74,7 +72,7 @@ contract ProposalPayloadStkAave is GenericProposal {
       COOLDOWN_SECONDS
     );
     // // 4. upgrade & initialize on proxy
-    newAdmin.upgradeAndCall(
+    ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
       abi.encodeWithSignature(

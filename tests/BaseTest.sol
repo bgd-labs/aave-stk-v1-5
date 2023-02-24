@@ -3,15 +3,13 @@ pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
 import {AaveMisc} from 'aave-address-book/AaveMisc.sol';
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
+import {GovHelpers, AaveGovernanceV2} from 'aave-helpers/GovHelpers.sol';
 import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 import {IGhoVariableDebtToken} from '../src/interfaces/IGhoVariableDebtToken.sol';
 import {ProposalPayloadStkAbpt, ProposalPayloadStkAave} from '../src/contracts/ProposalPayload.sol';
-import {DeployL1Proposal} from '../scripts/ProposalDeployment.s.sol';
 import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
 
 contract BaseTest is Test {
@@ -26,27 +24,28 @@ contract BaseTest is Test {
   address claimHelper;
 
   function _executeProposal(bool stkAAVE) internal {
+    uint256 proposalId;
+    GovHelpers.Payload[] memory payloads = new GovHelpers.Payload[](1);
     if (stkAAVE) {
-      ProposalPayloadStkAave stkAaveProposal = new ProposalPayloadStkAave();
-      uint256 proposalId = DeployL1Proposal._deployL1Proposal(
-        address(stkAaveProposal),
+      payloads[0] = GovHelpers.buildMainnet(
+        address(new ProposalPayloadStkAave())
+      );
+      proposalId = GovHelpers.createProposal(
         AaveGovernanceV2.LONG_EXECUTOR,
+        payloads,
         bytes32('1')
       );
-      GovHelpers.passVoteAndExecute(vm, proposalId);
     } else {
-      ProposalPayloadStkAbpt stkABPTProposal = new ProposalPayloadStkAbpt();
-      uint256 proposalId = DeployL1Proposal._deployL1Proposal(
-        address(stkABPTProposal),
-        AaveGovernanceV2.SHORT_EXECUTOR,
-        bytes32('1')
+      payloads[0] = GovHelpers.buildMainnet(
+        address(new ProposalPayloadStkAbpt())
       );
-      GovHelpers.passVoteAndExecute(vm, proposalId);
+      proposalId = GovHelpers.createProposal(payloads, bytes32('1'));
     }
+    GovHelpers.passVoteAndExecute(vm, proposalId);
   }
 
   function _setUp(bool stkAAVE) internal {
-    vm.createSelectFork(vm.rpcUrl('ethereum'), 16691814);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), 16698041);
 
     address stake = address(0);
     if (stkAAVE) {
