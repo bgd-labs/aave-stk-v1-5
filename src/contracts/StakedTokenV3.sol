@@ -93,7 +93,10 @@ contract StakedTokenV3 is
       emissionManager,
       distributionDuration
     )
-  {}
+  {
+    // brick initialize
+    lastInitializedRevision = REVISION();
+  }
 
   /**
    * @dev returns the revision of the implementation contract

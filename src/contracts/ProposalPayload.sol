@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.16;
 
 import {AaveMisc} from 'aave-address-book/AaveMisc.sol';
 import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
@@ -63,15 +63,7 @@ contract ProposalPayloadStkAave is GenericProposal {
       DISTRIBUTION_DURATION,
       address(ghoMock)
     );
-    // 3. initialize for safety reasons
-    newImpl.initialize(
-      SLASHING_ADMIN,
-      COOLDOWN_ADMIN,
-      CLAIM_HELPER,
-      MAX_SLASHING,
-      COOLDOWN_SECONDS
-    );
-    // // 4. upgrade & initialize on proxy
+    // 3. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
@@ -109,15 +101,7 @@ contract ProposalPayloadStkAbpt is GenericProposal {
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
       DISTRIBUTION_DURATION
     );
-    // 3. initialize for safety reasons
-    newImpl.initialize(
-      SLASHING_ADMIN,
-      COOLDOWN_ADMIN,
-      CLAIM_HELPER,
-      MAX_SLASHING,
-      COOLDOWN_SECONDS
-    );
-    // 4. upgrade & initialize on proxy
+    // 3. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
