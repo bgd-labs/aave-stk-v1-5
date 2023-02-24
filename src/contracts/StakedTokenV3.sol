@@ -15,7 +15,6 @@ import {AaveDistributionManager} from './AaveDistributionManager.sol';
 import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
-import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
@@ -194,28 +193,6 @@ contract StakedTokenV3 is
     });
 
     emit Cooldown(from, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function stakeWithPermit(
-    address from,
-    address to,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, to, amount);
   }
 
   /// @inheritdoc IStakedTokenV2

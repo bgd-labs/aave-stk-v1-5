@@ -102,25 +102,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function cooldownOnBehalfOf(address from) external;
 
   /**
-   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-   * @param to The address to receiving the shares
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
-   */
-  function stakeWithPermit(
-    address from,
-    address to,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-
-  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
    * @param from The address of the user from to claim
    * @param to Address to send the claimed rewards
