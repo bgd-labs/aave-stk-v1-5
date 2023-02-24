@@ -24,10 +24,10 @@ contract GovernanceValidation is BaseTest {
     calldatas[0] = '';
     bool[] memory withDelegatecalls = new bool[](1);
     withDelegatecalls[0] = true;
-    uint256 proposalId = GovHelpers.createProposal(
+    uint256 proposalId = GovHelpers.createTestProposal(
       vm,
       GovHelpers.SPropCreateParams(
-        GovHelpers.SHORT_EXECUTOR,
+        AaveGovernanceV2.SHORT_EXECUTOR,
         targets,
         values,
         signatures,
@@ -49,7 +49,7 @@ contract GovernanceValidation is BaseTest {
    */
   function test_voteNoPower() public {
     uint256 proposalId = _createDummyProposal();
-    GovHelpers.GOV.submitVote(proposalId, true);
+    AaveGovernanceV2.GOV.submitVote(proposalId, true);
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GovHelpers
       .getProposalById(proposalId);
 
@@ -64,7 +64,7 @@ contract GovernanceValidation is BaseTest {
 
     _stake(amount);
     uint256 proposalId = _createDummyProposal();
-    GovHelpers.GOV.submitVote(proposalId, true);
+    AaveGovernanceV2.GOV.submitVote(proposalId, true);
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GovHelpers
       .getProposalById(proposalId);
 

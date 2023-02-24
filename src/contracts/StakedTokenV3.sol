@@ -99,6 +99,8 @@ contract StakedTokenV3 is
       distributionDuration
     )
   {
+    // brick initialize
+    lastInitializedRevision = REVISION();
     uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
     LOWER_BOUND = 10**decimals;
   }
