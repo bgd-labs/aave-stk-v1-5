@@ -16,6 +16,7 @@ import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDel
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
+import {IERC20Metadata} from '../interfaces/IERC20Metadata.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
@@ -43,6 +44,8 @@ contract StakedTokenV3 is
   uint256 public constant CLAIM_HELPER_ROLE = 2;
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
+
+  uint256 public immutable MINIMUM_SHARES;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
@@ -93,7 +96,10 @@ contract StakedTokenV3 is
       emissionManager,
       distributionDuration
     )
-  {}
+  {
+    uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
+    MINIMUM_SHARES = 10**decimals;
+  }
 
   /**
    * @dev returns the revision of the implementation contract
@@ -335,7 +341,7 @@ contract StakedTokenV3 is
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
     uint256 currentShares = totalSupply();
-    require(currentShares != 0, 'EMPTY_POOL');
+    require(currentShares >= MINIMUM_SHARES, 'SHARES_LT_MINIMUM');
     uint256 assets = previewRedeem(currentShares);
     _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
