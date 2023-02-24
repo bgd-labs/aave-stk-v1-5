@@ -436,6 +436,7 @@ contract StakedTokenV3 is
     uint256 amountToClaim = (amount > newTotalRewards)
       ? newTotalRewards
       : amount;
+    require(amountToClaim != 0, 'INVALID_ZERO_AMOUNT');
 
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
