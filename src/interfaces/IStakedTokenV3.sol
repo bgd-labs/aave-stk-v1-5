@@ -102,24 +102,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function cooldownOnBehalfOf(address from) external;
 
   /**
-   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-   * @param from The address staking the assets
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
-   */
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-
-  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
    * @param from The address of the user from to claim
    * @param to Address to send the claimed rewards
@@ -151,15 +133,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes them
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
-
-  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
@@ -170,18 +143,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
     uint256 claimAmount,
     uint256 redeemAmount
   ) external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes them. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function

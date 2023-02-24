@@ -206,27 +206,6 @@ contract StakedTokenV3 is
     emit Cooldown(from, amount);
   }
 
-  /// @inheritdoc IStakedTokenV3
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, from, amount);
-  }
-
   /// @inheritdoc IStakedTokenV2
   function redeem(address to, uint256 amount)
     external
@@ -259,24 +238,6 @@ contract StakedTokenV3 is
     uint256 amount
   ) external override onlyClaimHelper returns (uint256) {
     return _claimRewards(from, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
-    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external override onlyClaimHelper returns (uint256) {
-    return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
   /// @inheritdoc IStakedTokenV3
