@@ -4,6 +4,11 @@ pragma solidity ^0.8.0;
 import {IStakedTokenV3} from './IStakedTokenV3.sol';
 
 interface IStakedAaveV3 is IStakedTokenV3 {
+  struct ExchangeRateSnapshot {
+    uint40 blockNumber;
+    uint216 value;
+  }
+
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
    * @param to Address to stake to
