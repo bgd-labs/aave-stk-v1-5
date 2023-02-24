@@ -9,7 +9,7 @@ import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 import {IGhoVariableDebtToken} from '../src/interfaces/IGhoVariableDebtToken.sol';
-import {ProposalPayloadStkAbpt, ProposalPayloadStkAave} from '../src/contracts/ProposalPayload.sol';
+import {ProposalPayloadStkAbpt, ProposalPayloadStkAave, GenericProposal} from '../src/contracts/ProposalPayload.sol';
 import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
 
 contract BaseTest is Test {
@@ -42,6 +42,28 @@ contract BaseTest is Test {
       proposalId = GovHelpers.createProposal(payloads, bytes32('1'));
     }
     GovHelpers.passVoteAndExecute(vm, proposalId);
+
+    // ensure implementation is bricked
+    address impl = ProxyHelpers
+      .getInitializableAdminUpgradeabilityProxyImplementation(
+        vm,
+        address(STAKE_CONTRACT)
+      );
+
+    try
+      StakedTokenV3(impl).initialize(
+        GenericProposal.SLASHING_ADMIN,
+        GenericProposal.COOLDOWN_ADMIN,
+        GenericProposal.CLAIM_HELPER,
+        GenericProposal.MAX_SLASHING,
+        GenericProposal.COOLDOWN_SECONDS
+      )
+    {} catch Error(string memory reason) {
+      require(
+        keccak256(bytes(reason)) ==
+          keccak256(bytes('Contract instance has already been initialized'))
+      );
+    }
   }
 
   function _setUp(bool stkAAVE) internal {

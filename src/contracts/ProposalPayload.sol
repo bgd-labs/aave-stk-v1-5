@@ -21,7 +21,7 @@ contract GhoDebtMock is IGhoVariableDebtToken {
   ) public {}
 }
 
-contract GenericProposal {
+library GenericProposal {
   address public constant SLASHING_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
 
   address public constant COOLDOWN_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
@@ -43,7 +43,7 @@ contract GenericProposal {
  * @notice Proposal for upgrading the StkAave implementation
  * @author BGD Labs
  */
-contract ProposalPayloadStkAave is GenericProposal {
+contract ProposalPayloadStkAave {
   address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   function execute() external {
@@ -57,10 +57,10 @@ contract ProposalPayloadStkAave is GenericProposal {
     StakedAaveV3 newImpl = new StakedAaveV3(
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
-      UNSTAKE_WINDOW,
+      GenericProposal.UNSTAKE_WINDOW,
       0x25F2226B597E8F9514B3F68F00f494cF4f286491,
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
-      DISTRIBUTION_DURATION,
+      GenericProposal.DISTRIBUTION_DURATION,
       address(ghoMock)
     );
     // 3. upgrade & initialize on proxy
@@ -69,11 +69,11 @@ contract ProposalPayloadStkAave is GenericProposal {
       address(newImpl),
       abi.encodeWithSignature(
         'initialize(address,address,address,uint256,uint256)',
-        SLASHING_ADMIN,
-        COOLDOWN_ADMIN,
-        CLAIM_HELPER,
-        MAX_SLASHING,
-        COOLDOWN_SECONDS
+        GenericProposal.SLASHING_ADMIN,
+        GenericProposal.COOLDOWN_ADMIN,
+        GenericProposal.CLAIM_HELPER,
+        GenericProposal.MAX_SLASHING,
+        GenericProposal.COOLDOWN_SECONDS
       )
     );
   }
@@ -84,7 +84,7 @@ contract ProposalPayloadStkAave is GenericProposal {
  * @notice Proposal for upgrading the StkAbpt implementation
  * @author BGD Labs
  */
-contract ProposalPayloadStkAbpt is GenericProposal {
+contract ProposalPayloadStkAbpt {
   address public constant STK_ABPT = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
 
   function execute() external {
@@ -96,10 +96,10 @@ contract ProposalPayloadStkAbpt is GenericProposal {
     StakedTokenV3 newImpl = new StakedTokenV3(
       IERC20(0x41A08648C3766F9F9d85598fF102a08f4ef84F84),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
-      UNSTAKE_WINDOW,
+      GenericProposal.UNSTAKE_WINDOW,
       0x25F2226B597E8F9514B3F68F00f494cF4f286491,
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
-      DISTRIBUTION_DURATION
+      GenericProposal.DISTRIBUTION_DURATION
     );
     // 3. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM).upgradeAndCall(
@@ -107,11 +107,11 @@ contract ProposalPayloadStkAbpt is GenericProposal {
       address(newImpl),
       abi.encodeWithSignature(
         'initialize(address,address,address,uint256,uint256)',
-        SLASHING_ADMIN,
-        COOLDOWN_ADMIN,
-        CLAIM_HELPER,
-        MAX_SLASHING,
-        COOLDOWN_SECONDS
+        GenericProposal.SLASHING_ADMIN,
+        GenericProposal.COOLDOWN_ADMIN,
+        GenericProposal.CLAIM_HELPER,
+        GenericProposal.MAX_SLASHING,
+        GenericProposal.COOLDOWN_SECONDS
       )
     );
   }
