@@ -63,15 +63,7 @@ contract ProposalPayloadStkAave is GenericProposal {
       DISTRIBUTION_DURATION,
       address(ghoMock)
     );
-    // 4. initialize for safety reasons
-    newImpl.initialize(
-      SLASHING_ADMIN,
-      COOLDOWN_ADMIN,
-      CLAIM_HELPER,
-      MAX_SLASHING,
-      COOLDOWN_SECONDS
-    );
-    // 5. upgrade & initialize on proxy
+    // 4. upgrade & initialize on proxy
     newAdmin.upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
@@ -111,15 +103,7 @@ contract ProposalPayloadStkAbpt is GenericProposal {
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
       DISTRIBUTION_DURATION
     );
-    // 4. initialize for safety reasons
-    newImpl.initialize(
-      SLASHING_ADMIN,
-      COOLDOWN_ADMIN,
-      CLAIM_HELPER,
-      MAX_SLASHING,
-      COOLDOWN_SECONDS
-    );
-    // 5. upgrade & initialize on proxy
+    // 4. upgrade & initialize on proxy
     newAdmin.upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),

@@ -58,6 +58,7 @@ contract StakedAaveV3 is StakedTokenV3 {
   {
     require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');
     GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
+    lastInitializedRevision = REVISION();
   }
 
   /**
