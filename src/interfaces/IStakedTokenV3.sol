@@ -152,15 +152,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
-
-  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
@@ -171,18 +162,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
     uint256 claimAmount,
     uint256 redeemAmount
   ) external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function

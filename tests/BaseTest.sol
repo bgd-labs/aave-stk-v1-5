@@ -13,7 +13,7 @@ import {DeployL1Proposal} from '../scripts/ProposalDeployment.s.sol';
 import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
 
 contract BaseTest is Test {
-  StakedTokenV3 STAKE_CONTRACT;
+  StakedAaveV3 STAKE_CONTRACT;
 
   uint256 constant SLASHING_ADMIN = 0;
   uint256 constant COOLDOWN_ADMIN = 1;
@@ -52,7 +52,7 @@ contract BaseTest is Test {
     } else {
       stake = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
     }
-    STAKE_CONTRACT = StakedTokenV3(stake);
+    STAKE_CONTRACT = StakedAaveV3(address(StakedTokenV3(stake)));
     vm.startPrank(GovHelpers.AAVE_WHALE);
     _executeProposal(stkAAVE);
     vm.stopPrank();

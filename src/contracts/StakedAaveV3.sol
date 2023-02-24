@@ -19,13 +19,14 @@ import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IGhoVariableDebtToken} from '../interfaces/IGhoVariableDebtToken.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
+import {IStakedAaveV3} from '../interfaces/IStakedAaveV3.sol';
 
 /**
  * @title StakedAaveV3
  * @notice StakedTokenV3 with AAVE token as staked token
  * @author BGD Labs
  */
-contract StakedAaveV3 is StakedTokenV3 {
+contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
@@ -80,6 +81,24 @@ contract StakedAaveV3 is StakedTokenV3 {
 
     // needed to claimRewardsAndStake works without a custom approval each time
     STAKED_TOKEN.approve(address(this), type(uint256).max);
+  }
+
+  /// @inheritdoc IStakedAaveV3
+  function claimRewardsAndStake(address to, uint256 amount)
+    external
+    override
+    returns (uint256)
+  {
+    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
+  }
+
+  /// @inheritdoc IStakedAaveV3
+  function claimRewardsAndStakeOnBehalf(
+    address from,
+    address to,
+    uint256 amount
+  ) external override onlyClaimHelper returns (uint256) {
+    return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
   /**

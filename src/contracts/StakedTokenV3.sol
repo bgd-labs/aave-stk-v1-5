@@ -253,24 +253,6 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
-    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external override onlyClaimHelper returns (uint256) {
-    return _claimRewardsAndStakeOnBehalf(from, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
   function claimRewardsAndRedeem(
     address to,
     uint256 claimAmount,
