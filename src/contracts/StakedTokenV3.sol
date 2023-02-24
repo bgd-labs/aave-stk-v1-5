@@ -16,6 +16,7 @@ import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDel
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
+import {IERC20Metadata} from '../interfaces/IERC20Metadata.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
@@ -43,6 +44,10 @@ contract StakedTokenV3 is
   uint256 public constant CLAIM_HELPER_ROLE = 2;
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
+
+  /// @notice lower bound to prevent spam & avoid excahngeRate issues
+  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
+  uint256 public immutable LOWER_BOUND;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
@@ -93,7 +98,10 @@ contract StakedTokenV3 is
       emissionManager,
       distributionDuration
     )
-  {}
+  {
+    uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
+    LOWER_BOUND = 10**decimals;
+  }
 
   /**
    * @dev returns the revision of the implementation contract
@@ -322,6 +330,7 @@ contract StakedTokenV3 is
     if (amount > maxSlashable) {
       amount = maxSlashable;
     }
+    require(balance - amount >= LOWER_BOUND, 'REMAINING_LT_MINIMUM');
 
     inPostSlashingPeriod = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
@@ -334,7 +343,9 @@ contract StakedTokenV3 is
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
+    require(amount >= LOWER_BOUND, 'AMOUNT_LT_MINIMUM');
     uint256 currentShares = totalSupply();
+    require(currentShares >= LOWER_BOUND, 'SHARES_LT_MINIMUM');
     uint256 assets = previewRedeem(currentShares);
     _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
@@ -559,6 +570,7 @@ contract StakedTokenV3 is
    * @param newExchangeRate the new exchange rate
    */
   function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
+    require(newExchangeRate != 0, 'ZERO_EXCHANGE_RATE');
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }
