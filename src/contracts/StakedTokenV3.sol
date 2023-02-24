@@ -445,7 +445,7 @@ contract StakedTokenV3 is
   }
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
