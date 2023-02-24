@@ -45,7 +45,9 @@ contract StakedTokenV3 is
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
-  uint256 public immutable MINIMUM_SHARES;
+  /// @notice lower bound spam guard
+  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
+  uint256 public immutable SPAM_MINIMUM;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
@@ -98,7 +100,7 @@ contract StakedTokenV3 is
     )
   {
     uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
-    MINIMUM_SHARES = 10**decimals;
+    SPAM_MINIMUM = 10**decimals;
   }
 
   /**
@@ -340,9 +342,9 @@ contract StakedTokenV3 is
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
-    require(amount >= 1 ether, 'SPAM_PREVENTION');
+    require(amount >= SPAM_MINIMUM, 'AMOUNT_LT_MINIMUM');
     uint256 currentShares = totalSupply();
-    require(currentShares >= MINIMUM_SHARES, 'SHARES_LT_MINIMUM');
+    require(currentShares >= SPAM_MINIMUM, 'SHARES_LT_MINIMUM');
     uint256 assets = previewRedeem(currentShares);
     _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
