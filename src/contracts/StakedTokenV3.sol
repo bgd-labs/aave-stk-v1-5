@@ -99,7 +99,7 @@ contract StakedTokenV3 is
    * @dev returns the revision of the implementation contract
    * @return The revision
    */
-  function REVISION() public pure virtual override returns (uint256) {
+  function REVISION() public pure virtual returns (uint256) {
     return 3;
   }
 
@@ -535,8 +535,7 @@ contract StakedTokenV3 is
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * EXCHANGE_RATE_UNIT) /
-      _currentExchangeRate;
+    uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
 
     _burn(from, amountToRedeem);
 

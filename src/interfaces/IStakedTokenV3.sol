@@ -40,7 +40,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
    * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
    * As long as the slashing event is ongoing, stake and slash are deactivated.
-   * - MUST NOT be called when a spevious slashing is still ongoing
+   * - MUST NOT be called when a previous slashing is still ongoing
    * @param destination the address where seized funds will be transferred
    * @param amount the amount to be slashed
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
@@ -56,8 +56,8 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function settleSlashing() external;
 
   /**
-   * @dev Pulls STAKE_TOKEN and distributes them amonst current stakers by altering the exchange rate.
-   * This method is permissionless and intendet to be used after a slashing event to return potential excess funds.
+   * @dev Pulls STAKE_TOKEN and distributes them amongst current stakers by altering the exchange rate.
+   * This method is permissionless and intended to be used after a slashing event to return potential excess funds.
    * @param amount amount of STAKE_TOKEN to pull.
    */
   function returnFunds(uint256 amount) external;
@@ -103,6 +103,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
 
   /**
    * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
+   * @param from The address staking the assets
    * @param to The address to receiving the shares
    * @param amount The amount to be staked
    * @param deadline The permit execution deadline
@@ -152,7 +153,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes them
    * @param to Address to stake to
    * @param amount Amount to claim
    */
@@ -173,7 +174,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes them. Only the claim helper contract is allowed to call this function
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
@@ -185,7 +186,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external returns (uint256);
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
    * @param from The address of the from
    * @param to Address to claim and unstake to
    * @param claimAmount Amount to claim
