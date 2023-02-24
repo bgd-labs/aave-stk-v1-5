@@ -15,11 +15,8 @@ import {AaveDistributionManager} from './AaveDistributionManager.sol';
 import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
-<<<<<<< HEAD
-=======
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 import {IERC20Metadata} from '../interfaces/IERC20Metadata.sol';
->>>>>>> main
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
