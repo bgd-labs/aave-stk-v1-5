@@ -4141,6 +4141,12 @@ interface IStakedAaveV3 is IStakedTokenV3 {
   event GHODebtTokenChanged(address indexed newDebtToken);
 
   /**
+   * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
+   * @param newGHODebtToken Address to GHO debt token
+   */
+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external;
+
+  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
    * @param to Address to stake to
    * @param amount Amount to claim
@@ -4759,12 +4765,13 @@ library AaveGovernanceV2 {
  */
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
-  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtToken public ghoDebtToken;
 
   uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
   mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
+
+  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
+  IGhoVariableDebtToken public ghoDebtToken;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
@@ -4813,7 +4820,8 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) public {
+  /// @inheritdoc IStakedAaveV3
+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
     require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));

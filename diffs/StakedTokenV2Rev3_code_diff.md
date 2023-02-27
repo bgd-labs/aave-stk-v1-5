@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..0b0551a 100644
+index 83f9691..33f7219 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,50 @@
@@ -2114,7 +2114,7 @@ index 83f9691..0b0551a 100644
    function permit(
      address owner,
      address spender,
-@@ -1963,10 +1904,2960 @@ contract StakedTokenV2Rev3 is
+@@ -1963,10 +1904,2968 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -4356,6 +4356,12 @@ index 83f9691..0b0551a 100644
 +  event GHODebtTokenChanged(address indexed newDebtToken);
 +
 +  /**
++   * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
++   * @param newGHODebtToken Address to GHO debt token
++   */
++  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external;
++
++  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
 +   * @param to Address to stake to
 +   * @param amount Amount to claim
@@ -4974,12 +4980,13 @@ index 83f9691..0b0551a 100644
 + */
 +contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
 +  using SafeCast for uint256;
-+  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-+  IGhoVariableDebtToken public ghoDebtToken;
 +
 +  uint32 internal _exchangeRateSnapshotsCount;
 +  /// @notice Snapshots of the exchangeRate for a given block
 +  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
++
++  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
++  IGhoVariableDebtToken public ghoDebtToken;
 +
 +  function REVISION() public pure virtual override returns (uint256) {
 +    return 4;
@@ -5028,7 +5035,8 @@ index 83f9691..0b0551a 100644
 +    STAKED_TOKEN.approve(address(this), type(uint256).max);
 +  }
 +
-+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) public {
++  /// @inheritdoc IStakedAaveV3
++  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
 +    require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
 +    ghoDebtToken = newGHODebtToken;
 +    emit GHODebtTokenChanged(address(newGHODebtToken));
@@ -5076,7 +5084,7 @@ index 83f9691..0b0551a 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +4872,18 @@ contract StakedTokenV2Rev3 is
+@@ -1981,6 +4880,18 @@ contract StakedTokenV2Rev3 is
      address to,
      uint256 amount
    ) internal override {
@@ -5095,7 +5103,7 @@ index 83f9691..0b0551a 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +4917,68 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +4925,68 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );

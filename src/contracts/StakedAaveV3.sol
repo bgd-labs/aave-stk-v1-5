@@ -30,12 +30,13 @@ import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
  */
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
-  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtToken public ghoDebtToken;
 
   uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
   mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
+
+  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
+  IGhoVariableDebtToken public ghoDebtToken;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
