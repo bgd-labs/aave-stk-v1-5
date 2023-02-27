@@ -46,6 +46,8 @@ $_{t1}$: the state of the system after a transaction.
 
 **total staked:** the amount of underlying staked into the `stkToken` (ignoring airdrops)
 
+**LOWER_BOUND:** 1 unit of the staked asset (1 ether for 18 decimal assets)
+
 **staking:** entering the pool
 
 **redeeming:** leaving the pool
@@ -66,9 +68,9 @@ $_{t1}$: the state of the system after a transaction.
 
 ## Cooldown
 
-- `cooldown` should persist the accounts current `balance` and the `block.timestamp` within `stakersCooldowns[account]`
+- `cooldown` should persist the accounts current `balance` and the `block.timestamp` within `stakersCooldowns[account]`.
 
-- calling `cooldown` whilst in an active cooldown will reset the cooldown
+- Calling `cooldown` whilst in an active cooldown will reset the cooldown-
 
 ## Exchange rate
 
@@ -82,34 +84,35 @@ This design was chosen opposed to a dynamic exchangeRate based on underlying as 
 
 - `slash` should transfer `amount` of the staked tokens to the `destination` address.
 
-  - the maximum `amount` is determined by a `maxSlashingPercentage` which describes the ratio of total staked assets being available to slash
-  - if the specified `amount` exceeds the maximum, the maximum will be slashed instead
+  - The maximum `amount` is determined by a `maxSlashingPercentage` which describes the ratio of total staked assets being available to slash.
+  - If the specified `amount` exceeds the maximum, the maximum will be slashed instead.
+  - The slashing will revert when less than `LOWER_BOUND` would be remaining after the slashing.
 
-- after the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount: $$exchangeRate_{t1}={totalStaked_{t0} - amount \over totalSupply_{t0}}$$
+- After the slashing event occurred the `exchangeRate` should reflect the discount in the redeemable amount: $$exchangeRate_{t1}={totalStaked_{t0} - amount \over totalSupply_{t0}}$$.
 
-- a slashing even will set `inPostSlashingPeriod` to `true`. The post slashing period lasts until it is settled by the slashing admin. For the post lashing period the following rules apply:
+- A slashing even will set `inPostSlashingPeriod` to `true`. The post slashing period lasts until it is settled by the slashing admin. For the post lashing period the following rules apply:
   - accounts can exit the pool immediately without a cooldown period.
   - no account can enter the pool.
   - no other slashing can occur.
 
 ### Staking
 
-- staking should scale up the amount, so the pool always guarantees fair entry
+- `stake(amount)` should scale up the amount, so the pool always guarantees fair entry
 
 $$
 stkAmount_{t1} = {amount * exchangeRate_{t0} \over 1e18}
 $$
 
-- staking with a pending cooldown will no longer adjust the cooldown time
+- `stake(amount)` with a pending cooldown will no longer adjust the cooldown time.
 
 ### Redeeming
 
-- the redeemable amount is determined as
+- The redeemable amount is determined as
 
   - `stakersCooldowns[account].amount` or
   - `balanceOf(account)` in case of an unsetteled slashing event (`inPostSlashingPeriod == true`)
 
-- the redeemable amount should be scaled down, so the pool always guarantees fair exit
+- The redeemable amount should be scaled down, so the pool always guarantees fair exit
 
 $$
 amount_{t1} = {amount * 1e18 \over exchangeRate_{t0}}
@@ -127,13 +130,15 @@ Therefore:
 
 - `returnFunds` allows permissionless returning of funds to the system (e.g. when not all slashed funds were utilized to recover). Returned funds are injected into the exchangeRate and therefore mutualized over all accounts.
 
-- to ensure only accounts affected by slashing will profit from `returnFunds`, entering the system is not possible until the slashing is settled by the slashingAdmin
+- To ensure only accounts affected by slashing will profit from `returnFunds`, entering the system is not possible until the slashing is settled by the slashingAdmin.
+
+- To prevent spamming the system, and prevent extensive rounding errors, both the minimum amount returned, as well as the current shares (totalSupply of the stkToken) need to exceed `LOWER_BOUND`.
 
 ### Governance (only stkAAVE)
 
-- The total power (of one type) of all users in the system is less or equal than the sum of balances of all stkAAVE holders (total staked): $$\sum powerOfAccount_i <= \sum balanceOf(account_i)$$
+- The total power (of one type) of all users in the system is less or equal than the sum of balances of all stkAAVE holders (total staked): $$\sum powerOfAccount_i <= \sum balanceOf(account_i)$$.
 
-- The governance voting and proposition power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`: $$power_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}$$
+- The governance voting and proposition power of an `address` is defined by the `powerAtBlock` adjusted by the `exchange rate at block`: $$power_{t0} = {stkAmount_{t0} * 1e18 \over exchangeRate_{t0}}$$.
 
 - If an account is not receiving delegation of power (one type) from anybody, and that account is not delegating that power to anybody, the power of that account must be equal to its proportional AAVE balance.
 
