@@ -21,6 +21,7 @@ import {StakedTokenV2} from './StakedTokenV2.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
 import {IStakedAaveV3} from '../interfaces/IStakedAaveV3.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
+import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 
 /**
  * @title StakedAaveV3
@@ -30,7 +31,7 @@ import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtToken public immutable GHO_DEBT_TOKEN;
+  IGhoVariableDebtToken public ghoDebtToken;
 
   uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
@@ -46,8 +47,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     uint256 unstakeWindow,
     address rewardsVault,
     address emissionManager,
-    uint128 distributionDuration,
-    address ghoDebtToken
+    uint128 distributionDuration
   )
     StakedTokenV3(
       stakedToken,
@@ -58,8 +58,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
       distributionDuration
     )
   {
-    require(Address.isContract(address(ghoDebtToken)), 'GHO_MUST_BE_CONTRACT');
-    GHO_DEBT_TOKEN = IGhoVariableDebtToken(ghoDebtToken);
     // brick initialize
     lastInitializedRevision = REVISION();
   }
@@ -84,6 +82,12 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
 
     // needed to claimRewardsAndStake works without a custom approval each time
     STAKED_TOKEN.approve(address(this), type(uint256).max);
+  }
+
+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) public {
+    require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
+    ghoDebtToken = newGHODebtToken;
+    emit GHODebtTokenChanged(address(newGHODebtToken));
   }
 
   /// @inheritdoc IStakedAaveV3
@@ -139,13 +143,15 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     address to,
     uint256 amount
   ) internal override {
-    GHO_DEBT_TOKEN.updateDiscountDistribution(
-      from,
-      to,
-      balanceOf(from),
-      balanceOf(to),
-      amount
-    );
+    try
+      ghoDebtToken.updateDiscountDistribution(
+        from,
+        to,
+        balanceOf(from),
+        balanceOf(to),
+        amount
+      )
+    {} catch (bytes memory) {}
     address votingFromDelegatee = _votingDelegates[from];
     address votingToDelegatee = _votingDelegates[to];
 

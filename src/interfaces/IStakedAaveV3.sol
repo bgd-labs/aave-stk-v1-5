@@ -9,6 +9,8 @@ interface IStakedAaveV3 is IStakedTokenV3 {
     uint216 value;
   }
 
+  event GHODebtTokenChanged(address indexed newDebtToken);
+
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
    * @param to Address to stake to
