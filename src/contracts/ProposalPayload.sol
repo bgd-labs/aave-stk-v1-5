@@ -9,17 +9,6 @@ import {StakedAaveV3} from './StakedAaveV3.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../interfaces/IInitializableAdminUpgradeabilityProxy.sol';
-import {IGhoVariableDebtToken} from '../interfaces/IGhoVariableDebtToken.sol';
-
-contract GhoDebtMock is IGhoVariableDebtToken {
-  function updateDiscountDistribution(
-    address sender,
-    address recipient,
-    uint256 senderDiscountTokenBalance,
-    uint256 recipientDiscountTokenBalance,
-    uint256 amount
-  ) public {}
-}
 
 library GenericProposal {
   address public constant SLASHING_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
@@ -51,8 +40,6 @@ contract ProposalPayloadStkAave {
     IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
       address(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG)
     );
-    // ~ ARBITRARY STEP NEEDS TO BE REMOVED ONCE GHO IS LIVE ~
-    GhoDebtMock ghoMock = new GhoDebtMock();
     // 2. deploy newimplementation
     StakedAaveV3 newImpl = new StakedAaveV3(
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
@@ -60,8 +47,7 @@ contract ProposalPayloadStkAave {
       GenericProposal.UNSTAKE_WINDOW,
       0x25F2226B597E8F9514B3F68F00f494cF4f286491,
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
-      GenericProposal.DISTRIBUTION_DURATION,
-      address(ghoMock)
+      GenericProposal.DISTRIBUTION_DURATION
     );
     // 3. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG).upgradeAndCall(

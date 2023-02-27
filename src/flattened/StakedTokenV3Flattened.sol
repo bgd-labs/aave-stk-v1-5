@@ -1008,7 +1008,7 @@ abstract contract VersionedInitializable {
 
 interface IAaveDistributionManager {
   function configureAssets(
-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
   ) external;
 }
 
@@ -1017,7 +1017,7 @@ interface IAaveDistributionManager {
  * @notice Accounting contract to manage multiple staking distributions
  * @author Aave
  */
-contract AaveDistributionManager is IAaveDistributionManager {
+contract AaveDistributionManager {
   struct AssetData {
     uint128 emissionPerSecond;
     uint128 lastUpdateTimestamp;
@@ -1050,11 +1050,9 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @dev Configures the distribution of rewards for a list of assets
    * @param assetsConfigInput The list of configurations to apply
    */
-  function configureAssets(
-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-  ) external override {
-    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
-
+  function _configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) internal {
     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
       AssetData storage assetConfig = assets[
         assetsConfigInput[i].underlyingAsset
@@ -1714,8 +1712,8 @@ interface IERC20WithPermit is IERC20 {
 
 interface IStakedTokenV2 {
   struct CooldownSnapshot {
-    uint72 timestamp;
-    uint184 amount;
+    uint40 timestamp;
+    uint216 amount;
   }
 
   /**
@@ -1769,14 +1767,10 @@ abstract contract StakedTokenV2 is
 {
   using SafeERC20 for IERC20;
 
-  function REVISION() public pure virtual returns (uint256) {
-    return 2;
-  }
-
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;
 
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  /// @notice Seconds available to redeem once the cooldown period is fulfilled
   uint256 public immutable UNSTAKE_WINDOW;
 
   /// @notice Address to pull from the rewards, needs to have approved this contract
@@ -1868,14 +1862,6 @@ abstract contract StakedTokenV2 is
   }
 
   /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
-  }
-
-  /**
    * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
    * @param owner the owner of the funds
    * @param spender the spender
@@ -1916,7 +1902,9 @@ abstract contract StakedTokenV2 is
     );
 
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce + 1;
+    unchecked {
+      _nonces[owner] = currentValidNonce + 1;
+    }
     _approve(owner, spender, value);
   }
 
@@ -2047,11 +2035,6 @@ abstract contract StakedTokenV2 is
 }
 
 interface IStakedTokenV3 is IStakedTokenV2 {
-  struct ExchangeRateSnapshot {
-    uint40 blockNumber;
-    uint216 value;
-  }
-
   event Staked(
     address indexed from,
     address indexed to,
@@ -2083,7 +2066,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
    * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
    * As long as the slashing event is ongoing, stake and slash are deactivated.
-   * - MUST NOT be called when a spevious slashing is still ongoing
+   * - MUST NOT be called when a previous slashing is still ongoing
    * @param destination the address where seized funds will be transferred
    * @param amount the amount to be slashed
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
@@ -2099,8 +2082,8 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function settleSlashing() external;
 
   /**
-   * @dev Pulls STAKE_TOKEN and distributes them amonst current stakers by altering the exchange rate.
-   * This method is permissionless and intendet to be used after a slashing event to return potential excess funds.
+   * @dev Pulls STAKE_TOKEN and distributes them amongst current stakers by altering the exchange rate.
+   * This method is permissionless and intended to be used after a slashing event to return potential excess funds.
    * @param amount amount of STAKE_TOKEN to pull.
    */
   function returnFunds(uint256 amount) external;
@@ -2139,23 +2122,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function previewStake(uint256 assets) external view returns (uint256);
 
   /**
-   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-   * @param to The address to receiving the shares
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
    */
-  function stakeWithPermit(
-    address from,
-    address to,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
+  function cooldownOnBehalfOf(address from) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
@@ -2189,15 +2159,6 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
-
-  /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
@@ -2210,19 +2171,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
    * @param from The address of the from
    * @param to Address to claim and unstake to
    * @param claimAmount Amount to claim
@@ -3607,7 +3556,12 @@ library SafeCast {
  * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
  * @author BGD Labs
  */
-contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
+contract StakedTokenV3 is
+  StakedTokenV2,
+  IStakedTokenV3,
+  RoleManager,
+  IAaveDistributionManager
+{
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
   using SafeCast for uint256;
@@ -3617,6 +3571,10 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   uint256 public constant CLAIM_HELPER_ROLE = 2;
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
+
+  /// @notice lower bound to prevent spam & avoid excahngeRate issues
+  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
+  uint256 public immutable LOWER_BOUND;
 
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
@@ -3667,13 +3625,18 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
       emissionManager,
       distributionDuration
     )
-  {}
+  {
+    // brick initialize
+    lastInitializedRevision = REVISION();
+    uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
+    LOWER_BOUND = 10**decimals;
+  }
 
   /**
    * @dev returns the revision of the implementation contract
    * @return The revision
    */
-  function REVISION() public pure virtual override returns (uint256) {
+  function REVISION() public pure virtual returns (uint256) {
     return 3;
   }
 
@@ -3723,6 +3686,19 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     _updateExchangeRate(INITIAL_EXCHANGE_RATE);
   }
 
+  /// @inheritdoc IAaveDistributionManager
+  function configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) external override {
+    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+
+    for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+      assetsConfigInput[i].totalStaked = totalSupply();
+    }
+
+    _configureAssets(assetsConfigInput);
+  }
+
   /// @inheritdoc IStakedTokenV3
   function previewStake(uint256 assets) public view returns (uint256) {
     return (assets * _currentExchangeRate) / EXCHANGE_RATE_UNIT;
@@ -3738,36 +3714,23 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV2
   function cooldown() external override(IStakedTokenV2, StakedTokenV2) {
-    uint256 amount = balanceOf(msg.sender);
-    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
-    stakersCooldowns[msg.sender] = CooldownSnapshot({
-      timestamp: uint72(block.timestamp),
-      amount: uint184(amount)
-    });
-
-    emit Cooldown(msg.sender, amount);
+    _cooldown(msg.sender);
   }
 
   /// @inheritdoc IStakedTokenV3
-  function stakeWithPermit(
-    address from,
-    address to,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, to, amount);
+  function cooldownOnBehalfOf(address from) external override onlyClaimHelper {
+    _cooldown(from);
+  }
+
+  function _cooldown(address from) internal {
+    uint256 amount = balanceOf(from);
+    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+    stakersCooldowns[from] = CooldownSnapshot({
+      timestamp: uint40(block.timestamp),
+      amount: uint216(amount)
+    });
+
+    emit Cooldown(from, amount);
   }
 
   /// @inheritdoc IStakedTokenV2
@@ -3802,24 +3765,6 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 amount
   ) external override onlyClaimHelper returns (uint256) {
     return _claimRewards(from, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
-    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
-  }
-
-  /// @inheritdoc IStakedTokenV3
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external override onlyClaimHelper returns (uint256) {
-    return _claimRewardsAndStakeOnBehalf(from, to, amount);
   }
 
   /// @inheritdoc IStakedTokenV3
@@ -3874,6 +3819,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     if (amount > maxSlashable) {
       amount = maxSlashable;
     }
+    require(balance - amount >= LOWER_BOUND, 'REMAINING_LT_MINIMUM');
 
     inPostSlashingPeriod = true;
     _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
@@ -3886,7 +3832,9 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
   /// @inheritdoc IStakedTokenV3
   function returnFunds(uint256 amount) external override {
+    require(amount >= LOWER_BOUND, 'AMOUNT_LT_MINIMUM');
     uint256 currentShares = totalSupply();
+    require(currentShares >= LOWER_BOUND, 'SHARES_LT_MINIMUM');
     uint256 assets = previewRedeem(currentShares);
     _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 
@@ -3977,6 +3925,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
     uint256 amountToClaim = (amount > newTotalRewards)
       ? newTotalRewards
       : amount;
+    require(amountToClaim != 0, 'INVALID_ZERO_AMOUNT');
 
     stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
     REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
@@ -3985,7 +3934,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
   }
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
@@ -4087,8 +4036,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
-    uint256 underlyingToRedeem = (amountToRedeem * EXCHANGE_RATE_UNIT) /
-      _currentExchangeRate;
+    uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
 
     _burn(from, amountToRedeem);
 
@@ -4112,6 +4060,7 @@ contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
    * @param newExchangeRate the new exchange rate
    */
   function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
+    require(newExchangeRate != 0, 'ZERO_EXCHANGE_RATE');
     _currentExchangeRate = newExchangeRate;
     emit ExchangeRateChanged(newExchangeRate);
   }

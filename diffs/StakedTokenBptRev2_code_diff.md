@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..ad195ee 100644
+index 37a034f..dd8a999 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,50 @@
@@ -1184,7 +1184,8 @@ index 37a034f..ad195ee 100644
 -
  interface IAaveDistributionManager {
    function configureAssets(
-     DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
++    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
    ) external;
  }
  
@@ -1195,14 +1196,15 @@ index 37a034f..ad195ee 100644
   * @notice Accounting contract to manage multiple staking distributions
   * @author Aave
 - **/
-+ */
- contract AaveDistributionManager is IAaveDistributionManager {
+-contract AaveDistributionManager is IAaveDistributionManager {
 -  using SafeMath for uint256;
 -
++ */
++contract AaveDistributionManager {
    struct AssetData {
      uint128 emissionPerSecond;
      uint128 lastUpdateTimestamp;
-@@ -904,15 +1041,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -904,20 +1041,18 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 index
    );
  
@@ -1217,11 +1219,19 @@ index 37a034f..ad195ee 100644
     * @dev Configures the distribution of rewards for a list of assets
     * @param assetsConfigInput The list of configurations to apply
 -   **/
+-  function configureAssets(
+-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+-  ) external override {
+-    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+-
 +   */
-   function configureAssets(
-     DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-   ) external override {
-@@ -944,7 +1081,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
++  function _configureAssets(
++    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
++  ) internal {
+     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+       AssetData storage assetConfig = assets[
+         assetsConfigInput[i].underlyingAsset
+@@ -944,7 +1079,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param assetConfig Storage pointer to the distribution's config
     * @param totalStaked Current total of staked assets for this distribution
     * @return The new distribution index
@@ -1230,7 +1240,7 @@ index 37a034f..ad195ee 100644
    function _updateAssetStateInternal(
      address underlyingAsset,
      AssetData storage assetConfig,
-@@ -981,7 +1118,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -981,7 +1116,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
     * @param totalStaked Total tokens staked in the distribution
     * @return The accrued rewards for the user until the moment
@@ -1239,7 +1249,7 @@ index 37a034f..ad195ee 100644
    function _updateUserAssetInternal(
      address user,
      address asset,
-@@ -1011,7 +1148,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1011,7 +1146,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user The address of the user
     * @param stakes List of structs of the user data related with his stake
     * @return The accrued rewards for the user until the moment
@@ -1248,7 +1258,7 @@ index 37a034f..ad195ee 100644
    function _claimRewards(
      address user,
      DistributionTypes.UserStakeInput[] memory stakes
-@@ -1019,14 +1156,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1019,14 +1154,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 accruedRewards = 0;
  
      for (uint256 i = 0; i < stakes.length; i++) {
@@ -1266,7 +1276,7 @@ index 37a034f..ad195ee 100644
      }
  
      return accruedRewards;
-@@ -1037,7 +1174,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1037,7 +1172,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user The address of the user
     * @param stakes List of structs of the user data related with his stake
     * @return The accrued rewards for the user until the moment
@@ -1275,7 +1285,7 @@ index 37a034f..ad195ee 100644
    function _getUnclaimedRewards(
      address user,
      DistributionTypes.UserStakeInput[] memory stakes
-@@ -1053,9 +1190,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1053,9 +1188,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
          stakes[i].totalStaked
        );
  
@@ -1292,7 +1302,7 @@ index 37a034f..ad195ee 100644
      }
      return accruedRewards;
    }
-@@ -1066,16 +1207,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1066,16 +1205,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param reserveIndex Current index of the distribution
     * @param userIndex Index stored for the user, representation his staking moment
     * @return The rewards
@@ -1312,7 +1322,7 @@ index 37a034f..ad195ee 100644
    }
  
    /**
-@@ -1085,7 +1225,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1085,7 +1223,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param lastUpdateTimestamp Last moment this distribution was updated
     * @param totalBalance of tokens considered for the distribution
     * @return The new index.
@@ -1321,7 +1331,7 @@ index 37a034f..ad195ee 100644
    function _getAssetIndex(
      uint256 currentIndex,
      uint256 emissionPerSecond,
-@@ -1104,13 +1244,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1104,13 +1242,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
        ? DISTRIBUTION_END
        : block.timestamp;
@@ -1338,7 +1348,7 @@ index 37a034f..ad195ee 100644
    }
  
    /**
-@@ -1118,7 +1255,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1118,7 +1253,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user Address of the user
     * @param asset The address of the reference asset of the distribution
     * @return The new index
@@ -1347,7 +1357,7 @@ index 37a034f..ad195ee 100644
    function getUserAssetData(address user, address asset)
      public
      view
-@@ -1128,21 +1265,6 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1128,21 +1263,6 @@ contract AaveDistributionManager is IAaveDistributionManager {
    }
  }
  
@@ -1369,7 +1379,7 @@ index 37a034f..ad195ee 100644
  interface IGovernancePowerDelegationToken {
    enum DelegationType {
      VOTING_POWER,
-@@ -1179,14 +1301,13 @@ interface IGovernancePowerDelegationToken {
+@@ -1179,14 +1299,13 @@ interface IGovernancePowerDelegationToken {
     * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
     **/
    function delegateByType(address delegatee, DelegationType delegationType)
@@ -1386,7 +1396,7 @@ index 37a034f..ad195ee 100644
  
    /**
     * @dev returns the delegatee of an user
-@@ -1195,7 +1316,6 @@ interface IGovernancePowerDelegationToken {
+@@ -1195,7 +1314,6 @@ interface IGovernancePowerDelegationToken {
    function getDelegateeByType(address delegator, DelegationType delegationType)
      external
      view
@@ -1394,7 +1404,7 @@ index 37a034f..ad195ee 100644
      returns (address);
  
    /**
-@@ -1206,7 +1326,6 @@ interface IGovernancePowerDelegationToken {
+@@ -1206,7 +1324,6 @@ interface IGovernancePowerDelegationToken {
    function getPowerCurrent(address user, DelegationType delegationType)
      external
      view
@@ -1402,7 +1412,7 @@ index 37a034f..ad195ee 100644
      returns (uint256);
  
    /**
-@@ -1217,20 +1336,14 @@ interface IGovernancePowerDelegationToken {
+@@ -1217,20 +1334,14 @@ interface IGovernancePowerDelegationToken {
      address user,
      uint256 blockNumber,
      DelegationType delegationType
@@ -1425,7 +1435,7 @@ index 37a034f..ad195ee 100644
  /**
   * @notice implementation of the AAVE token contract
   * @author Aave
-@@ -1239,7 +1352,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1239,7 +1350,6 @@ abstract contract GovernancePowerDelegationERC20 is
    ERC20,
    IGovernancePowerDelegationToken
  {
@@ -1433,7 +1443,7 @@ index 37a034f..ad195ee 100644
    /// @notice The EIP-712 typehash for the delegation struct used by the contract
    bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
      keccak256(
-@@ -1339,12 +1451,7 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1339,12 +1449,7 @@ abstract contract GovernancePowerDelegationERC20 is
     * In this initial implementation with no AAVE minting, simply returns the current supply
     * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
     **/
@@ -1447,7 +1457,7 @@ index 37a034f..ad195ee 100644
      return super.totalSupply();
    }
  
-@@ -1419,10 +1526,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1419,10 +1524,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          from,
          uint128(previous),
@@ -1460,7 +1470,7 @@ index 37a034f..ad195ee 100644
      }
      if (to != address(0)) {
        uint256 previous = 0;
-@@ -1438,10 +1545,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1438,10 +1543,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          to,
          uint128(previous),
@@ -1473,7 +1483,7 @@ index 37a034f..ad195ee 100644
      }
    }
  
-@@ -1457,7 +1564,7 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1457,7 +1562,7 @@ abstract contract GovernancePowerDelegationERC20 is
      mapping(address => uint256) storage snapshotsCounts,
      address user,
      uint256 blockNumber
@@ -1482,7 +1492,7 @@ index 37a034f..ad195ee 100644
      require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
  
      uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1466,30 +1573,40 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1466,30 +1571,40 @@ abstract contract GovernancePowerDelegationERC20 is
        return balanceOf(user);
      }
  
@@ -1541,7 +1551,7 @@ index 37a034f..ad195ee 100644
    }
  
    /**
-@@ -1559,8 +1676,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1559,8 +1674,6 @@ abstract contract GovernancePowerDelegationERC20 is
    }
  }
  
@@ -1550,7 +1560,7 @@ index 37a034f..ad195ee 100644
  /**
   * @title ERC20WithSnapshot
   * @notice ERC20 including snapshots of balances on transfer-related actions
-@@ -1569,8 +1684,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1569,8 +1682,6 @@ abstract contract GovernancePowerDelegationERC20 is
  abstract contract GovernancePowerWithSnapshot is
    GovernancePowerDelegationERC20
  {
@@ -1559,7 +1569,7 @@ index 37a034f..ad195ee 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1583,35 +1696,85 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1583,44 +1694,90 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1583,8 +1593,8 @@ index 37a034f..ad195ee 100644
 +
 +interface IStakedTokenV2 {
 +  struct CooldownSnapshot {
-+    uint72 timestamp;
-+    uint184 amount;
++    uint40 timestamp;
++    uint216 amount;
    }
 +
 +  /**
@@ -1648,17 +1658,16 @@ index 37a034f..ad195ee 100644
  
 -  /// @dev Start of Storage layout from StakedToken v1
 -  uint256 public constant REVISION = 2;
-+  function REVISION() public pure virtual returns (uint256) {
-+    return 2;
-+  }
- 
+-
    IERC20 public immutable STAKED_TOKEN;
    IERC20 public immutable REWARD_TOKEN;
 -  uint256 public immutable COOLDOWN_SECONDS;
  
-   /// @notice Seconds available to redeem once the cooldown period is fullfilled
+-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
++  /// @notice Seconds available to redeem once the cooldown period is fulfilled
    uint256 public immutable UNSTAKE_WINDOW;
-@@ -1620,7 +1783,7 @@ contract StakedTokenBptRev2 is
+ 
+   /// @notice Address to pull from the rewards, needs to have approved this contract
    address public immutable REWARDS_VAULT;
  
    mapping(address => uint256) public stakerRewardsToClaim;
@@ -1667,7 +1676,7 @@ index 37a034f..ad195ee 100644
  
    /// @dev End of Storage layout from StakedToken v1
  
-@@ -1652,299 +1815,41 @@ contract StakedTokenBptRev2 is
+@@ -1652,299 +1809,41 @@ contract StakedTokenBptRev2 is
      uint256 amount
    );
    event Redeem(address indexed from, address indexed to, uint256 amount);
@@ -1979,29 +1988,27 @@ index 37a034f..ad195ee 100644
    function getTotalRewardsBalance(address staker)
      external
      view
-@@ -1958,17 +1863,16 @@ contract StakedTokenBptRev2 is
+@@ -1958,17 +1857,8 @@ contract StakedTokenBptRev2 is
        totalStaked: totalSupply()
      });
      return
 -      stakerRewardsToClaim[staker].add(
 -        _getUnclaimedRewards(staker, userStakeInputs)
 -      );
+-  }
+-
+-  /**
+-   * @dev returns the revision of the implementation contract
+-   * @return The revision
+-   */
+-  function getRevision() internal pure override returns (uint256) {
+-    return REVISION;
 +      stakerRewardsToClaim[staker] +
 +      _getUnclaimedRewards(staker, userStakeInputs);
    }
  
    /**
-    * @dev returns the revision of the implementation contract
-    * @return The revision
-    */
--  function getRevision() internal pure override returns (uint256) {
--    return REVISION;
-+  function getRevision() internal pure virtual override returns (uint256) {
-+    return REVISION();
-   }
- 
-   /**
-@@ -1981,7 +1885,6 @@ contract StakedTokenBptRev2 is
+@@ -1981,7 +1871,6 @@ contract StakedTokenBptRev2 is
     * @param s signature param
     * @param r signature param
     */
@@ -2009,12 +2016,14 @@ index 37a034f..ad195ee 100644
    function permit(
      address owner,
      address spender,
-@@ -2013,86 +1916,10 @@ contract StakedTokenBptRev2 is
+@@ -2013,86 +1902,12 @@ contract StakedTokenBptRev2 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 -    _nonces[owner] = currentValidNonce.add(1);
-+    _nonces[owner] = currentValidNonce + 1;
++    unchecked {
++      _nonces[owner] = currentValidNonce + 1;
++    }
      _approve(owner, spender, value);
    }
  
@@ -2097,7 +2106,7 @@ index 37a034f..ad195ee 100644
    /**
     * @dev Delegates power from signatory to `delegatee`
     * @param delegatee The address to delegate votes to
-@@ -2161,4 +1988,2176 @@ contract StakedTokenBptRev2 is
+@@ -2161,4 +1976,2137 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
@@ -2160,11 +2169,6 @@ index 37a034f..ad195ee 100644
 +}
 +
 +interface IStakedTokenV3 is IStakedTokenV2 {
-+  struct ExchangeRateSnapshot {
-+    uint40 blockNumber;
-+    uint216 value;
-+  }
-+
 +  event Staked(
 +    address indexed from,
 +    address indexed to,
@@ -2196,7 +2200,7 @@ index 37a034f..ad195ee 100644
 +   * to destination. Decreasing the amount of underlying will automatically adjust the exchange rate.
 +   * A call to `slash` will start a slashing event which has to be settled via `settleSlashing`.
 +   * As long as the slashing event is ongoing, stake and slash are deactivated.
-+   * - MUST NOT be called when a spevious slashing is still ongoing
++   * - MUST NOT be called when a previous slashing is still ongoing
 +   * @param destination the address where seized funds will be transferred
 +   * @param amount the amount to be slashed
 +   * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
@@ -2212,8 +2216,8 @@ index 37a034f..ad195ee 100644
 +  function settleSlashing() external;
 +
 +  /**
-+   * @dev Pulls STAKE_TOKEN and distributes them amonst current stakers by altering the exchange rate.
-+   * This method is permissionless and intendet to be used after a slashing event to return potential excess funds.
++   * @dev Pulls STAKE_TOKEN and distributes them amongst current stakers by altering the exchange rate.
++   * This method is permissionless and intended to be used after a slashing event to return potential excess funds.
 +   * @param amount amount of STAKE_TOKEN to pull.
 +   */
 +  function returnFunds(uint256 amount) external;
@@ -2252,23 +2256,10 @@ index 37a034f..ad195ee 100644
 +  function previewStake(uint256 assets) external view returns (uint256);
 +
 +  /**
-+   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-+   * @param to The address to receiving the shares
-+   * @param amount The amount to be staked
-+   * @param deadline The permit execution deadline
-+   * @param v The v component of the signed message
-+   * @param r The r component of the signed message
-+   * @param s The s component of the signed message
++   * @dev Activates the cooldown period to unstake
++   * - It can't be called if the user is not staking
 +   */
-+  function stakeWithPermit(
-+    address from,
-+    address to,
-+    uint256 amount,
-+    uint256 deadline,
-+    uint8 v,
-+    bytes32 r,
-+    bytes32 s
-+  ) external;
++  function cooldownOnBehalfOf(address from) external;
 +
 +  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to` on behalf of the user. Only the claim helper contract is allowed to call this function
@@ -2302,15 +2293,6 @@ index 37a034f..ad195ee 100644
 +  ) external;
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
-+   * @param to Address to stake to
-+   * @param amount Amount to claim
-+   */
-+  function claimRewardsAndStake(address to, uint256 amount)
-+    external
-+    returns (uint256);
-+
-+  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
@@ -2323,19 +2305,7 @@ index 37a034f..ad195ee 100644
 +  ) external;
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
-+   * @param from The address of the from from which to claim
-+   * @param to Address to stake to
-+   * @param amount Amount to claim
-+   */
-+  function claimRewardsAndStakeOnBehalf(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) external returns (uint256);
-+
-+  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem. Only the claim helper contract is allowed to call this function
++   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
 +   * @param from The address of the from
 +   * @param to Address to claim and unstake to
 +   * @param claimAmount Amount to claim
@@ -3720,7 +3690,12 @@ index 37a034f..ad195ee 100644
 + * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
 + * @author BGD Labs
 + */
-+contract StakedTokenV3 is StakedTokenV2, IStakedTokenV3, RoleManager {
++contract StakedTokenV3 is
++  StakedTokenV2,
++  IStakedTokenV3,
++  RoleManager,
++  IAaveDistributionManager
++{
 +  using SafeERC20 for IERC20;
 +  using PercentageMath for uint256;
 +  using SafeCast for uint256;
@@ -3730,6 +3705,10 @@ index 37a034f..ad195ee 100644
 +  uint256 public constant CLAIM_HELPER_ROLE = 2;
 +  uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
 +  uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
++
++  /// @notice lower bound to prevent spam & avoid excahngeRate issues
++  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
++  uint256 public immutable LOWER_BOUND;
 +
 +  /// @notice Seconds between starting cooldown and being able to withdraw
 +  uint256 internal _cooldownSeconds;
@@ -3780,13 +3759,18 @@ index 37a034f..ad195ee 100644
 +      emissionManager,
 +      distributionDuration
 +    )
-+  {}
++  {
++    // brick initialize
++    lastInitializedRevision = REVISION();
++    uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
++    LOWER_BOUND = 10**decimals;
++  }
 +
 +  /**
 +   * @dev returns the revision of the implementation contract
 +   * @return The revision
 +   */
-+  function REVISION() public pure virtual override returns (uint256) {
++  function REVISION() public pure virtual returns (uint256) {
 +    return 3;
 +  }
 +
@@ -3836,6 +3820,19 @@ index 37a034f..ad195ee 100644
 +    _updateExchangeRate(INITIAL_EXCHANGE_RATE);
 +  }
 +
++  /// @inheritdoc IAaveDistributionManager
++  function configureAssets(
++    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
++  ) external override {
++    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
++
++    for (uint256 i = 0; i < assetsConfigInput.length; i++) {
++      assetsConfigInput[i].totalStaked = totalSupply();
++    }
++
++    _configureAssets(assetsConfigInput);
++  }
++
 +  /// @inheritdoc IStakedTokenV3
 +  function previewStake(uint256 assets) public view returns (uint256) {
 +    return (assets * _currentExchangeRate) / EXCHANGE_RATE_UNIT;
@@ -3851,36 +3848,23 @@ index 37a034f..ad195ee 100644
 +
 +  /// @inheritdoc IStakedTokenV2
 +  function cooldown() external override(IStakedTokenV2, StakedTokenV2) {
-+    uint256 amount = balanceOf(msg.sender);
-+    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
-+    stakersCooldowns[msg.sender] = CooldownSnapshot({
-+      timestamp: uint72(block.timestamp),
-+      amount: uint184(amount)
-+    });
-+
-+    emit Cooldown(msg.sender, amount);
++    _cooldown(msg.sender);
 +  }
 +
 +  /// @inheritdoc IStakedTokenV3
-+  function stakeWithPermit(
-+    address from,
-+    address to,
-+    uint256 amount,
-+    uint256 deadline,
-+    uint8 v,
-+    bytes32 r,
-+    bytes32 s
-+  ) external override {
-+    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-+      from,
-+      address(this),
-+      amount,
-+      deadline,
-+      v,
-+      r,
-+      s
-+    );
-+    _stake(from, to, amount);
++  function cooldownOnBehalfOf(address from) external override onlyClaimHelper {
++    _cooldown(from);
++  }
++
++  function _cooldown(address from) internal {
++    uint256 amount = balanceOf(from);
++    require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
++    stakersCooldowns[from] = CooldownSnapshot({
++      timestamp: uint40(block.timestamp),
++      amount: uint216(amount)
++    });
++
++    emit Cooldown(from, amount);
 +  }
 +
 +  /// @inheritdoc IStakedTokenV2
@@ -3915,24 +3899,6 @@ index 37a034f..ad195ee 100644
 +    uint256 amount
 +  ) external override onlyClaimHelper returns (uint256) {
 +    return _claimRewards(from, to, amount);
-+  }
-+
-+  /// @inheritdoc IStakedTokenV3
-+  function claimRewardsAndStake(address to, uint256 amount)
-+    external
-+    override
-+    returns (uint256)
-+  {
-+    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
-+  }
-+
-+  /// @inheritdoc IStakedTokenV3
-+  function claimRewardsAndStakeOnBehalf(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) external override onlyClaimHelper returns (uint256) {
-+    return _claimRewardsAndStakeOnBehalf(from, to, amount);
 +  }
 +
 +  /// @inheritdoc IStakedTokenV3
@@ -3987,6 +3953,7 @@ index 37a034f..ad195ee 100644
 +    if (amount > maxSlashable) {
 +      amount = maxSlashable;
 +    }
++    require(balance - amount >= LOWER_BOUND, 'REMAINING_LT_MINIMUM');
 +
 +    inPostSlashingPeriod = true;
 +    _updateExchangeRate(_getExchangeRate(balance - amount, currentShares));
@@ -3999,7 +3966,9 @@ index 37a034f..ad195ee 100644
 +
 +  /// @inheritdoc IStakedTokenV3
 +  function returnFunds(uint256 amount) external override {
++    require(amount >= LOWER_BOUND, 'AMOUNT_LT_MINIMUM');
 +    uint256 currentShares = totalSupply();
++    require(currentShares >= LOWER_BOUND, 'SHARES_LT_MINIMUM');
 +    uint256 assets = previewRedeem(currentShares);
 +    _updateExchangeRate(_getExchangeRate(assets + amount, currentShares));
 +
@@ -4090,6 +4059,7 @@ index 37a034f..ad195ee 100644
 +    uint256 amountToClaim = (amount > newTotalRewards)
 +      ? newTotalRewards
 +      : amount;
++    require(amountToClaim != 0, 'INVALID_ZERO_AMOUNT');
 +
 +    stakerRewardsToClaim[from] = newTotalRewards - amountToClaim;
 +    REWARD_TOKEN.safeTransferFrom(REWARDS_VAULT, to, amountToClaim);
@@ -4098,7 +4068,7 @@ index 37a034f..ad195ee 100644
 +  }
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
++   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
 +   * @param from The address of the from from which to claim
 +   * @param to Address to stake to
 +   * @param amount Amount to claim
@@ -4200,8 +4170,7 @@ index 37a034f..ad195ee 100644
 +
 +    _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 +
-+    uint256 underlyingToRedeem = (amountToRedeem * EXCHANGE_RATE_UNIT) /
-+      _currentExchangeRate;
++    uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
 +
 +    _burn(from, amountToRedeem);
 +
@@ -4225,6 +4194,7 @@ index 37a034f..ad195ee 100644
 +   * @param newExchangeRate the new exchange rate
 +   */
 +  function _updateExchangeRate(uint216 newExchangeRate) internal virtual {
++    require(newExchangeRate != 0, 'ZERO_EXCHANGE_RATE');
 +    _currentExchangeRate = newExchangeRate;
 +    emit ExchangeRateChanged(newExchangeRate);
 +  }
