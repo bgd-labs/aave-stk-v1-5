@@ -143,15 +143,18 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     address to,
     uint256 amount
   ) internal override {
-    try
-      ghoDebtToken.updateDiscountDistribution(
-        from,
-        to,
-        balanceOf(from),
-        balanceOf(to),
-        amount
-      )
-    {} catch (bytes memory) {}
+    IGhoVariableDebtToken cachedGhoDebtToken = ghoDebtToken;
+    if (address(cachedGhoDebtToken) != address(0)) {
+      try
+        cachedGhoDebtToken.updateDiscountDistribution(
+          from,
+          to,
+          balanceOf(from),
+          balanceOf(to),
+          amount
+        )
+      {} catch (bytes memory) {}
+    }
     address votingFromDelegatee = _votingDelegates[from];
     address votingToDelegatee = _votingDelegates[to];
 
