@@ -64,11 +64,11 @@ contract CooldownValidation is BaseTest {
     uint256 amount = 10 ether;
     _stake(amount);
     STAKE_CONTRACT.cooldown();
-    (uint72 cooldownBefore, uint184 cooldownAmountBefore) = STAKE_CONTRACT
+    (uint40 cooldownBefore, uint216 cooldownAmountBefore) = STAKE_CONTRACT
       .stakersCooldowns(address(this));
 
     _stake(amount);
-    (uint72 cooldownAfter, uint184 cooldownAmountAfter) = STAKE_CONTRACT
+    (uint40 cooldownAfter, uint216 cooldownAmountAfter) = STAKE_CONTRACT
       .stakersCooldowns(address(this));
 
     assertEq(cooldownBefore, cooldownAfter);
@@ -86,7 +86,7 @@ contract CooldownValidation is BaseTest {
     vm.startPrank(user1);
     _stake(amount, user1);
     STAKE_CONTRACT.cooldown();
-    (uint72 cooldownBefore, uint184 cooldownAmountBefore) = STAKE_CONTRACT
+    (uint40 cooldownBefore, uint216 cooldownAmountBefore) = STAKE_CONTRACT
       .stakersCooldowns(user1);
 
     vm.stopPrank();
@@ -96,7 +96,7 @@ contract CooldownValidation is BaseTest {
     vm.stopPrank();
 
     vm.startPrank(user1);
-    (uint72 cooldownAfter, uint184 cooldownAmountAfter) = STAKE_CONTRACT
+    (uint40 cooldownAfter, uint216 cooldownAmountAfter) = STAKE_CONTRACT
       .stakersCooldowns(user1);
     vm.stopPrank();
 
@@ -147,13 +147,13 @@ contract CooldownValidation is BaseTest {
     _stake(amount, user1);
     // cooldown for 10
     STAKE_CONTRACT.cooldown();
-    (uint72 cooldownBefore, uint184 cooldownAmountBefore) = STAKE_CONTRACT
+    (uint40 cooldownBefore, uint216 cooldownAmountBefore) = STAKE_CONTRACT
       .stakersCooldowns(user1);
     // stake another 10
     _stake(amount, user1);
     // transfer out 10
     STAKE_CONTRACT.transfer(user2, amount);
-    (uint72 cooldownAfter, uint184 cooldownAmountAfter) = STAKE_CONTRACT
+    (uint40 cooldownAfter, uint216 cooldownAmountAfter) = STAKE_CONTRACT
       .stakersCooldowns(user1);
     vm.stopPrank();
 
@@ -175,7 +175,7 @@ contract CooldownValidation is BaseTest {
     (uint72 cooldownBefore, ) = STAKE_CONTRACT.stakersCooldowns(user1);
     // transfer out 5
     STAKE_CONTRACT.transfer(user2, 5 ether);
-    (uint72 cooldownAfter, uint184 cooldownAmountAfter) = STAKE_CONTRACT
+    (uint40 cooldownAfter, uint216 cooldownAmountAfter) = STAKE_CONTRACT
       .stakersCooldowns(user1);
     vm.stopPrank();
 
@@ -197,7 +197,7 @@ contract CooldownValidation is BaseTest {
 
     // transfer out 10
     STAKE_CONTRACT.transfer(user2, 10 ether);
-    (uint72 cooldownAfter, uint184 cooldownAmountAfter) = STAKE_CONTRACT
+    (uint40 cooldownAfter, uint216 cooldownAmountAfter) = STAKE_CONTRACT
       .stakersCooldowns(user1);
     vm.stopPrank();
 

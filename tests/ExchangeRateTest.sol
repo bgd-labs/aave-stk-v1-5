@@ -47,7 +47,7 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
    */
   function test_firstDepositor() public {
     _currentExchangeRate = 1 ether;
-    uint256 initialAmount = 1000;
+    uint256 initialAmount = 1 ether;
     uint256 refundAmount = 501 ether;
 
     _updateExchangeRate(
@@ -60,34 +60,44 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
 
   // FUZZ
   /**
-   * Quantifying issue on returnFunds
-   * function returnFunds(uint256 amount) external override
+   * Quantifying issue on function returnFunds(uint256 amount)  by fuzzing internal exchangeRateCalculation
    * @param amount uint256 amount of funds returned
    * @param shares uint256 totalSupply()
-   * For this purpose assuming a start with 1:1 exchangeRate
+   * Under the following conditions:
+   * - 1:1 exchangeRate
+   * - a single returnFunds, returning no more than 10^9 of current funds
+   * The overall error will not succeed 10^-9 of total assets
    */
   function test_returnFunds(uint96 amount, uint96 shares) public {
-    vm.assume(amount != 0);
-    vm.assume(shares != 0);
+    vm.assume(shares >= 1 ether);
+    vm.assume(amount >= 1 ether);
+    vm.assume(amount <= uint256(shares) * 1 gwei);
     _testRefund(amount, shares);
   }
 
   /**
-   * Quantifying issue on returnFunds
-   * function returnFunds(uint256 amount) external override
+   * Quantifying issue on function slash(uint256 amount) by fuzzing internal exchangeRateCalculation
    * @param amount uint256 amount of funds returned
    * @param shares uint256 totalSupply()
-   * For this purpose assuming a start with 1:1 exchangeRate
+   * Under the following conditions:
+   * - 1:1 exchangeRate
+   * - a single slashing, slashing no more than 99% of assets
+   * The overall error will not succeed 10^-9 of total assets
    */
   function test_slash(uint96 amount, uint96 shares) public {
-    vm.assume(amount != 0);
-    vm.assume(shares != 0);
-    vm.assume(amount < shares);
+    vm.assume(shares >= 1 ether);
+    vm.assume(amount > 0);
+    vm.assume(amount < (uint256(shares) * 99) / 100);
     _currentExchangeRate = 1 ether;
 
     _updateExchangeRate(_getExchangeRate(shares - amount, shares));
 
     assertLe(previewRedeem(shares), shares - amount);
+    assertApproxEqAbs(
+      previewRedeem(shares),
+      shares - amount,
+      (shares - amount) / 1 gwei
+    );
   }
 
   function _testRefund(uint256 amount, uint256 shares) public {
@@ -95,5 +105,10 @@ contract ExchangeRateTest is Test, ExchangeRateMock {
 
     _updateExchangeRate(_getExchangeRate(shares + amount, shares));
     assertLe(previewRedeem(shares), shares + amount);
+    assertApproxEqAbs(
+      previewRedeem(shares),
+      shares + amount,
+      (shares + amount) / 1 gwei
+    );
   }
 }

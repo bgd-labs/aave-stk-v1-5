@@ -199,8 +199,8 @@ contract StakedTokenV3 is
     uint256 amount = balanceOf(from);
     require(amount != 0, 'INVALID_BALANCE_ON_COOLDOWN');
     stakersCooldowns[from] = CooldownSnapshot({
-      timestamp: uint72(block.timestamp),
-      amount: uint184(amount)
+      timestamp: uint40(block.timestamp),
+      amount: uint216(amount)
     });
 
     emit Cooldown(from, amount);

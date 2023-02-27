@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 interface IStakedTokenV2 {
   struct CooldownSnapshot {
-    uint72 timestamp;
-    uint184 amount;
+    uint40 timestamp;
+    uint216 amount;
   }
 
   /**

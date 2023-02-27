@@ -27,4 +27,5 @@
 | _currentExchangeRate             | uint216                                                                                | 73   | 0      | 27    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | inPostSlashingPeriod             | bool                                                                                   | 73   | 27     | 1     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _exchangeRateSnapshotsCount      | uint32                                                                                 | 73   | 28     | 4     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _exchangeRateSnapshots           | mapping(uint256 => struct IStakedTokenV3.ExchangeRateSnapshot)                         | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _exchangeRateSnapshots           | mapping(uint256 => struct IStakedAaveV3.ExchangeRateSnapshot)                          | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| ghoDebtToken                     | contract IGhoVariableDebtToken                                                         | 75   | 0      | 20    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |

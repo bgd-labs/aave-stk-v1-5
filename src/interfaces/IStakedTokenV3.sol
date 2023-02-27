@@ -4,11 +4,6 @@ pragma solidity ^0.8.0;
 import {IStakedTokenV2} from './IStakedTokenV2.sol';
 
 interface IStakedTokenV3 is IStakedTokenV2 {
-  struct ExchangeRateSnapshot {
-    uint40 blockNumber;
-    uint216 value;
-  }
-
   event Staked(
     address indexed from,
     address indexed to,
