@@ -84,7 +84,8 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     STAKED_TOKEN.approve(address(this), type(uint256).max);
   }
 
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) public {
+  /// @inheritdoc IStakedAaveV3
+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
     require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
