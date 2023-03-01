@@ -1,27 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-// most imports are only here to force import order for better (i.e smaller) diff on flattening
-import {Context} from '../lib/Context.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
-import {ERC20} from '../lib/ERC20.sol';
-import {ITransferHook} from '../interfaces/ITransferHook.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
-import {Address} from '../lib/Address.sol';
-import {SafeERC20} from '../lib/SafeERC20.sol';
-import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
-import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
-import {AaveDistributionManager} from './AaveDistributionManager.sol';
-import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
-import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IGhoVariableDebtToken} from '../interfaces/IGhoVariableDebtToken.sol';
-import {StakedTokenV2} from './StakedTokenV2.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
 import {IStakedAaveV3} from '../interfaces/IStakedAaveV3.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 
 /**
  * @title StakedAaveV3
@@ -87,7 +74,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
 
   /// @inheritdoc IStakedAaveV3
   function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
-    require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
+    require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
   }

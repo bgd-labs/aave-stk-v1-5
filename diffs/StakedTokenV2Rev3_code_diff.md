@@ -1,9 +1,9 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..1b85286 100644
+index 83f9691..1fe776f 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
-@@ -1,124 +1,50 @@
+@@ -1,124 +1,26 @@
 -/**
 - *Submitted for verification at Etherscan.io on 2020-12-10
 - */
@@ -18,8 +18,7 @@ index 83f9691..1b85286 100644
 -    VOTING_POWER,
 -    PROPOSITION_POWER
 -  }
-+// most imports are only here to force import order for better (i.e smaller) diff on flattening
- 
+-
 -  /**
 -   * @dev emitted when a user delegates to another
 -   * @param delegator the delegator
@@ -99,36 +98,30 @@ index 83f9691..1b85286 100644
 -    virtual
 -    returns (uint256);
 -}
-+// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
- 
- /**
+-
+-/**
 - * @dev From https://github.com/OpenZeppelin/openzeppelin-contracts
 - * Provides information about the current execution context, including the
-+ * @dev Provides information about the current execution context, including the
-  * sender of the transaction and its data. While these are generally available
-  * via msg.sender and msg.data, they should not be accessed in such a direct
+- * sender of the transaction and its data. While these are generally available
+- * via msg.sender and msg.data, they should not be accessed in such a direct
 - * manner, since when dealing with GSN meta-transactions the account sending and
-+ * manner, since when dealing with meta-transactions the account sending and
-  * paying for execution may not be the actual sender (as far as an application
-  * is concerned).
-  *
-  * This contract is only required for intermediate, library-like contracts.
-  */
- abstract contract Context {
+- * paying for execution may not be the actual sender (as far as an application
+- * is concerned).
+- *
+- * This contract is only required for intermediate, library-like contracts.
+- */
+-abstract contract Context {
 -  function _msgSender() internal view virtual returns (address payable) {
-+  function _msgSender() internal view virtual returns (address) {
-     return msg.sender;
-   }
- 
+-    return msg.sender;
+-  }
+-
 -  function _msgData() internal view virtual returns (bytes memory) {
 -    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-+  function _msgData() internal view virtual returns (bytes calldata) {
-     return msg.data;
-   }
- }
- 
+-    return msg.data;
+-  }
+-}
 +// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
-+
+ 
  /**
   * @dev Interface of the ERC20 standard as defined in the EIP.
 - * From https://github.com/OpenZeppelin/openzeppelin-contracts
@@ -151,7 +144,7 @@ index 83f9691..1b85286 100644
    /**
     * @dev Returns the amount of tokens in existence.
     */
-@@ -130,13 +56,13 @@ interface IERC20 {
+@@ -130,13 +32,13 @@ interface IERC20 {
    function balanceOf(address account) external view returns (uint256);
  
    /**
@@ -167,7 +160,7 @@ index 83f9691..1b85286 100644
  
    /**
     * @dev Returns the remaining number of tokens that `spender` will be
-@@ -167,7 +93,7 @@ interface IERC20 {
+@@ -167,7 +69,7 @@ interface IERC20 {
    function approve(address spender, uint256 amount) external returns (bool);
  
    /**
@@ -176,7 +169,7 @@ index 83f9691..1b85286 100644
     * allowance mechanism. `amount` is then deducted from the caller's
     * allowance.
     *
-@@ -176,249 +102,36 @@ interface IERC20 {
+@@ -176,248 +78,71 @@ interface IERC20 {
     * Emits a {Transfer} event.
     */
    function transferFrom(
@@ -186,8 +179,7 @@ index 83f9691..1b85286 100644
 +    address to,
      uint256 amount
    ) external returns (bool);
-+}
- 
+-
 -  /**
 -   * @dev Emitted when `value` tokens are moved from one account (`from`) to
 -   * another (`to`).
@@ -195,17 +187,15 @@ index 83f9691..1b85286 100644
 -   * Note that `value` may be zero.
 -   */
 -  event Transfer(address indexed from, address indexed to, uint256 value);
-+// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
- 
+-
 -  /**
 -   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
 -   * a call to {approve}. `value` is the new allowance.
 -   */
 -  event Approval(address indexed owner, address indexed spender, uint256 value);
--}
-+// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
+ }
  
- /**
+-/**
 - * @dev From https://github.com/OpenZeppelin/openzeppelin-contracts
 - * Wrappers over Solidity's arithmetic operations with added overflow
 - * checks.
@@ -215,15 +205,12 @@ index 83f9691..1b85286 100644
 - * error, which is the standard behavior in high level programming languages.
 - * `SafeMath` restores this intuition by reverting the transaction when an
 - * operation overflows.
-+ * @dev Interface for the optional metadata functions from the ERC20 standard.
-  *
+- *
 - * Using this library instead of the unchecked operations eliminates an entire
 - * class of bugs, so it's recommended to use it always.
-+ * _Available since v4.1._
-  */
+- */
 -library SafeMath {
-+interface IERC20Metadata is IERC20 {
-   /**
+-  /**
 -   * @dev Returns the addition of two unsigned integers, reverting on
 -   * overflow.
 -   *
@@ -231,17 +218,20 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - Addition cannot overflow.
-+   * @dev Returns the name of the token.
-    */
+-   */
 -  function add(uint256 a, uint256 b) internal pure returns (uint256) {
 -    uint256 c = a + b;
 -    require(c >= a, 'SafeMath: addition overflow');
 -
 -    return c;
--  }
-+  function name() external view returns (string memory);
++library DistributionTypes {
++  struct AssetConfigInput {
++    uint128 emissionPerSecond;
++    uint256 totalStaked;
++    address underlyingAsset;
+   }
  
-   /**
+-  /**
 -   * @dev Returns the subtraction of two unsigned integers, reverting on
 -   * overflow (when the result is negative).
 -   *
@@ -249,14 +239,17 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - Subtraction cannot overflow.
-+   * @dev Returns the symbol of the token.
-    */
+-   */
 -  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
 -    return sub(a, b, 'SafeMath: subtraction overflow');
--  }
-+  function symbol() external view returns (string memory);
++  struct UserStakeInput {
++    address underlyingAsset;
++    uint256 stakedByUser;
++    uint256 totalStaked;
+   }
++}
  
-   /**
+-  /**
 -   * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
 -   * overflow (when the result is negative).
 -   *
@@ -264,8 +257,7 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - Subtraction cannot overflow.
-+   * @dev Returns the decimals places of the token.
-    */
+-   */
 -  function sub(
 -    uint256 a,
 -    uint256 b,
@@ -296,11 +288,19 @@ index 83f9691..1b85286 100644
 -
 -    uint256 c = a * b;
 -    require(c / a == b, 'SafeMath: multiplication overflow');
--
++// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+ 
 -    return c;
 -  }
--
--  /**
++// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
+ 
++/**
++ * @dev Interface for the optional metadata functions from the ERC20 standard.
++ *
++ * _Available since v4.1._
++ */
++interface IERC20Metadata is IERC20 {
+   /**
 -   * @dev Returns the integer division of two unsigned integers. Reverts on
 -   * division by zero. The result is rounded towards zero.
 -   *
@@ -310,12 +310,14 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - The divisor cannot be zero.
--   */
++   * @dev Returns the name of the token.
+    */
 -  function div(uint256 a, uint256 b) internal pure returns (uint256) {
 -    return div(a, b, 'SafeMath: division by zero');
 -  }
--
--  /**
++  function name() external view returns (string memory);
+ 
+   /**
 -   * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
 -   * division by zero. The result is rounded towards zero.
 -   *
@@ -325,7 +327,8 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - The divisor cannot be zero.
--   */
++   * @dev Returns the symbol of the token.
+    */
 -  function div(
 -    uint256 a,
 -    uint256 b,
@@ -338,8 +341,9 @@ index 83f9691..1b85286 100644
 -
 -    return c;
 -  }
--
--  /**
++  function symbol() external view returns (string memory);
+ 
+   /**
 -   * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
 -   * Reverts when dividing by zero.
 -   *
@@ -349,7 +353,8 @@ index 83f9691..1b85286 100644
 -   *
 -   * Requirements:
 -   * - The divisor cannot be zero.
--   */
++   * @dev Returns the decimals places of the token.
+    */
 -  function mod(uint256 a, uint256 b) internal pure returns (uint256) {
 -    return mod(a, b, 'SafeMath: modulo by zero');
 -  }
@@ -373,12 +378,23 @@ index 83f9691..1b85286 100644
 -    require(b != 0, errorMessage);
 -    return a % b;
 -  }
--}
--
--/**
++  function decimals() external view returns (uint8);
+ }
+ 
++// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
++
+ /**
 - * @dev Collection of functions related to the address type
 - * From https://github.com/OpenZeppelin/openzeppelin-contracts
-- */
++ * @dev Provides information about the current execution context, including the
++ * sender of the transaction and its data. While these are generally available
++ * via msg.sender and msg.data, they should not be accessed in such a direct
++ * manner, since when dealing with meta-transactions the account sending and
++ * paying for execution may not be the actual sender (as far as an application
++ * is concerned).
++ *
++ * This contract is only required for intermediate, library-like contracts.
+  */
 -library Address {
 -  /**
 -   * @dev Returns true if `account` is a contract.
@@ -408,8 +424,11 @@ index 83f9691..1b85286 100644
 -      codehash := extcodehash(account)
 -    }
 -    return (codehash != accountHash && codehash != 0x0);
--  }
--
++abstract contract Context {
++  function _msgSender() internal view virtual returns (address) {
++    return msg.sender;
+   }
+ 
 -  /**
 -   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
 -   * `recipient`, forwarding all available gas and reverting on errors.
@@ -435,12 +454,12 @@ index 83f9691..1b85286 100644
 -      success,
 -      'Address: unable to send value, recipient may have reverted'
 -    );
--  }
-+  function decimals() external view returns (uint8);
++  function _msgData() internal view virtual returns (bytes calldata) {
++    return msg.data;
+   }
  }
  
- /**
-@@ -429,12 +142,13 @@ library Address {
+@@ -429,12 +154,13 @@ library Address {
   * For a generic mechanism see {ERC20PresetMinterPauser}.
   *
   * TIP: For a detailed writeup see our guide
@@ -458,7 +477,7 @@ index 83f9691..1b85286 100644
   *
   * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
   * This allows applications to reconstruct the allowance for all accounts just
-@@ -445,39 +159,32 @@ library Address {
+@@ -445,39 +171,32 @@ library Address {
   * functions have been added to mitigate the well-known issues around setting
   * allowances. See {IERC20-approve}.
   */
@@ -510,7 +529,7 @@ index 83f9691..1b85286 100644
      return _name;
    }
  
-@@ -485,38 +192,44 @@ contract ERC20 is Context, IERC20 {
+@@ -485,38 +204,44 @@ contract ERC20 is Context, IERC20 {
     * @dev Returns the symbol of the token, usually a shorter version of the
     * name.
     */
@@ -563,7 +582,7 @@ index 83f9691..1b85286 100644
      return _balances[account];
    }
  
-@@ -525,16 +238,17 @@ contract ERC20 is Context, IERC20 {
+@@ -525,16 +250,17 @@ contract ERC20 is Context, IERC20 {
     *
     * Requirements:
     *
@@ -584,7 +603,7 @@ index 83f9691..1b85286 100644
      return true;
    }
  
-@@ -554,6 +268,9 @@ contract ERC20 is Context, IERC20 {
+@@ -554,6 +280,9 @@ contract ERC20 is Context, IERC20 {
    /**
     * @dev See {IERC20-approve}.
     *
@@ -594,7 +613,7 @@ index 83f9691..1b85286 100644
     * Requirements:
     *
     * - `spender` cannot be the zero address.
-@@ -564,7 +281,8 @@ contract ERC20 is Context, IERC20 {
+@@ -564,7 +293,8 @@ contract ERC20 is Context, IERC20 {
      override
      returns (bool)
    {
@@ -604,7 +623,7 @@ index 83f9691..1b85286 100644
      return true;
    }
  
-@@ -572,28 +290,26 @@ contract ERC20 is Context, IERC20 {
+@@ -572,28 +302,26 @@ contract ERC20 is Context, IERC20 {
     * @dev See {IERC20-transferFrom}.
     *
     * Emits an {Approval} event indicating the updated allowance. This is not
@@ -646,7 +665,7 @@ index 83f9691..1b85286 100644
      return true;
    }
  
-@@ -614,11 +330,8 @@ contract ERC20 is Context, IERC20 {
+@@ -614,11 +342,8 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -660,7 +679,7 @@ index 83f9691..1b85286 100644
      return true;
    }
  
-@@ -641,47 +354,55 @@ contract ERC20 is Context, IERC20 {
+@@ -641,47 +366,55 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -739,7 +758,7 @@ index 83f9691..1b85286 100644
    }
  
    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-@@ -689,18 +410,23 @@ contract ERC20 is Context, IERC20 {
+@@ -689,18 +422,23 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `from` set to the zero address.
     *
@@ -767,7 +786,7 @@ index 83f9691..1b85286 100644
    }
  
    /**
-@@ -709,7 +435,7 @@ contract ERC20 is Context, IERC20 {
+@@ -709,7 +447,7 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `to` set to the zero address.
     *
@@ -776,7 +795,7 @@ index 83f9691..1b85286 100644
     *
     * - `account` cannot be the zero address.
     * - `account` must have at least `amount` tokens.
-@@ -719,18 +445,23 @@ contract ERC20 is Context, IERC20 {
+@@ -719,18 +457,23 @@ contract ERC20 is Context, IERC20 {
  
      _beforeTokenTransfer(account, address(0), amount);
  
@@ -807,7 +826,7 @@ index 83f9691..1b85286 100644
     * e.g. set automatic allowances for certain subsystems, etc.
     *
     * Emits an {Approval} event.
-@@ -753,14 +484,25 @@ contract ERC20 is Context, IERC20 {
+@@ -753,14 +496,25 @@ contract ERC20 is Context, IERC20 {
    }
  
    /**
@@ -839,7 +858,7 @@ index 83f9691..1b85286 100644
    }
  
    /**
-@@ -770,7 +512,7 @@ contract ERC20 is Context, IERC20 {
+@@ -770,7 +524,7 @@ contract ERC20 is Context, IERC20 {
     * Calling conditions:
     *
     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
@@ -848,7 +867,7 @@ index 83f9691..1b85286 100644
     * - when `from` is zero, `amount` tokens will be minted for `to`.
     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
     * - `from` and `to` are never both zero.
-@@ -782,16 +524,26 @@ contract ERC20 is Context, IERC20 {
+@@ -782,44 +536,721 @@ contract ERC20 is Context, IERC20 {
      address to,
      uint256 amount
    ) internal virtual {}
@@ -862,6 +881,10 @@ index 83f9691..1b85286 100644
 -  function cooldown() external;
 -
 -  function claimRewards(address to, uint256 amount) external;
+-}
+-
+-interface ITransferHook {
+-  function onTransfer(
 +  /**
 +   * @dev Hook that is called after any transfer of tokens. This includes
 +   * minting and burning.
@@ -877,17 +900,435 @@ index 83f9691..1b85286 100644
 +   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
 +   */
 +  function _afterTokenTransfer(
-+    address from,
-+    address to,
-+    uint256 amount
+     address from,
+     address to,
+     uint256 amount
+-  ) external;
 +  ) internal virtual {}
  }
  
- interface ITransferHook {
-@@ -816,10 +568,288 @@ library DistributionTypes {
+-library DistributionTypes {
+-  struct AssetConfigInput {
+-    uint128 emissionPerSecond;
+-    uint256 totalStaked;
+-    address underlyingAsset;
++interface IGovernancePowerDelegationToken {
++  enum DelegationType {
++    VOTING_POWER,
++    PROPOSITION_POWER
    }
- }
  
+-  struct UserStakeInput {
+-    address underlyingAsset;
+-    uint256 stakedByUser;
+-    uint256 totalStaked;
++  /**
++   * @dev emitted when a user delegates to another
++   * @param delegator the delegator
++   * @param delegatee the delegatee
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  event DelegateChanged(
++    address indexed delegator,
++    address indexed delegatee,
++    DelegationType delegationType
++  );
++
++  /**
++   * @dev emitted when an action changes the delegated power of a user
++   * @param user the user which delegated power has changed
++   * @param amount the amount of delegated power for the user
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  event DelegatedPowerChanged(
++    address indexed user,
++    uint256 amount,
++    DelegationType delegationType
++  );
++
++  /**
++   * @dev delegates the specific power to a delegatee
++   * @param delegatee the user which delegated power has changed
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  function delegateByType(address delegatee, DelegationType delegationType)
++    external;
++
++  /**
++   * @dev delegates all the powers to a specific user
++   * @param delegatee the user to which the power will be delegated
++   **/
++  function delegate(address delegatee) external;
++
++  /**
++   * @dev returns the delegatee of an user
++   * @param delegator the address of the delegator
++   **/
++  function getDelegateeByType(address delegator, DelegationType delegationType)
++    external
++    view
++    returns (address);
++
++  /**
++   * @dev returns the current delegated power of a user. The current power is the
++   * power delegated at the time of the last snapshot
++   * @param user the user
++   **/
++  function getPowerCurrent(address user, DelegationType delegationType)
++    external
++    view
++    returns (uint256);
++
++  /**
++   * @dev returns the delegated power of a user at a certain block
++   * @param user the user
++   **/
++  function getPowerAtBlock(
++    address user,
++    uint256 blockNumber,
++    DelegationType delegationType
++  ) external view returns (uint256);
++
++  /**
++   * @dev returns the total supply at a certain block number
++   **/
++  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
++}
++
++/**
++ * @notice implementation of the AAVE token contract
++ * @author Aave
++ */
++abstract contract GovernancePowerDelegationERC20 is
++  ERC20,
++  IGovernancePowerDelegationToken
++{
++  /// @notice The EIP-712 typehash for the delegation struct used by the contract
++  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
++    keccak256(
++      'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
++    );
++
++  bytes32 public constant DELEGATE_TYPEHASH =
++    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
++
++  /// @dev snapshot of a value on a specific block, used for votes
++  struct Snapshot {
++    uint128 blockNumber;
++    uint128 value;
++  }
++
++  /**
++   * @dev delegates one specific power to a delegatee
++   * @param delegatee the user which delegated power has changed
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  function delegateByType(address delegatee, DelegationType delegationType)
++    external
++    override
++  {
++    _delegateByType(msg.sender, delegatee, delegationType);
++  }
++
++  /**
++   * @dev delegates all the powers to a specific user
++   * @param delegatee the user to which the power will be delegated
++   **/
++  function delegate(address delegatee) external override {
++    _delegateByType(msg.sender, delegatee, DelegationType.VOTING_POWER);
++    _delegateByType(msg.sender, delegatee, DelegationType.PROPOSITION_POWER);
++  }
++
++  /**
++   * @dev returns the delegatee of an user
++   * @param delegator the address of the delegator
++   **/
++  function getDelegateeByType(address delegator, DelegationType delegationType)
++    external
++    view
++    override
++    returns (address)
++  {
++    (
++      ,
++      ,
++      mapping(address => address) storage delegates
++    ) = _getDelegationDataByType(delegationType);
++
++    return _getDelegatee(delegator, delegates);
++  }
++
++  /**
++   * @dev returns the current delegated power of a user. The current power is the
++   * power delegated at the time of the last snapshot
++   * @param user the user
++   **/
++  function getPowerCurrent(address user, DelegationType delegationType)
++    external
++    view
++    override
++    returns (uint256)
++  {
++    (
++      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++      mapping(address => uint256) storage snapshotsCounts,
++
++    ) = _getDelegationDataByType(delegationType);
++
++    return _searchByBlockNumber(snapshots, snapshotsCounts, user, block.number);
++  }
++
++  /**
++   * @dev returns the delegated power of a user at a certain block
++   * @param user the user
++   **/
++  function getPowerAtBlock(
++    address user,
++    uint256 blockNumber,
++    DelegationType delegationType
++  ) external view override returns (uint256) {
++    (
++      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++      mapping(address => uint256) storage snapshotsCounts,
++
++    ) = _getDelegationDataByType(delegationType);
++
++    return _searchByBlockNumber(snapshots, snapshotsCounts, user, blockNumber);
++  }
++
++  /**
++   * @dev returns the total supply at a certain block number
++   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
++   * In this initial implementation with no AAVE minting, simply returns the current supply
++   * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
++   **/
++  function totalSupplyAt(uint256) external view override returns (uint256) {
++    return super.totalSupply();
++  }
++
++  /**
++   * @dev delegates the specific power to a delegatee
++   * @param delegatee the user which delegated power has changed
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  function _delegateByType(
++    address delegator,
++    address delegatee,
++    DelegationType delegationType
++  ) internal {
++    require(delegatee != address(0), 'INVALID_DELEGATEE');
++
++    (
++      ,
++      ,
++      mapping(address => address) storage delegates
++    ) = _getDelegationDataByType(delegationType);
++
++    uint256 delegatorBalance = balanceOf(delegator);
++
++    address previousDelegatee = _getDelegatee(delegator, delegates);
++
++    delegates[delegator] = delegatee;
++
++    _moveDelegatesByType(
++      previousDelegatee,
++      delegatee,
++      delegatorBalance,
++      delegationType
++    );
++    emit DelegateChanged(delegator, delegatee, delegationType);
++  }
++
++  /**
++   * @dev moves delegated power from one user to another
++   * @param from the user from which delegated power is moved
++   * @param to the user that will receive the delegated power
++   * @param amount the amount of delegated power to be moved
++   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
++   **/
++  function _moveDelegatesByType(
++    address from,
++    address to,
++    uint256 amount,
++    DelegationType delegationType
++  ) internal {
++    if (from == to) {
++      return;
++    }
++
++    (
++      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++      mapping(address => uint256) storage snapshotsCounts,
++
++    ) = _getDelegationDataByType(delegationType);
++
++    if (from != address(0)) {
++      uint256 previous = 0;
++      uint256 fromSnapshotsCount = snapshotsCounts[from];
++
++      if (fromSnapshotsCount != 0) {
++        previous = snapshots[from][fromSnapshotsCount - 1].value;
++      } else {
++        previous = balanceOf(from);
++      }
++
++      _writeSnapshot(
++        snapshots,
++        snapshotsCounts,
++        from,
++        uint128(previous),
++        uint128(previous - amount)
++      );
++
++      emit DelegatedPowerChanged(from, previous - amount, delegationType);
++    }
++    if (to != address(0)) {
++      uint256 previous = 0;
++      uint256 toSnapshotsCount = snapshotsCounts[to];
++      if (toSnapshotsCount != 0) {
++        previous = snapshots[to][toSnapshotsCount - 1].value;
++      } else {
++        previous = balanceOf(to);
++      }
++
++      _writeSnapshot(
++        snapshots,
++        snapshotsCounts,
++        to,
++        uint128(previous),
++        uint128(previous + amount)
++      );
++
++      emit DelegatedPowerChanged(to, previous + amount, delegationType);
++    }
++  }
++
++  /**
++   * @dev searches a snapshot by block number. Uses binary search.
++   * @param snapshots the snapshots mapping
++   * @param snapshotsCounts the number of snapshots
++   * @param user the user for which the snapshot is being searched
++   * @param blockNumber the block number being searched
++   **/
++  function _searchByBlockNumber(
++    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++    mapping(address => uint256) storage snapshotsCounts,
++    address user,
++    uint256 blockNumber
++  ) internal view virtual returns (uint256) {
++    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
++
++    uint256 snapshotsCount = snapshotsCounts[user];
++
++    if (snapshotsCount == 0) {
++      return balanceOf(user);
++    }
++
++    // Check implicit zero balance
++    if (snapshots[user][0].blockNumber > blockNumber) {
++      return 0;
++    }
++
++    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
++  }
++
++  function _binarySearch(
++    mapping(uint256 => Snapshot) storage snapshots,
++    uint256 snapshotsCount,
++    uint256 blockNumber
++  ) internal view returns (uint256) {
++    unchecked {
++      // First check most recent balance
++      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
++        return snapshots[snapshotsCount - 1].value;
++      }
++
++      uint256 lower = 0;
++      uint256 upper = snapshotsCount - 1;
++      while (upper > lower) {
++        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
++        Snapshot memory snapshot = snapshots[center];
++        if (snapshot.blockNumber == blockNumber) {
++          return snapshot.value;
++        } else if (snapshot.blockNumber < blockNumber) {
++          lower = center;
++        } else {
++          upper = center - 1;
++        }
++      }
++      return snapshots[lower].value;
++    }
++  }
++
++  /**
++   * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type
++   * NOTE: Ideal implementation would have mapped this in a struct by delegation type. Unfortunately,
++   * the AAVE token and StakeToken already include a mapping for the snapshots, so we require contracts
++   * who inherit from this to provide access to the delegation data by overriding this method.
++   * @param delegationType the type of delegation
++   **/
++  function _getDelegationDataByType(DelegationType delegationType)
++    internal
++    view
++    virtual
++    returns (
++      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
++      mapping(address => uint256) storage, //snapshots count
++      mapping(address => address) storage //delegatees list
++    );
++
++  /**
++   * @dev Writes a snapshot for an owner of tokens
++   * @param owner The owner of the tokens
++   * @param oldValue The value before the operation that is gonna be executed after the snapshot
++   * @param newValue The value after the operation
++   */
++  function _writeSnapshot(
++    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
++    mapping(address => uint256) storage snapshotsCounts,
++    address owner,
++    uint128 oldValue,
++    uint128 newValue
++  ) internal {
++    uint128 currentBlock = uint128(block.number);
++
++    uint256 ownerSnapshotsCount = snapshotsCounts[owner];
++    mapping(uint256 => Snapshot) storage snapshotsOwner = snapshots[owner];
++
++    // Doing multiple operations in the same block
++    if (
++      ownerSnapshotsCount != 0 &&
++      snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock
++    ) {
++      snapshotsOwner[ownerSnapshotsCount - 1].value = newValue;
++    } else {
++      snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);
++      snapshotsCounts[owner] = ownerSnapshotsCount + 1;
++    }
++  }
++
++  /**
++   * @dev returns the user delegatee. If a user never performed any delegation,
++   * his delegated address will be 0x0. In that case we simply return the user itself
++   * @param delegator the address of the user for which return the delegatee
++   * @param delegates the array of delegates for a particular type of delegation
++   **/
++  function _getDelegatee(
++    address delegator,
++    mapping(address => address) storage delegates
++  ) internal view returns (address) {
++    address previousDelegatee = delegates[delegator];
++
++    if (previousDelegatee == address(0)) {
++      return delegator;
++    }
++
++    return previousDelegatee;
++  }
++}
++
++// OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
++
 +// OpenZeppelin Contracts (last updated v4.8.0) (utils/Address.sol)
 +
 +/**
@@ -1162,11 +1603,9 @@ index 83f9691..1b85286 100644
 +    } else {
 +      revert(errorMessage);
 +    }
-+  }
-+}
-+
-+// OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
-+
+   }
+ }
+ 
  /**
   * @title SafeERC20
 - * @dev From https://github.com/OpenZeppelin/openzeppelin-contracts
@@ -1175,7 +1614,7 @@ index 83f9691..1b85286 100644
   * contract returns false). Tokens that return no value (and instead revert or
   * throw on failure) are also supported, non-reverting calls are assumed to be
   * successful.
-@@ -827,7 +857,6 @@ library DistributionTypes {
+@@ -827,7 +1258,6 @@ library DistributionTypes {
   * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
   */
  library SafeERC20 {
@@ -1183,7 +1622,7 @@ index 83f9691..1b85286 100644
    using Address for address;
  
    function safeTransfer(
-@@ -835,7 +864,7 @@ library SafeERC20 {
+@@ -835,7 +1265,7 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
@@ -1192,7 +1631,7 @@ index 83f9691..1b85286 100644
        token,
        abi.encodeWithSelector(token.transfer.selector, to, value)
      );
-@@ -847,37 +876,85 @@ library SafeERC20 {
+@@ -847,37 +1277,85 @@ library SafeERC20 {
      address to,
      uint256 value
    ) internal {
@@ -1286,413 +1725,13 @@ index 83f9691..1b85286 100644
        require(
          abi.decode(returndata, (bool)),
          'SafeERC20: ERC20 operation did not succeed'
-@@ -931,7 +1008,7 @@ abstract contract VersionedInitializable {
- 
- interface IAaveDistributionManager {
-   function configureAssets(
--    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
-+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
-   ) external;
- }
- 
-@@ -939,10 +1016,8 @@ interface IAaveDistributionManager {
-  * @title AaveDistributionManager
-  * @notice Accounting contract to manage multiple staking distributions
-  * @author Aave
-- **/
--contract AaveDistributionManager is IAaveDistributionManager {
--  using SafeMath for uint256;
--
-+ */
-+contract AaveDistributionManager {
-   struct AssetData {
-     uint128 emissionPerSecond;
-     uint128 lastUpdateTimestamp;
-@@ -966,20 +1041,18 @@ contract AaveDistributionManager is IAaveDistributionManager {
-     uint256 index
-   );
- 
--  constructor(address emissionManager, uint256 distributionDuration) public {
--    DISTRIBUTION_END = block.timestamp.add(distributionDuration);
-+  constructor(address emissionManager, uint256 distributionDuration) {
-+    DISTRIBUTION_END = block.timestamp + distributionDuration;
-     EMISSION_MANAGER = emissionManager;
-   }
- 
-   /**
-    * @dev Configures the distribution of rewards for a list of assets
-    * @param assetsConfigInput The list of configurations to apply
--   **/
--  function configureAssets(
--    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
--  ) external override {
--    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
--
-+   */
-+  function _configureAssets(
-+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
-+  ) internal {
-     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
-       AssetData storage assetConfig = assets[
-         assetsConfigInput[i].underlyingAsset
-@@ -1006,7 +1079,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param assetConfig Storage pointer to the distribution's config
-    * @param totalStaked Current total of staked assets for this distribution
-    * @return The new distribution index
--   **/
-+   */
-   function _updateAssetStateInternal(
-     address underlyingAsset,
-     AssetData storage assetConfig,
-@@ -1043,7 +1116,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
-    * @param totalStaked Total tokens staked in the distribution
-    * @return The accrued rewards for the user until the moment
--   **/
-+   */
-   function _updateUserAssetInternal(
-     address user,
-     address asset,
-@@ -1073,7 +1146,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param user The address of the user
-    * @param stakes List of structs of the user data related with his stake
-    * @return The accrued rewards for the user until the moment
--   **/
-+   */
-   function _claimRewards(
-     address user,
-     DistributionTypes.UserStakeInput[] memory stakes
-@@ -1081,14 +1154,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
-     uint256 accruedRewards = 0;
- 
-     for (uint256 i = 0; i < stakes.length; i++) {
--      accruedRewards = accruedRewards.add(
-+      accruedRewards =
-+        accruedRewards +
-         _updateUserAssetInternal(
-           user,
-           stakes[i].underlyingAsset,
-           stakes[i].stakedByUser,
-           stakes[i].totalStaked
--        )
--      );
-+        );
-     }
- 
-     return accruedRewards;
-@@ -1099,7 +1172,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param user The address of the user
-    * @param stakes List of structs of the user data related with his stake
-    * @return The accrued rewards for the user until the moment
--   **/
-+   */
-   function _getUnclaimedRewards(
-     address user,
-     DistributionTypes.UserStakeInput[] memory stakes
-@@ -1115,9 +1188,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
-         stakes[i].totalStaked
-       );
- 
--      accruedRewards = accruedRewards.add(
--        _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user])
--      );
-+      accruedRewards =
-+        accruedRewards +
-+        _getRewards(
-+          stakes[i].stakedByUser,
-+          assetIndex,
-+          assetConfig.users[user]
-+        );
-     }
-     return accruedRewards;
-   }
-@@ -1128,16 +1205,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param reserveIndex Current index of the distribution
-    * @param userIndex Index stored for the user, representation his staking moment
-    * @return The rewards
--   **/
-+   */
-   function _getRewards(
-     uint256 principalUserBalance,
-     uint256 reserveIndex,
-     uint256 userIndex
-   ) internal pure returns (uint256) {
-     return
--      principalUserBalance.mul(reserveIndex.sub(userIndex)).div(
--        10**uint256(PRECISION)
--      );
-+      (principalUserBalance * (reserveIndex - userIndex)) /
-+      (10**uint256(PRECISION));
-   }
- 
-   /**
-@@ -1147,7 +1223,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param lastUpdateTimestamp Last moment this distribution was updated
-    * @param totalBalance of tokens considered for the distribution
-    * @return The new index.
--   **/
-+   */
-   function _getAssetIndex(
-     uint256 currentIndex,
-     uint256 emissionPerSecond,
-@@ -1166,13 +1242,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
-     uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
-       ? DISTRIBUTION_END
-       : block.timestamp;
--    uint256 timeDelta = currentTimestamp.sub(lastUpdateTimestamp);
-+    uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
-     return
--      emissionPerSecond
--        .mul(timeDelta)
--        .mul(10**uint256(PRECISION))
--        .div(totalBalance)
--        .add(currentIndex);
-+      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
-+        totalBalance) + currentIndex;
-   }
- 
-   /**
-@@ -1180,7 +1253,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
-    * @param user Address of the user
-    * @param asset The address of the reference asset of the distribution
-    * @return The new index
--   **/
-+   */
-   function getUserAssetData(address user, address asset)
-     public
-     view
-@@ -1190,6 +1263,85 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -886,6 +1364,56 @@ library SafeERC20 {
    }
  }
  
-+interface IGovernancePowerDelegationToken {
-+  enum DelegationType {
-+    VOTING_POWER,
-+    PROPOSITION_POWER
-+  }
-+
-+  /**
-+   * @dev emitted when a user delegates to another
-+   * @param delegator the delegator
-+   * @param delegatee the delegatee
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  event DelegateChanged(
-+    address indexed delegator,
-+    address indexed delegatee,
-+    DelegationType delegationType
-+  );
-+
-+  /**
-+   * @dev emitted when an action changes the delegated power of a user
-+   * @param user the user which delegated power has changed
-+   * @param amount the amount of delegated power for the user
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  event DelegatedPowerChanged(
-+    address indexed user,
-+    uint256 amount,
-+    DelegationType delegationType
-+  );
-+
-+  /**
-+   * @dev delegates the specific power to a delegatee
-+   * @param delegatee the user which delegated power has changed
-+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-+   **/
-+  function delegateByType(address delegatee, DelegationType delegationType)
-+    external;
-+
-+  /**
-+   * @dev delegates all the powers to a specific user
-+   * @param delegatee the user to which the power will be delegated
-+   **/
-+  function delegate(address delegatee) external;
-+
-+  /**
-+   * @dev returns the delegatee of an user
-+   * @param delegator the address of the delegator
-+   **/
-+  function getDelegateeByType(address delegator, DelegationType delegationType)
-+    external
-+    view
-+    returns (address);
-+
-+  /**
-+   * @dev returns the current delegated power of a user. The current power is the
-+   * power delegated at the time of the last snapshot
-+   * @param user the user
-+   **/
-+  function getPowerCurrent(address user, DelegationType delegationType)
-+    external
-+    view
-+    returns (uint256);
-+
-+  /**
-+   * @dev returns the delegated power of a user at a certain block
-+   * @param user the user
-+   **/
-+  function getPowerAtBlock(
-+    address user,
-+    uint256 blockNumber,
-+    DelegationType delegationType
-+  ) external view returns (uint256);
-+
-+  /**
-+   * @dev returns the total supply at a certain block number
-+   **/
-+  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
-+}
-+
- /**
-  * @notice implementation of the AAVE token contract
-  * @author Aave
-@@ -1198,7 +1350,6 @@ abstract contract GovernancePowerDelegationERC20 is
-   ERC20,
-   IGovernancePowerDelegationToken
- {
--  using SafeMath for uint256;
-   /// @notice The EIP-712 typehash for the delegation struct used by the contract
-   bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
-     keccak256(
-@@ -1298,12 +1449,7 @@ abstract contract GovernancePowerDelegationERC20 is
-    * In this initial implementation with no AAVE minting, simply returns the current supply
-    * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
-    **/
--  function totalSupplyAt(uint256 blockNumber)
--    external
--    view
--    override
--    returns (uint256)
--  {
-+  function totalSupplyAt(uint256) external view override returns (uint256) {
-     return super.totalSupply();
-   }
- 
-@@ -1378,10 +1524,10 @@ abstract contract GovernancePowerDelegationERC20 is
-         snapshotsCounts,
-         from,
-         uint128(previous),
--        uint128(previous.sub(amount))
-+        uint128(previous - amount)
-       );
- 
--      emit DelegatedPowerChanged(from, previous.sub(amount), delegationType);
-+      emit DelegatedPowerChanged(from, previous - amount, delegationType);
-     }
-     if (to != address(0)) {
-       uint256 previous = 0;
-@@ -1397,10 +1543,10 @@ abstract contract GovernancePowerDelegationERC20 is
-         snapshotsCounts,
-         to,
-         uint128(previous),
--        uint128(previous.add(amount))
-+        uint128(previous + amount)
-       );
- 
--      emit DelegatedPowerChanged(to, previous.add(amount), delegationType);
-+      emit DelegatedPowerChanged(to, previous + amount, delegationType);
-     }
-   }
- 
-@@ -1416,7 +1562,7 @@ abstract contract GovernancePowerDelegationERC20 is
-     mapping(address => uint256) storage snapshotsCounts,
-     address user,
-     uint256 blockNumber
--  ) internal view returns (uint256) {
-+  ) internal view virtual returns (uint256) {
-     require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
- 
-     uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1425,30 +1571,40 @@ abstract contract GovernancePowerDelegationERC20 is
-       return balanceOf(user);
-     }
- 
--    // First check most recent balance
--    if (snapshots[user][snapshotsCount - 1].blockNumber <= blockNumber) {
--      return snapshots[user][snapshotsCount - 1].value;
--    }
--
--    // Next check implicit zero balance
-+    // Check implicit zero balance
-     if (snapshots[user][0].blockNumber > blockNumber) {
-       return 0;
-     }
- 
--    uint256 lower = 0;
--    uint256 upper = snapshotsCount - 1;
--    while (upper > lower) {
--      uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
--      Snapshot memory snapshot = snapshots[user][center];
--      if (snapshot.blockNumber == blockNumber) {
--        return snapshot.value;
--      } else if (snapshot.blockNumber < blockNumber) {
--        lower = center;
--      } else {
--        upper = center - 1;
-+    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
-+  }
-+
-+  function _binarySearch(
-+    mapping(uint256 => Snapshot) storage snapshots,
-+    uint256 snapshotsCount,
-+    uint256 blockNumber
-+  ) internal view returns (uint256) {
-+    unchecked {
-+      // First check most recent balance
-+      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-+        return snapshots[snapshotsCount - 1].value;
-       }
-+
-+      uint256 lower = 0;
-+      uint256 upper = snapshotsCount - 1;
-+      while (upper > lower) {
-+        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-+        Snapshot memory snapshot = snapshots[center];
-+        if (snapshot.blockNumber == blockNumber) {
-+          return snapshot.value;
-+        } else if (snapshot.blockNumber < blockNumber) {
-+          lower = center;
-+        } else {
-+          upper = center - 1;
-+        }
-+      }
-+      return snapshots[lower].value;
-     }
--    return snapshots[user][lower].value;
-   }
- 
-   /**
-@@ -1526,8 +1682,6 @@ abstract contract GovernancePowerDelegationERC20 is
- abstract contract GovernancePowerWithSnapshot is
-   GovernancePowerDelegationERC20
- {
--  using SafeMath for uint256;
--
-   /**
-    * @dev The following storage layout points to the prior StakedToken.sol implementation:
-    * _snapshots => _votingSnapshots
-@@ -1540,42 +1694,92 @@ abstract contract GovernancePowerWithSnapshot is
-   /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
-   /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
-   /// to control all potential reentrancies by calling back the this contract
-+  /// @dev DEPRECATED
-   ITransferHook public _aaveGovernance;
-+}
- 
--  function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
--    _aaveGovernance = aaveGovernance;
-+// most imports are only here to force import order for better (i.e smaller) diff on flattening
-+
-+interface IERC20WithPermit is IERC20 {
-+  function permit(
-+    address owner,
-+    address spender,
-+    uint256 value,
-+    uint256 deadline,
-+    uint8 v,
-+    bytes32 r,
-+    bytes32 s
++interface IAaveDistributionManager {
++  function configureAssets(
++    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
 +  ) external;
 +}
 +
@@ -1700,7 +1739,7 @@ index 83f9691..1b85286 100644
 +  struct CooldownSnapshot {
 +    uint40 timestamp;
 +    uint216 amount;
-   }
++  }
 +
 +  /**
 +   * @dev Allows staking a specified amount of STAKED_TOKEN
@@ -1738,6 +1777,543 @@ index 83f9691..1b85286 100644
 +    external
 +    view
 +    returns (uint256);
++}
++
+ /**
+  * @title VersionedInitializable
+  *
+@@ -929,20 +1457,12 @@ abstract contract VersionedInitializable {
+   uint256[50] private ______gap;
+ }
+ 
+-interface IAaveDistributionManager {
+-  function configureAssets(
+-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+-  ) external;
+-}
+-
+ /**
+  * @title AaveDistributionManager
+  * @notice Accounting contract to manage multiple staking distributions
+  * @author Aave
+- **/
+-contract AaveDistributionManager is IAaveDistributionManager {
+-  using SafeMath for uint256;
+-
++ */
++contract AaveDistributionManager {
+   struct AssetData {
+     uint128 emissionPerSecond;
+     uint128 lastUpdateTimestamp;
+@@ -966,20 +1486,18 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 index
+   );
+ 
+-  constructor(address emissionManager, uint256 distributionDuration) public {
+-    DISTRIBUTION_END = block.timestamp.add(distributionDuration);
++  constructor(address emissionManager, uint256 distributionDuration) {
++    DISTRIBUTION_END = block.timestamp + distributionDuration;
+     EMISSION_MANAGER = emissionManager;
+   }
+ 
+   /**
+    * @dev Configures the distribution of rewards for a list of assets
+    * @param assetsConfigInput The list of configurations to apply
+-   **/
+-  function configureAssets(
+-    DistributionTypes.AssetConfigInput[] calldata assetsConfigInput
+-  ) external override {
+-    require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
+-
++   */
++  function _configureAssets(
++    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
++  ) internal {
+     for (uint256 i = 0; i < assetsConfigInput.length; i++) {
+       AssetData storage assetConfig = assets[
+         assetsConfigInput[i].underlyingAsset
+@@ -1006,7 +1524,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param assetConfig Storage pointer to the distribution's config
+    * @param totalStaked Current total of staked assets for this distribution
+    * @return The new distribution index
+-   **/
++   */
+   function _updateAssetStateInternal(
+     address underlyingAsset,
+     AssetData storage assetConfig,
+@@ -1043,7 +1561,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
+    * @param totalStaked Total tokens staked in the distribution
+    * @return The accrued rewards for the user until the moment
+-   **/
++   */
+   function _updateUserAssetInternal(
+     address user,
+     address asset,
+@@ -1073,7 +1591,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param user The address of the user
+    * @param stakes List of structs of the user data related with his stake
+    * @return The accrued rewards for the user until the moment
+-   **/
++   */
+   function _claimRewards(
+     address user,
+     DistributionTypes.UserStakeInput[] memory stakes
+@@ -1081,14 +1599,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 accruedRewards = 0;
+ 
+     for (uint256 i = 0; i < stakes.length; i++) {
+-      accruedRewards = accruedRewards.add(
++      accruedRewards =
++        accruedRewards +
+         _updateUserAssetInternal(
+           user,
+           stakes[i].underlyingAsset,
+           stakes[i].stakedByUser,
+           stakes[i].totalStaked
+-        )
+-      );
++        );
+     }
+ 
+     return accruedRewards;
+@@ -1099,7 +1617,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param user The address of the user
+    * @param stakes List of structs of the user data related with his stake
+    * @return The accrued rewards for the user until the moment
+-   **/
++   */
+   function _getUnclaimedRewards(
+     address user,
+     DistributionTypes.UserStakeInput[] memory stakes
+@@ -1115,9 +1633,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+         stakes[i].totalStaked
+       );
+ 
+-      accruedRewards = accruedRewards.add(
+-        _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user])
+-      );
++      accruedRewards =
++        accruedRewards +
++        _getRewards(
++          stakes[i].stakedByUser,
++          assetIndex,
++          assetConfig.users[user]
++        );
+     }
+     return accruedRewards;
+   }
+@@ -1128,16 +1650,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param reserveIndex Current index of the distribution
+    * @param userIndex Index stored for the user, representation his staking moment
+    * @return The rewards
+-   **/
++   */
+   function _getRewards(
+     uint256 principalUserBalance,
+     uint256 reserveIndex,
+     uint256 userIndex
+   ) internal pure returns (uint256) {
+     return
+-      principalUserBalance.mul(reserveIndex.sub(userIndex)).div(
+-        10**uint256(PRECISION)
+-      );
++      (principalUserBalance * (reserveIndex - userIndex)) /
++      (10**uint256(PRECISION));
+   }
+ 
+   /**
+@@ -1147,7 +1668,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param lastUpdateTimestamp Last moment this distribution was updated
+    * @param totalBalance of tokens considered for the distribution
+    * @return The new index.
+-   **/
++   */
+   function _getAssetIndex(
+     uint256 currentIndex,
+     uint256 emissionPerSecond,
+@@ -1166,13 +1687,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
+     uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
+       ? DISTRIBUTION_END
+       : block.timestamp;
+-    uint256 timeDelta = currentTimestamp.sub(lastUpdateTimestamp);
++    uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
+     return
+-      emissionPerSecond
+-        .mul(timeDelta)
+-        .mul(10**uint256(PRECISION))
+-        .div(totalBalance)
+-        .add(currentIndex);
++      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
++        totalBalance) + currentIndex;
+   }
+ 
+   /**
+@@ -1180,7 +1698,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+    * @param user Address of the user
+    * @param asset The address of the reference asset of the distribution
+    * @return The new index
+-   **/
++   */
+   function getUserAssetData(address user, address asset)
+     public
+     view
+@@ -1190,332 +1708,12 @@ contract AaveDistributionManager is IAaveDistributionManager {
+   }
+ }
+ 
+-/**
+- * @notice implementation of the AAVE token contract
+- * @author Aave
+- */
+-abstract contract GovernancePowerDelegationERC20 is
+-  ERC20,
+-  IGovernancePowerDelegationToken
+-{
+-  using SafeMath for uint256;
+-  /// @notice The EIP-712 typehash for the delegation struct used by the contract
+-  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
+-    keccak256(
+-      'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
+-    );
+-
+-  bytes32 public constant DELEGATE_TYPEHASH =
+-    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
+-
+-  /// @dev snapshot of a value on a specific block, used for votes
+-  struct Snapshot {
+-    uint128 blockNumber;
+-    uint128 value;
+-  }
+-
+-  /**
+-   * @dev delegates one specific power to a delegatee
+-   * @param delegatee the user which delegated power has changed
+-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+-   **/
+-  function delegateByType(address delegatee, DelegationType delegationType)
+-    external
+-    override
+-  {
+-    _delegateByType(msg.sender, delegatee, delegationType);
+-  }
+-
+-  /**
+-   * @dev delegates all the powers to a specific user
+-   * @param delegatee the user to which the power will be delegated
+-   **/
+-  function delegate(address delegatee) external override {
+-    _delegateByType(msg.sender, delegatee, DelegationType.VOTING_POWER);
+-    _delegateByType(msg.sender, delegatee, DelegationType.PROPOSITION_POWER);
+-  }
+-
+-  /**
+-   * @dev returns the delegatee of an user
+-   * @param delegator the address of the delegator
+-   **/
+-  function getDelegateeByType(address delegator, DelegationType delegationType)
+-    external
+-    view
+-    override
+-    returns (address)
+-  {
+-    (
+-      ,
+-      ,
+-      mapping(address => address) storage delegates
+-    ) = _getDelegationDataByType(delegationType);
+-
+-    return _getDelegatee(delegator, delegates);
+-  }
+-
+-  /**
+-   * @dev returns the current delegated power of a user. The current power is the
+-   * power delegated at the time of the last snapshot
+-   * @param user the user
+-   **/
+-  function getPowerCurrent(address user, DelegationType delegationType)
+-    external
+-    view
+-    override
+-    returns (uint256)
+-  {
+-    (
+-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+-      mapping(address => uint256) storage snapshotsCounts,
+-
+-    ) = _getDelegationDataByType(delegationType);
+-
+-    return _searchByBlockNumber(snapshots, snapshotsCounts, user, block.number);
+-  }
+-
+-  /**
+-   * @dev returns the delegated power of a user at a certain block
+-   * @param user the user
+-   **/
+-  function getPowerAtBlock(
+-    address user,
+-    uint256 blockNumber,
+-    DelegationType delegationType
+-  ) external view override returns (uint256) {
+-    (
+-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+-      mapping(address => uint256) storage snapshotsCounts,
+-
+-    ) = _getDelegationDataByType(delegationType);
+-
+-    return _searchByBlockNumber(snapshots, snapshotsCounts, user, blockNumber);
+-  }
+-
+-  /**
+-   * @dev returns the total supply at a certain block number
+-   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
+-   * In this initial implementation with no AAVE minting, simply returns the current supply
+-   * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
+-   **/
+-  function totalSupplyAt(uint256 blockNumber)
+-    external
+-    view
+-    override
+-    returns (uint256)
+-  {
+-    return super.totalSupply();
+-  }
+-
+-  /**
+-   * @dev delegates the specific power to a delegatee
+-   * @param delegatee the user which delegated power has changed
+-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+-   **/
+-  function _delegateByType(
+-    address delegator,
+-    address delegatee,
+-    DelegationType delegationType
+-  ) internal {
+-    require(delegatee != address(0), 'INVALID_DELEGATEE');
+-
+-    (
+-      ,
+-      ,
+-      mapping(address => address) storage delegates
+-    ) = _getDelegationDataByType(delegationType);
+-
+-    uint256 delegatorBalance = balanceOf(delegator);
+-
+-    address previousDelegatee = _getDelegatee(delegator, delegates);
+-
+-    delegates[delegator] = delegatee;
+-
+-    _moveDelegatesByType(
+-      previousDelegatee,
+-      delegatee,
+-      delegatorBalance,
+-      delegationType
+-    );
+-    emit DelegateChanged(delegator, delegatee, delegationType);
+-  }
+-
+-  /**
+-   * @dev moves delegated power from one user to another
+-   * @param from the user from which delegated power is moved
+-   * @param to the user that will receive the delegated power
+-   * @param amount the amount of delegated power to be moved
+-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+-   **/
+-  function _moveDelegatesByType(
++interface ITransferHook {
++  function onTransfer(
+     address from,
+     address to,
+-    uint256 amount,
+-    DelegationType delegationType
+-  ) internal {
+-    if (from == to) {
+-      return;
+-    }
+-
+-    (
+-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+-      mapping(address => uint256) storage snapshotsCounts,
+-
+-    ) = _getDelegationDataByType(delegationType);
+-
+-    if (from != address(0)) {
+-      uint256 previous = 0;
+-      uint256 fromSnapshotsCount = snapshotsCounts[from];
+-
+-      if (fromSnapshotsCount != 0) {
+-        previous = snapshots[from][fromSnapshotsCount - 1].value;
+-      } else {
+-        previous = balanceOf(from);
+-      }
+-
+-      _writeSnapshot(
+-        snapshots,
+-        snapshotsCounts,
+-        from,
+-        uint128(previous),
+-        uint128(previous.sub(amount))
+-      );
+-
+-      emit DelegatedPowerChanged(from, previous.sub(amount), delegationType);
+-    }
+-    if (to != address(0)) {
+-      uint256 previous = 0;
+-      uint256 toSnapshotsCount = snapshotsCounts[to];
+-      if (toSnapshotsCount != 0) {
+-        previous = snapshots[to][toSnapshotsCount - 1].value;
+-      } else {
+-        previous = balanceOf(to);
+-      }
+-
+-      _writeSnapshot(
+-        snapshots,
+-        snapshotsCounts,
+-        to,
+-        uint128(previous),
+-        uint128(previous.add(amount))
+-      );
+-
+-      emit DelegatedPowerChanged(to, previous.add(amount), delegationType);
+-    }
+-  }
+-
+-  /**
+-   * @dev searches a snapshot by block number. Uses binary search.
+-   * @param snapshots the snapshots mapping
+-   * @param snapshotsCounts the number of snapshots
+-   * @param user the user for which the snapshot is being searched
+-   * @param blockNumber the block number being searched
+-   **/
+-  function _searchByBlockNumber(
+-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+-    mapping(address => uint256) storage snapshotsCounts,
+-    address user,
+-    uint256 blockNumber
+-  ) internal view returns (uint256) {
+-    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
+-
+-    uint256 snapshotsCount = snapshotsCounts[user];
+-
+-    if (snapshotsCount == 0) {
+-      return balanceOf(user);
+-    }
+-
+-    // First check most recent balance
+-    if (snapshots[user][snapshotsCount - 1].blockNumber <= blockNumber) {
+-      return snapshots[user][snapshotsCount - 1].value;
+-    }
+-
+-    // Next check implicit zero balance
+-    if (snapshots[user][0].blockNumber > blockNumber) {
+-      return 0;
+-    }
+-
+-    uint256 lower = 0;
+-    uint256 upper = snapshotsCount - 1;
+-    while (upper > lower) {
+-      uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+-      Snapshot memory snapshot = snapshots[user][center];
+-      if (snapshot.blockNumber == blockNumber) {
+-        return snapshot.value;
+-      } else if (snapshot.blockNumber < blockNumber) {
+-        lower = center;
+-      } else {
+-        upper = center - 1;
+-      }
+-    }
+-    return snapshots[user][lower].value;
+-  }
+-
+-  /**
+-   * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type
+-   * NOTE: Ideal implementation would have mapped this in a struct by delegation type. Unfortunately,
+-   * the AAVE token and StakeToken already include a mapping for the snapshots, so we require contracts
+-   * who inherit from this to provide access to the delegation data by overriding this method.
+-   * @param delegationType the type of delegation
+-   **/
+-  function _getDelegationDataByType(DelegationType delegationType)
+-    internal
+-    view
+-    virtual
+-    returns (
+-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+-      mapping(address => uint256) storage, //snapshots count
+-      mapping(address => address) storage //delegatees list
+-    );
+-
+-  /**
+-   * @dev Writes a snapshot for an owner of tokens
+-   * @param owner The owner of the tokens
+-   * @param oldValue The value before the operation that is gonna be executed after the snapshot
+-   * @param newValue The value after the operation
+-   */
+-  function _writeSnapshot(
+-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+-    mapping(address => uint256) storage snapshotsCounts,
+-    address owner,
+-    uint128 oldValue,
+-    uint128 newValue
+-  ) internal {
+-    uint128 currentBlock = uint128(block.number);
+-
+-    uint256 ownerSnapshotsCount = snapshotsCounts[owner];
+-    mapping(uint256 => Snapshot) storage snapshotsOwner = snapshots[owner];
+-
+-    // Doing multiple operations in the same block
+-    if (
+-      ownerSnapshotsCount != 0 &&
+-      snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock
+-    ) {
+-      snapshotsOwner[ownerSnapshotsCount - 1].value = newValue;
+-    } else {
+-      snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);
+-      snapshotsCounts[owner] = ownerSnapshotsCount + 1;
+-    }
+-  }
+-
+-  /**
+-   * @dev returns the user delegatee. If a user never performed any delegation,
+-   * his delegated address will be 0x0. In that case we simply return the user itself
+-   * @param delegator the address of the user for which return the delegatee
+-   * @param delegates the array of delegates for a particular type of delegation
+-   **/
+-  function _getDelegatee(
+-    address delegator,
+-    mapping(address => address) storage delegates
+-  ) internal view returns (address) {
+-    address previousDelegatee = delegates[delegator];
+-
+-    if (previousDelegatee == address(0)) {
+-      return delegator;
+-    }
+-
+-    return previousDelegatee;
+-  }
++    uint256 amount
++  ) external;
+ }
+ 
+ /**
+@@ -1526,8 +1724,6 @@ abstract contract GovernancePowerDelegationERC20 is
+ abstract contract GovernancePowerWithSnapshot is
+   GovernancePowerDelegationERC20
+ {
+-  using SafeMath for uint256;
+-
+   /**
+    * @dev The following storage layout points to the prior StakedToken.sol implementation:
+    * _snapshots => _votingSnapshots
+@@ -1540,42 +1736,34 @@ abstract contract GovernancePowerWithSnapshot is
+   /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
+   /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
+   /// to control all potential reentrancies by calling back the this contract
++  /// @dev DEPRECATED
+   ITransferHook public _aaveGovernance;
+-
+-  function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
+-    _aaveGovernance = aaveGovernance;
+-  }
  }
  
  /**
@@ -1779,7 +2355,7 @@ index 83f9691..1b85286 100644
  
    /// @dev End of Storage layout from StakedToken v1
  
-@@ -1607,294 +1811,41 @@ contract StakedTokenV2Rev3 is
+@@ -1607,294 +1795,41 @@ contract StakedTokenV2Rev3 is
      uint256 amount
    );
    event Redeem(address indexed from, address indexed to, uint256 amount);
@@ -2086,7 +2662,7 @@ index 83f9691..1b85286 100644
    function getTotalRewardsBalance(address staker)
      external
      view
-@@ -1908,17 +1859,8 @@ contract StakedTokenV2Rev3 is
+@@ -1908,17 +1843,8 @@ contract StakedTokenV2Rev3 is
        totalStaked: totalSupply()
      });
      return
@@ -2106,7 +2682,7 @@ index 83f9691..1b85286 100644
    }
  
    /**
-@@ -1931,7 +1873,6 @@ contract StakedTokenV2Rev3 is
+@@ -1931,7 +1857,6 @@ contract StakedTokenV2Rev3 is
     * @param s signature param
     * @param r signature param
     */
@@ -2114,7 +2690,7 @@ index 83f9691..1b85286 100644
    function permit(
      address owner,
      address spender,
-@@ -1963,10 +1904,2968 @@ contract StakedTokenV2Rev3 is
+@@ -1963,10 +1888,2408 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -4401,576 +4977,16 @@ index 83f9691..1b85286 100644
 +  ) external;
 +}
 +
-+pragma abicoder v2;
-+
-+interface IGovernanceStrategy {
-+  /**
-+   * @dev Returns the Proposition Power of a user at a specific block number.
-+   * @param user Address of the user.
-+   * @param blockNumber Blocknumber at which to fetch Proposition Power
-+   * @return Power number
-+   **/
-+  function getPropositionPowerAt(address user, uint256 blockNumber)
-+    external
-+    view
-+    returns (uint256);
-+
-+  /**
-+   * @dev Returns the total supply of Outstanding Proposition Tokens
-+   * @param blockNumber Blocknumber at which to evaluate
-+   * @return total supply at blockNumber
-+   **/
-+  function getTotalPropositionSupplyAt(uint256 blockNumber)
-+    external
-+    view
-+    returns (uint256);
-+
-+  /**
-+   * @dev Returns the total supply of Outstanding Voting Tokens
-+   * @param blockNumber Blocknumber at which to evaluate
-+   * @return total supply at blockNumber
-+   **/
-+  function getTotalVotingSupplyAt(uint256 blockNumber)
-+    external
-+    view
-+    returns (uint256);
-+
-+  /**
-+   * @dev Returns the Vote Power of a user at a specific block number.
-+   * @param user Address of the user.
-+   * @param blockNumber Blocknumber at which to fetch Vote Power
-+   * @return Vote number
-+   **/
-+  function getVotingPowerAt(address user, uint256 blockNumber)
-+    external
-+    view
-+    returns (uint256);
-+}
-+
-+interface IExecutorWithTimelock {
-+  /**
-+   * @dev emitted when a new pending admin is set
-+   * @param newPendingAdmin address of the new pending admin
-+   **/
-+  event NewPendingAdmin(address newPendingAdmin);
-+
-+  /**
-+   * @dev emitted when a new admin is set
-+   * @param newAdmin address of the new admin
-+   **/
-+  event NewAdmin(address newAdmin);
-+
-+  /**
-+   * @dev emitted when a new delay (between queueing and execution) is set
-+   * @param delay new delay
-+   **/
-+  event NewDelay(uint256 delay);
-+
-+  /**
-+   * @dev emitted when a new (trans)action is Queued.
-+   * @param actionHash hash of the action
-+   * @param target address of the targeted contract
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   **/
-+  event QueuedAction(
-+    bytes32 actionHash,
-+    address indexed target,
++interface IERC20WithPermit is IERC20 {
++  function permit(
++    address owner,
++    address spender,
 +    uint256 value,
-+    string signature,
-+    bytes data,
-+    uint256 executionTime,
-+    bool withDelegatecall
-+  );
-+
-+  /**
-+   * @dev emitted when an action is Cancelled
-+   * @param actionHash hash of the action
-+   * @param target address of the targeted contract
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   **/
-+  event CancelledAction(
-+    bytes32 actionHash,
-+    address indexed target,
-+    uint256 value,
-+    string signature,
-+    bytes data,
-+    uint256 executionTime,
-+    bool withDelegatecall
-+  );
-+
-+  /**
-+   * @dev emitted when an action is Cancelled
-+   * @param actionHash hash of the action
-+   * @param target address of the targeted contract
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   * @param resultData the actual callData used on the target
-+   **/
-+  event ExecutedAction(
-+    bytes32 actionHash,
-+    address indexed target,
-+    uint256 value,
-+    string signature,
-+    bytes data,
-+    uint256 executionTime,
-+    bool withDelegatecall,
-+    bytes resultData
-+  );
-+
-+  /**
-+   * @dev Getter of the current admin address (should be governance)
-+   * @return The address of the current admin
-+   **/
-+  function getAdmin() external view returns (address);
-+
-+  /**
-+   * @dev Getter of the current pending admin address
-+   * @return The address of the pending admin
-+   **/
-+  function getPendingAdmin() external view returns (address);
-+
-+  /**
-+   * @dev Getter of the delay between queuing and execution
-+   * @return The delay in seconds
-+   **/
-+  function getDelay() external view returns (uint256);
-+
-+  /**
-+   * @dev Returns whether an action (via actionHash) is queued
-+   * @param actionHash hash of the action to be checked
-+   * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
-+   * @return true if underlying action of actionHash is queued
-+   **/
-+  function isActionQueued(bytes32 actionHash) external view returns (bool);
-+
-+  /**
-+   * @dev Checks whether a proposal is over its grace period
-+   * @param governance Governance contract
-+   * @param proposalId Id of the proposal against which to test
-+   * @return true of proposal is over grace period
-+   **/
-+  function isProposalOverGracePeriod(
-+    IAaveGovernanceV2 governance,
-+    uint256 proposalId
-+  ) external view returns (bool);
-+
-+  /**
-+   * @dev Getter of grace period constant
-+   * @return grace period in seconds
-+   **/
-+  function GRACE_PERIOD() external view returns (uint256);
-+
-+  /**
-+   * @dev Getter of minimum delay constant
-+   * @return minimum delay in seconds
-+   **/
-+  function MINIMUM_DELAY() external view returns (uint256);
-+
-+  /**
-+   * @dev Getter of maximum delay constant
-+   * @return maximum delay in seconds
-+   **/
-+  function MAXIMUM_DELAY() external view returns (uint256);
-+
-+  /**
-+   * @dev Function, called by Governance, that queue a transaction, returns action hash
-+   * @param target smart contract target
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   **/
-+  function queueTransaction(
-+    address target,
-+    uint256 value,
-+    string memory signature,
-+    bytes memory data,
-+    uint256 executionTime,
-+    bool withDelegatecall
-+  ) external returns (bytes32);
-+
-+  /**
-+   * @dev Function, called by Governance, that cancels a transaction, returns the callData executed
-+   * @param target smart contract target
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   **/
-+  function executeTransaction(
-+    address target,
-+    uint256 value,
-+    string memory signature,
-+    bytes memory data,
-+    uint256 executionTime,
-+    bool withDelegatecall
-+  ) external payable returns (bytes memory);
-+
-+  /**
-+   * @dev Function, called by Governance, that cancels a transaction, returns action hash
-+   * @param target smart contract target
-+   * @param value wei value of the transaction
-+   * @param signature function signature of the transaction
-+   * @param data function arguments of the transaction or callData if signature empty
-+   * @param executionTime time at which to execute the transaction
-+   * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-+   **/
-+  function cancelTransaction(
-+    address target,
-+    uint256 value,
-+    string memory signature,
-+    bytes memory data,
-+    uint256 executionTime,
-+    bool withDelegatecall
-+  ) external returns (bytes32);
-+}
-+
-+interface IAaveGovernanceV2 {
-+  enum ProposalState {
-+    Pending,
-+    Canceled,
-+    Active,
-+    Failed,
-+    Succeeded,
-+    Queued,
-+    Expired,
-+    Executed
-+  }
-+
-+  struct Vote {
-+    bool support;
-+    uint248 votingPower;
-+  }
-+
-+  struct Proposal {
-+    uint256 id;
-+    address creator;
-+    IExecutorWithTimelock executor;
-+    address[] targets;
-+    uint256[] values;
-+    string[] signatures;
-+    bytes[] calldatas;
-+    bool[] withDelegatecalls;
-+    uint256 startBlock;
-+    uint256 endBlock;
-+    uint256 executionTime;
-+    uint256 forVotes;
-+    uint256 againstVotes;
-+    bool executed;
-+    bool canceled;
-+    address strategy;
-+    bytes32 ipfsHash;
-+    mapping(address => Vote) votes;
-+  }
-+
-+  struct ProposalWithoutVotes {
-+    uint256 id;
-+    address creator;
-+    IExecutorWithTimelock executor;
-+    address[] targets;
-+    uint256[] values;
-+    string[] signatures;
-+    bytes[] calldatas;
-+    bool[] withDelegatecalls;
-+    uint256 startBlock;
-+    uint256 endBlock;
-+    uint256 executionTime;
-+    uint256 forVotes;
-+    uint256 againstVotes;
-+    bool executed;
-+    bool canceled;
-+    address strategy;
-+    bytes32 ipfsHash;
-+  }
-+
-+  /**
-+   * @dev emitted when a new proposal is created
-+   * @param id Id of the proposal
-+   * @param creator address of the creator
-+   * @param executor The ExecutorWithTimelock contract that will execute the proposal
-+   * @param targets list of contracts called by proposal's associated transactions
-+   * @param values list of value in wei for each propoposal's associated transaction
-+   * @param signatures list of function signatures (can be empty) to be used when created the callData
-+   * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-+   * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
-+   * @param startBlock block number when vote starts
-+   * @param endBlock block number when vote ends
-+   * @param strategy address of the governanceStrategy contract
-+   * @param ipfsHash IPFS hash of the proposal
-+   **/
-+  event ProposalCreated(
-+    uint256 id,
-+    address indexed creator,
-+    IExecutorWithTimelock indexed executor,
-+    address[] targets,
-+    uint256[] values,
-+    string[] signatures,
-+    bytes[] calldatas,
-+    bool[] withDelegatecalls,
-+    uint256 startBlock,
-+    uint256 endBlock,
-+    address strategy,
-+    bytes32 ipfsHash
-+  );
-+
-+  /**
-+   * @dev emitted when a proposal is canceled
-+   * @param id Id of the proposal
-+   **/
-+  event ProposalCanceled(uint256 id);
-+
-+  /**
-+   * @dev emitted when a proposal is queued
-+   * @param id Id of the proposal
-+   * @param executionTime time when proposal underlying transactions can be executed
-+   * @param initiatorQueueing address of the initiator of the queuing transaction
-+   **/
-+  event ProposalQueued(
-+    uint256 id,
-+    uint256 executionTime,
-+    address indexed initiatorQueueing
-+  );
-+  /**
-+   * @dev emitted when a proposal is executed
-+   * @param id Id of the proposal
-+   * @param initiatorExecution address of the initiator of the execution transaction
-+   **/
-+  event ProposalExecuted(uint256 id, address indexed initiatorExecution);
-+  /**
-+   * @dev emitted when a vote is registered
-+   * @param id Id of the proposal
-+   * @param voter address of the voter
-+   * @param support boolean, true = vote for, false = vote against
-+   * @param votingPower Power of the voter/vote
-+   **/
-+  event VoteEmitted(
-+    uint256 id,
-+    address indexed voter,
-+    bool support,
-+    uint256 votingPower
-+  );
-+
-+  event GovernanceStrategyChanged(
-+    address indexed newStrategy,
-+    address indexed initiatorChange
-+  );
-+
-+  event VotingDelayChanged(
-+    uint256 newVotingDelay,
-+    address indexed initiatorChange
-+  );
-+
-+  event ExecutorAuthorized(address executor);
-+
-+  event ExecutorUnauthorized(address executor);
-+
-+  /**
-+   * @dev Creates a Proposal (needs Proposition Power of creator > Threshold)
-+   * @param executor The ExecutorWithTimelock contract that will execute the proposal
-+   * @param targets list of contracts called by proposal's associated transactions
-+   * @param values list of value in wei for each propoposal's associated transaction
-+   * @param signatures list of function signatures (can be empty) to be used when created the callData
-+   * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-+   * @param withDelegatecalls if true, transaction delegatecalls the taget, else calls the target
-+   * @param ipfsHash IPFS hash of the proposal
-+   **/
-+  function create(
-+    IExecutorWithTimelock executor,
-+    address[] memory targets,
-+    uint256[] memory values,
-+    string[] memory signatures,
-+    bytes[] memory calldatas,
-+    bool[] memory withDelegatecalls,
-+    bytes32 ipfsHash
-+  ) external returns (uint256);
-+
-+  /**
-+   * @dev Cancels a Proposal,
-+   * either at anytime by guardian
-+   * or when proposal is Pending/Active and threshold no longer reached
-+   * @param proposalId id of the proposal
-+   **/
-+  function cancel(uint256 proposalId) external;
-+
-+  /**
-+   * @dev Queue the proposal (If Proposal Succeeded)
-+   * @param proposalId id of the proposal to queue
-+   **/
-+  function queue(uint256 proposalId) external;
-+
-+  /**
-+   * @dev Execute the proposal (If Proposal Queued)
-+   * @param proposalId id of the proposal to execute
-+   **/
-+  function execute(uint256 proposalId) external payable;
-+
-+  /**
-+   * @dev Function allowing msg.sender to vote for/against a proposal
-+   * @param proposalId id of the proposal
-+   * @param support boolean, true = vote for, false = vote against
-+   **/
-+  function submitVote(uint256 proposalId, bool support) external;
-+
-+  /**
-+   * @dev Function to register the vote of user that has voted offchain via signature
-+   * @param proposalId id of the proposal
-+   * @param support boolean, true = vote for, false = vote against
-+   * @param v v part of the voter signature
-+   * @param r r part of the voter signature
-+   * @param s s part of the voter signature
-+   **/
-+  function submitVoteBySignature(
-+    uint256 proposalId,
-+    bool support,
++    uint256 deadline,
 +    uint8 v,
 +    bytes32 r,
 +    bytes32 s
 +  ) external;
-+
-+  /**
-+   * @dev Set new GovernanceStrategy
-+   * Note: owner should be a timelocked executor, so needs to make a proposal
-+   * @param governanceStrategy new Address of the GovernanceStrategy contract
-+   **/
-+  function setGovernanceStrategy(address governanceStrategy) external;
-+
-+  /**
-+   * @dev Set new Voting Delay (delay before a newly created proposal can be voted on)
-+   * Note: owner should be a timelocked executor, so needs to make a proposal
-+   * @param votingDelay new voting delay in seconds
-+   **/
-+  function setVotingDelay(uint256 votingDelay) external;
-+
-+  /**
-+   * @dev Add new addresses to the list of authorized executors
-+   * @param executors list of new addresses to be authorized executors
-+   **/
-+  function authorizeExecutors(address[] memory executors) external;
-+
-+  /**
-+   * @dev Remove addresses to the list of authorized executors
-+   * @param executors list of addresses to be removed as authorized executors
-+   **/
-+  function unauthorizeExecutors(address[] memory executors) external;
-+
-+  /**
-+   * @dev Let the guardian abdicate from its priviledged rights
-+   **/
-+  function __abdicate() external;
-+
-+  /**
-+   * @dev Getter of the current GovernanceStrategy address
-+   * @return The address of the current GovernanceStrategy contracts
-+   **/
-+  function getGovernanceStrategy() external view returns (address);
-+
-+  /**
-+   * @dev Getter of the current Voting Delay (delay before a created proposal can be voted on)
-+   * Different from the voting duration
-+   * @return The voting delay in seconds
-+   **/
-+  function getVotingDelay() external view returns (uint256);
-+
-+  /**
-+   * @dev Returns whether an address is an authorized executor
-+   * @param executor address to evaluate as authorized executor
-+   * @return true if authorized
-+   **/
-+  function isExecutorAuthorized(address executor) external view returns (bool);
-+
-+  /**
-+   * @dev Getter the address of the guardian, that can mainly cancel proposals
-+   * @return The address of the guardian
-+   **/
-+  function getGuardian() external view returns (address);
-+
-+  /**
-+   * @dev Getter of the proposal count (the current number of proposals ever created)
-+   * @return the proposal count
-+   **/
-+  function getProposalsCount() external view returns (uint256);
-+
-+  /**
-+   * @dev Getter of a proposal by id
-+   * @param proposalId id of the proposal to get
-+   * @return the proposal as ProposalWithoutVotes memory object
-+   **/
-+  function getProposalById(uint256 proposalId)
-+    external
-+    view
-+    returns (ProposalWithoutVotes memory);
-+
-+  /**
-+   * @dev Getter of the Vote of a voter about a proposal
-+   * Note: Vote is a struct: ({bool support, uint248 votingPower})
-+   * @param proposalId id of the proposal
-+   * @param voter address of the voter
-+   * @return The associated Vote memory object
-+   **/
-+  function getVoteOnProposal(uint256 proposalId, address voter)
-+    external
-+    view
-+    returns (Vote memory);
-+
-+  /**
-+   * @dev Get the current state of a proposal
-+   * @param proposalId id of the proposal
-+   * @return The current state if the proposal
-+   **/
-+  function getProposalState(uint256 proposalId)
-+    external
-+    view
-+    returns (ProposalState);
-+}
-+
-+library AaveGovernanceV2 {
-+  IAaveGovernanceV2 internal constant GOV =
-+    IAaveGovernanceV2(0xEC568fffba86c094cf06b22134B23074DFE2252c);
-+
-+  IGovernanceStrategy public constant GOV_STRATEGY =
-+    IGovernanceStrategy(0xb7e383ef9B1E9189Fc0F71fb30af8aa14377429e);
-+
-+  address public constant SHORT_EXECUTOR =
-+    0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
-+
-+  address public constant LONG_EXECUTOR =
-+    0x79426A1c24B2978D90d7A5070a46C65B07bC4299;
-+
-+  address public constant ARC_TIMELOCK =
-+    0xAce1d11d836cb3F51Ef658FD4D353fFb3c301218;
-+
-+  // https://github.com/aave/governance-crosschain-bridges
-+  address internal constant POLYGON_BRIDGE_EXECUTOR =
-+    0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772;
-+
-+  address internal constant OPTIMISM_BRIDGE_EXECUTOR =
-+    0x7d9103572bE58FfE99dc390E8246f02dcAe6f611;
-+
-+  address internal constant ARBITRUM_BRIDGE_EXECUTOR =
-+    0x7d9103572bE58FfE99dc390E8246f02dcAe6f611;
-+
-+  // https://github.com/bgd-labs/aave-v3-crosschain-listing-template/tree/master/src/contracts
-+  address internal constant CROSSCHAIN_FORWARDER_POLYGON =
-+    0x158a6bC04F0828318821baE797f50B0A1299d45b;
-+
-+  address internal constant CROSSCHAIN_FORWARDER_OPTIMISM =
-+    0x5f5C02875a8e9B5A26fbd09040ABCfDeb2AA6711;
-+
-+  address internal constant CROSSCHAIN_FORWARDER_ARBITRUM =
-+    0x2e2B1F112C4D79A9D22464F0D345dE9b792705f1;
 +}
 +
 +/**
@@ -5037,7 +5053,7 @@ index 83f9691..1b85286 100644
 +
 +  /// @inheritdoc IStakedAaveV3
 +  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
-+    require(msg.sender == AaveGovernanceV2.SHORT_EXECUTOR);
++    require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
 +    ghoDebtToken = newGHODebtToken;
 +    emit GHODebtTokenChanged(address(newGHODebtToken));
 +  }
@@ -5084,7 +5100,7 @@ index 83f9691..1b85286 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +4880,18 @@ contract StakedTokenV2Rev3 is
+@@ -1981,6 +4304,18 @@ contract StakedTokenV2Rev3 is
      address to,
      uint256 amount
    ) internal override {
@@ -5103,7 +5119,7 @@ index 83f9691..1b85286 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +4925,68 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +4349,68 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );

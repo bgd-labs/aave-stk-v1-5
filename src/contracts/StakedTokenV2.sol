@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from '../interfaces/IERC20.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
-import {ITransferHook} from '../interfaces/ITransferHook.sol';
 
 import {ERC20} from '../lib/ERC20.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
