@@ -273,6 +273,7 @@ contract StakedTokenV3 is
     returns (uint256)
   {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
     uint256 balance = previewRedeem(currentShares);
 
