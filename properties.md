@@ -150,3 +150,7 @@ Therefore:
 
 - `Staked` and `Redeem` now both emit both `assets` and `shares` to be closer to eip-4616 standard
 - `Cooldown` now emits both `account, amount` as the cooldown is for a specific amount
+
+## Return types
+
+- we decided to return actual types and not cast to e.g. `uint256` in view methods. This decision was taken to not allow false assumptions around max values when using these methods inside external contracts.

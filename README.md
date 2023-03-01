@@ -7,6 +7,11 @@ It is important to highlight that stkAAVE and stkABPT are slightly different, th
 - For stkAAVE: StakedAaveV3
 - For stkABPT: StakedTokenV3
 
+Due to complex inheritance chains, a aggregated interface for each Contract is provided as:
+
+- [AggregatedStakedAaveV3](./src/interfaces/AggregatedStakedAaveV3.sol)
+- [AggregatedStakedTokenV3](./src/interfaces/AggregatedStakedTokenV3.sol)
+
 ## Slashing
 
 Thew new `StakedTokenV3` includes en enhanced mechanism to facilitate slashing of the underlying by tracking the `exchangeRate` between $stkToken \leftrightarrow Token$.
