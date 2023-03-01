@@ -26,3 +26,7 @@ diff-all :
 	forge inspect StakedTokenBptRev2 storage-layout --pretty > diffs/StakedTokenBptRev2_layout.md
 	forge inspect StakedAaveV3 storage-layout --pretty > diffs/StakedAaveV3_layout.md
 	forge inspect StakedTokenV3 storage-layout --pretty > diffs/StakedTokenV3_layout.md
+
+interface :
+	cast interface --name AggregatedStakedAaveV3 -o ./src/interfaces/AggregatedStakedAaveV3.sol ./out/StakedAaveV3.sol/StakedAaveV3.json
+	cast interface --name AggregatedStakedTokenV3 -o ./src/interfaces/AggregatedStakedTokenV3.sol ./out/StakedTokenV3.sol/StakedTokenV3.json
