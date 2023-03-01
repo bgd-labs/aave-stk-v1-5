@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..dd8a999 100644
+index 37a034f..404dad7 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,50 @@
@@ -2392,7 +2392,7 @@ index 37a034f..dd8a999 100644
 +  mapping(uint256 => address) private _pendingAdmins;
 +
 +  event PendingAdminChanged(address indexed newPendingAdmin, uint256 role);
-+  event RoleClaimed(address indexed newAdming, uint256 role);
++  event RoleClaimed(address indexed newAdmin, uint256 role);
 +
 +  modifier onlyRoleAdmin(uint256 role) {
 +    require(_admins[role] == msg.sender, 'CALLER_NOT_ROLE_ADMIN');

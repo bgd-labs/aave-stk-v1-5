@@ -2258,7 +2258,7 @@ contract RoleManager {
   mapping(uint256 => address) private _pendingAdmins;
 
   event PendingAdminChanged(address indexed newPendingAdmin, uint256 role);
-  event RoleClaimed(address indexed newAdming, uint256 role);
+  event RoleClaimed(address indexed newAdmin, uint256 role);
 
   modifier onlyRoleAdmin(uint256 role) {
     require(_admins[role] == msg.sender, 'CALLER_NOT_ROLE_ADMIN');
