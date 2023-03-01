@@ -66,6 +66,7 @@ contract RoleManager {
    **/
   function claimRoleAdmin(uint256 role) external onlyPendingRoleAdmin(role) {
     _admins[role] = msg.sender;
+    _pendingAdmins[role] = address(0);
     emit RoleClaimed(msg.sender, role);
   }
 
