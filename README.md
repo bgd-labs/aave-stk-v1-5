@@ -1,16 +1,22 @@
-# WIP: Stake token rev 3
+# Staked Token (Aave Safety Module) v1.5
 
-Repository contains a new revision of `StakedTokenV3` and `StakedAaveV3`.
+<p align="center">
+<img src="./stk15.png" width="300">
+</p>
+
+Repository contains a new revision of `StakedTokenV3` and `StakedAaveV3`, **equivalent to what is know high-level as Safety Module v1.5**.
 
 It is important to highlight that stkAAVE and stkABPT are slightly different, that's the reason why the code intended to use for each one is:
 
-- For stkAAVE: StakedAaveV3
-- For stkABPT: StakedTokenV3
+- For stkAAVE: [StakedAaveV3](./src/contracts/StakedAaveV3.sol)
+- For stkABPT: [StakedTokenV3](./src/contracts/StakedTokenV3.sol)
 
 Due to complex inheritance chains, a aggregated interface for each Contract is provided as:
 
 - [AggregatedStakedAaveV3](./src/interfaces/AggregatedStakedAaveV3.sol)
 - [AggregatedStakedTokenV3](./src/interfaces/AggregatedStakedTokenV3.sol)
+
+<br>
 
 ## Slashing
 
@@ -24,6 +30,8 @@ The community can then use (parts of) the funds for recovery. Once the recovery 
 
 Once the slashing is officially settled, accounts can reenter the pool and a new slashing can occur.
 
+<br>
+
 ## Cooldown & Redeeming
 
 The new `StakedTokenV3` adjusts the cooldown to no longer cooldown for an arbitrary `balance`, but instead to cooldown for the minimum `balanceOf(account)` between cooldown start `t0` and withdrawal window end `t1`.
@@ -32,15 +40,30 @@ In practice this means, the cooldown will write the `redeem` budget to storage o
 
 While in the current system one can trigger a `cooldown` for e.g. `100` -> receive `100` and then `redeem(200)`(after a prolonged cooldown), with the newly introduced mechanic you will only ever be able to `redeem(100)`. If at any point during the cooldown period the `balanceOf(account)` decreases below the `redeem` budget registered on `cooldown` the budget will be decreased to the new `balanceOf(account)`.
 
+<br>
+
 ## GHO
 
-The `StakedAaveV3` extends on top of `StakedTokenV3` , by adding hooks for managing the GHO discounts via a transferHook.
-
-A more detailed description can be found [here](./properties.md)
+The `StakedAaveV3` extends on top of `StakedTokenV3` , by adding hooks for managing the GHO discounts via a "transfer hook".
 
 An export of storage layout changes can be found [here](./storage.md)
 
-The contract is based on a pull request on the [aave-stake-v2 repository](https://github.com/aave/aave-stake-v2/pull/2)
+<br>
+
+## Security
+
+**External**
+
+- [SigmaPrime report](TBA)
+- [Certora report](TBA)
+- [Certora properties](TBA)
+
+**Procedures followed**
+- A more formal list of properties of the system can be found [HERE](./properties.md)
+- An export of storage layout changes and code diff from the previous implementation can be found [HERE](./https://github.com/bgd-labs/aave-stk-slashing-mgmt/tree/main/diffs)
+- The test suite of the implementation can be found [HERE](https://github.com/bgd-labs/aave-stk-slashing-mgmt/tree/main/tests)
+
+<br>
 
 ## Development
 
