@@ -5,7 +5,7 @@ import {IERC20} from '../interfaces/IERC20.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
-import {IGhoVariableDebtToken} from '../interfaces/IGhoVariableDebtToken.sol';
+import {IGhoVariableDebtTokenTransferHook} from '../interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
 import {IStakedAaveV3} from '../interfaces/IStakedAaveV3.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
@@ -23,7 +23,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtToken public ghoDebtToken;
+  IGhoVariableDebtTokenTransferHook public ghoDebtToken;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
@@ -73,7 +73,9 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
+  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
+    external
+  {
     require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
@@ -132,7 +134,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     address to,
     uint256 amount
   ) internal override {
-    IGhoVariableDebtToken cachedGhoDebtToken = ghoDebtToken;
+    IGhoVariableDebtTokenTransferHook cachedGhoDebtToken = ghoDebtToken;
     if (address(cachedGhoDebtToken) != address(0)) {
       try
         cachedGhoDebtToken.updateDiscountDistribution(

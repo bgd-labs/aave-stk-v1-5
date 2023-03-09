@@ -4093,7 +4093,7 @@ contract StakedTokenV3 is
   }
 }
 
-interface IGhoVariableDebtToken {
+interface IGhoVariableDebtTokenTransferHook {
   /**
    * @dev updates the discount when discount token is transferred
    * @dev Only callable by discount token
@@ -4124,7 +4124,8 @@ interface IStakedAaveV3 is IStakedTokenV3 {
    * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
    * @param newGHODebtToken Address to GHO debt token
    */
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external;
+  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
+    external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
@@ -4191,7 +4192,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtToken public ghoDebtToken;
+  IGhoVariableDebtTokenTransferHook public ghoDebtToken;
 
   function REVISION() public pure virtual override returns (uint256) {
     return 4;
@@ -4241,7 +4242,9 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
+  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
+    external
+  {
     require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
@@ -4300,7 +4303,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     address to,
     uint256 amount
   ) internal override {
-    IGhoVariableDebtToken cachedGhoDebtToken = ghoDebtToken;
+    IGhoVariableDebtTokenTransferHook cachedGhoDebtToken = ghoDebtToken;
     if (address(cachedGhoDebtToken) != address(0)) {
       try
         cachedGhoDebtToken.updateDiscountDistribution(

@@ -8,7 +8,7 @@ import {ProxyHelpers} from 'aave-helpers/ProxyHelpers.sol';
 import {StakedTokenV3} from '../src/contracts/StakedTokenV3.sol';
 import {StakedAaveV3} from '../src/contracts/StakedAaveV3.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../src/interfaces/IInitializableAdminUpgradeabilityProxy.sol';
-import {IGhoVariableDebtToken} from '../src/interfaces/IGhoVariableDebtToken.sol';
+import {IGhoVariableDebtTokenTransferHook} from '../src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {ProposalPayloadStkAbpt, ProposalPayloadStkAave, GenericProposal} from '../src/contracts/ProposalPayload.sol';
 import {ProxyAdmin, TransparentUpgradeableProxy} from 'openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol';
 

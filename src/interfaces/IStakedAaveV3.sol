@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IStakedTokenV3} from './IStakedTokenV3.sol';
-import {IGhoVariableDebtToken} from './IGhoVariableDebtToken.sol';
+import {IGhoVariableDebtTokenTransferHook} from './IGhoVariableDebtTokenTransferHook.sol';
 
 interface IStakedAaveV3 is IStakedTokenV3 {
   struct ExchangeRateSnapshot {
@@ -16,7 +16,8 @@ interface IStakedAaveV3 is IStakedTokenV3 {
    * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
    * @param newGHODebtToken Address to GHO debt token
    */
-  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external;
+  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
+    external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and restakes

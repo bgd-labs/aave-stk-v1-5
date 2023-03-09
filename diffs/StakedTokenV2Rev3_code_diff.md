@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..9013451 100644
+index 83f9691..3c07642 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,26 @@
@@ -2703,7 +2703,7 @@ index 83f9691..9013451 100644
    function permit(
      address owner,
      address spender,
-@@ -1963,10 +1882,2410 @@ contract StakedTokenV2Rev3 is
+@@ -1963,10 +1882,2413 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -4919,7 +4919,7 @@ index 83f9691..9013451 100644
 +  }
 +}
 +
-+interface IGhoVariableDebtToken {
++interface IGhoVariableDebtTokenTransferHook {
 +  /**
 +   * @dev updates the discount when discount token is transferred
 +   * @dev Only callable by discount token
@@ -4950,7 +4950,8 @@ index 83f9691..9013451 100644
 +   * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
 +   * @param newGHODebtToken Address to GHO debt token
 +   */
-+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external;
++  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
++    external;
 +
 +  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
@@ -5017,7 +5018,7 @@ index 83f9691..9013451 100644
 +  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
 +
 +  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-+  IGhoVariableDebtToken public ghoDebtToken;
++  IGhoVariableDebtTokenTransferHook public ghoDebtToken;
 +
 +  function REVISION() public pure virtual override returns (uint256) {
 +    return 4;
@@ -5067,7 +5068,9 @@ index 83f9691..9013451 100644
 +  }
 +
 +  /// @inheritdoc IStakedAaveV3
-+  function setGHODebtToken(IGhoVariableDebtToken newGHODebtToken) external {
++  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
++    external
++  {
 +    require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
 +    ghoDebtToken = newGHODebtToken;
 +    emit GHODebtTokenChanged(address(newGHODebtToken));
@@ -5115,11 +5118,11 @@ index 83f9691..9013451 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +4300,18 @@ contract StakedTokenV2Rev3 is
+@@ -1981,6 +4303,18 @@ contract StakedTokenV2Rev3 is
      address to,
      uint256 amount
    ) internal override {
-+    IGhoVariableDebtToken cachedGhoDebtToken = ghoDebtToken;
++    IGhoVariableDebtTokenTransferHook cachedGhoDebtToken = ghoDebtToken;
 +    if (address(cachedGhoDebtToken) != address(0)) {
 +      try
 +        cachedGhoDebtToken.updateDiscountDistribution(
@@ -5134,7 +5137,7 @@ index 83f9691..9013451 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +4345,68 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +4348,68 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );
