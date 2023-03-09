@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..c858093 100644
+index 37a034f..c643146 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2432,7 +2432,7 @@ index 37a034f..c858093 100644
 +   * @param assets the number of assets to stake
 +   * @return shares the number of shares that would be received
 +   */
-+  function previewStake(uint256 assets) external view returns (uint256);
++  function previewStake(uint256 assets) external view returns (uint256 shares);
 +
 +  /**
 +   * @dev Activates the cooldown period to unstake
@@ -2457,7 +2457,7 @@ index 37a034f..c858093 100644
 +   * @param shares the number of shares to redeem
 +   * @return assets the number of assets that would be redeemed
 +   */
-+  function previewRedeem(uint256 shares) external view returns (uint256);
++  function previewRedeem(uint256 shares) external view returns (uint256 assets);
 +
 +  /**
 +   * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function
