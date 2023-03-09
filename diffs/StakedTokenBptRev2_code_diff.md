@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..6244e27 100644
+index 37a034f..707dacd 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2272,7 +2272,7 @@ index 37a034f..6244e27 100644
    /**
     * @dev Delegates power from signatory to `delegatee`
     * @param delegatee The address to delegate votes to
-@@ -2161,4 +1962,2137 @@ contract StakedTokenBptRev2 is
+@@ -2161,4 +1962,2139 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
@@ -2608,6 +2608,7 @@ index 37a034f..6244e27 100644
 +   **/
 +  function claimRoleAdmin(uint256 role) external onlyPendingRoleAdmin(role) {
 +    _admins[role] = msg.sender;
++    _pendingAdmins[role] = address(0);
 +    emit RoleClaimed(msg.sender, role);
 +  }
 +
@@ -4111,6 +4112,7 @@ index 37a034f..6244e27 100644
 +    returns (uint256)
 +  {
 +    require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
++    require(amount > 0, 'ZERO_AMOUNT');
 +    uint256 currentShares = totalSupply();
 +    uint256 balance = previewRedeem(currentShares);
 +
@@ -4234,7 +4236,7 @@ index 37a034f..6244e27 100644
 +  }
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
++   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
 +   * @param from The address of the from from which to claim
 +   * @param to Address to stake to
 +   * @param amount Amount to claim

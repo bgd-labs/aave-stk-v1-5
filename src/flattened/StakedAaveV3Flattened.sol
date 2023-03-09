@@ -2294,6 +2294,7 @@ contract RoleManager {
    **/
   function claimRoleAdmin(uint256 role) external onlyPendingRoleAdmin(role) {
     _admins[role] = msg.sender;
+    _pendingAdmins[role] = address(0);
     emit RoleClaimed(msg.sender, role);
   }
 
@@ -3797,6 +3798,7 @@ contract StakedTokenV3 is
     returns (uint256)
   {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
     uint256 balance = previewRedeem(currentShares);
 
@@ -3920,7 +3922,7 @@ contract StakedTokenV3 is
   }
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim

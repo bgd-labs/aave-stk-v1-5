@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..1fe776f 100644
+index 83f9691..d21939a 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,26 @@
@@ -2690,7 +2690,7 @@ index 83f9691..1fe776f 100644
    function permit(
      address owner,
      address spender,
-@@ -1963,10 +1888,2408 @@ contract StakedTokenV2Rev3 is
+@@ -1963,10 +1888,2410 @@ contract StakedTokenV2Rev3 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -3101,6 +3101,7 @@ index 83f9691..1fe776f 100644
 +   **/
 +  function claimRoleAdmin(uint256 role) external onlyPendingRoleAdmin(role) {
 +    _admins[role] = msg.sender;
++    _pendingAdmins[role] = address(0);
 +    emit RoleClaimed(msg.sender, role);
 +  }
 +
@@ -4604,6 +4605,7 @@ index 83f9691..1fe776f 100644
 +    returns (uint256)
 +  {
 +    require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
++    require(amount > 0, 'ZERO_AMOUNT');
 +    uint256 currentShares = totalSupply();
 +    uint256 balance = previewRedeem(currentShares);
 +
@@ -4727,7 +4729,7 @@ index 83f9691..1fe776f 100644
 +  }
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
++   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
 +   * @param from The address of the from from which to claim
 +   * @param to Address to stake to
 +   * @param amount Amount to claim
@@ -5100,7 +5102,7 @@ index 83f9691..1fe776f 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1981,6 +4304,18 @@ contract StakedTokenV2Rev3 is
+@@ -1981,6 +4306,18 @@ contract StakedTokenV2Rev3 is
      address to,
      uint256 amount
    ) internal override {
@@ -5119,7 +5121,7 @@ index 83f9691..1fe776f 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2014,101 +4349,68 @@ contract StakedTokenV2Rev3 is
+@@ -2014,101 +4351,68 @@ contract StakedTokenV2Rev3 is
        amount,
        DelegationType.PROPOSITION_POWER
      );

@@ -59,6 +59,7 @@ An export of storage layout changes can be found [here](./storage.md)
 - [Certora properties](TBA)
 
 **Procedures followed**
+
 - A more formal list of properties of the system can be found [HERE](./properties.md)
 - An export of storage layout changes and code diff from the previous implementation can be found [HERE](./https://github.com/bgd-labs/aave-stk-slashing-mgmt/tree/main/diffs)
 - The test suite of the implementation can be found [HERE](https://github.com/bgd-labs/aave-stk-slashing-mgmt/tree/main/tests)
