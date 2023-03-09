@@ -128,10 +128,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
+   * @param to Address to claim and unstake to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
-   * @param to Address to claim and unstake to
    */
   function claimRewardsAndRedeem(
     address to,

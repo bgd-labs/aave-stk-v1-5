@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..e01eed9 100644
+index 37a034f..c858093 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2472,10 +2472,10 @@ index 37a034f..e01eed9 100644
 +  ) external;
 +
 +  /**
-+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
++   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
++   * @param to Address to claim and unstake to
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
-+   * @param to Address to claim and unstake to
 +   */
 +  function claimRewardsAndRedeem(
 +    address to,
