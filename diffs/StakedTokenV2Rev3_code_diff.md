@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..a277f88 100644
+index 83f9691..d9d9d6d 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,26 @@
@@ -2966,7 +2966,7 @@ index 83f9691..a277f88 100644
 +
 +  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
-+   * @param to Address to claim and unstake to
++   * @param to Address to claim and redeem to
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
 +   */
@@ -2979,7 +2979,7 @@ index 83f9691..a277f88 100644
 +  /**
 +   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
 +   * @param from The address of the from
-+   * @param to Address to claim and unstake to
++   * @param to Address to claim and redeem to
 +   * @param claimAmount Amount to claim
 +   * @param redeemAmount Amount to redeem
 +   */

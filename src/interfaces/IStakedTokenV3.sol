@@ -129,7 +129,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
-   * @param to Address to claim and unstake to
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    */
@@ -142,7 +142,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
    * @param from The address of the from
-   * @param to Address to claim and unstake to
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    */
