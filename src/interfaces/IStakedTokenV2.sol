@@ -7,6 +7,14 @@ interface IStakedTokenV2 {
     uint216 amount;
   }
 
+  event RewardsAccrued(address user, uint256 amount);
+  event RewardsClaimed(
+    address indexed from,
+    address indexed to,
+    uint256 amount
+  );
+  event Cooldown(address indexed user, uint256 amount);
+
   /**
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares

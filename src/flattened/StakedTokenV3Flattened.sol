@@ -529,6 +529,14 @@ interface IStakedTokenV2 {
     uint216 amount;
   }
 
+  event RewardsAccrued(address user, uint256 amount);
+  event RewardsClaimed(
+    address indexed from,
+    address indexed to,
+    uint256 amount
+  );
+  event Cooldown(address indexed user, uint256 amount);
+
   /**
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares
@@ -1788,20 +1796,6 @@ abstract contract StakedTokenV2 is
 
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
-
-  event Staked(
-    address indexed from,
-    address indexed onBehalfOf,
-    uint256 amount
-  );
-  event Redeem(address indexed from, address indexed to, uint256 amount);
-  event RewardsAccrued(address user, uint256 amount);
-  event RewardsClaimed(
-    address indexed from,
-    address indexed to,
-    uint256 amount
-  );
-  event Cooldown(address indexed user, uint256 amount);
 
   constructor(
     IERC20 stakedToken,
@@ -3559,7 +3553,7 @@ contract StakedTokenV3 is
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
-  /// @notice lower bound to prevent spam & avoid excahngeRate issues
+  /// @notice lower bound to prevent spam & avoid exchangeRate issues
   // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
   uint256 public immutable LOWER_BOUND;
 

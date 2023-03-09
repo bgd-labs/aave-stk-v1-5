@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..707dacd 100644
+index 37a034f..e01eed9 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -88,7 +88,7 @@ index 37a034f..707dacd 100644
     * allowance mechanism. `amount` is then deducted from the caller's
     * allowance.
     *
-@@ -94,27 +78,518 @@ interface IERC20 {
+@@ -94,27 +78,526 @@ interface IERC20 {
     * Emits a {Transfer} event.
     */
    function transferFrom(
@@ -298,13 +298,17 @@ index 37a034f..707dacd 100644
 +    return
 +      verifyCallResultFromTarget(target, success, returndata, errorMessage);
 +  }
-+
-+  /**
+ 
+   /**
+-   * @dev Emitted when `value` tokens are moved from one account (`from`) to
+-   * another (`to`).
 +   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
 +   * but performing a delegate call.
-+   *
+    *
+-   * Note that `value` may be zero.
 +   * _Available since v3.4._
-+   */
+    */
+-  event Transfer(address indexed from, address indexed to, uint256 value);
 +  function functionDelegateCall(address target, bytes memory data)
 +    internal
 +    returns (bytes memory)
@@ -316,13 +320,16 @@ index 37a034f..707dacd 100644
 +        'Address: low-level delegate call failed'
 +      );
 +  }
-+
-+  /**
+ 
+   /**
+-   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+-   * a call to {approve}. `value` is the new allowance.
 +   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
 +   * but performing a delegate call.
 +   *
 +   * _Available since v3.4._
-+   */
+    */
+-  event Approval(address indexed owner, address indexed spender, uint256 value);
 +  function functionDelegateCall(
 +    address target,
 +    bytes memory data,
@@ -427,18 +434,14 @@ index 37a034f..707dacd 100644
 +      abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
 +    );
 +  }
- 
-   /**
--   * @dev Emitted when `value` tokens are moved from one account (`from`) to
--   * another (`to`).
++
++  /**
 +   * @dev Deprecated. This function has issues similar to the ones found in
 +   * {IERC20-approve}, and its usage is discouraged.
-    *
--   * Note that `value` may be zero.
++   *
 +   * Whenever possible, use {safeIncreaseAllowance} and
 +   * {safeDecreaseAllowance} instead.
-    */
--  event Transfer(address indexed from, address indexed to, uint256 value);
++   */
 +  function safeApprove(
 +    IERC20 token,
 +    address spender,
@@ -487,16 +490,13 @@ index 37a034f..707dacd 100644
 +      );
 +    }
 +  }
- 
-   /**
--   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
--   * a call to {approve}. `value` is the new allowance.
++
++  /**
 +   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
 +   * on the return value: the return value is optional (but if data is returned, it must not be false).
 +   * @param token The token targeted by the call.
 +   * @param data The call data (encoded using abi.encode or one of its variants).
-    */
--  event Approval(address indexed owner, address indexed spender, uint256 value);
++   */
 +  function _callOptionalReturn(IERC20 token, bytes memory data) private {
 +    // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
 +    // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
@@ -514,15 +514,15 @@ index 37a034f..707dacd 100644
 +      );
 +    }
 +  }
- }
- 
--// File @aave/aave-token/contracts/open-zeppelin/ERC20.sol@v1.0.4
++}
++
 +interface IAaveDistributionManager {
 +  function configureAssets(
 +    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
 +  ) external;
-+}
-+
+ }
+ 
+-// File @aave/aave-token/contracts/open-zeppelin/ERC20.sol@v1.0.4
 +// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 +
 +/**
@@ -552,6 +552,14 @@ index 37a034f..707dacd 100644
 +    uint40 timestamp;
 +    uint216 amount;
 +  }
++
++  event RewardsAccrued(address user, uint256 amount);
++  event RewardsClaimed(
++    address indexed from,
++    address indexed to,
++    uint256 amount
++  );
++  event Cooldown(address indexed user, uint256 amount);
 +
 +  /**
 +   * @dev Allows staking a specified amount of STAKED_TOKEN
@@ -617,7 +625,7 @@ index 37a034f..707dacd 100644
  
  /**
   * @dev Implementation of the {IERC20} interface.
-@@ -124,12 +599,13 @@ interface IERC20 {
+@@ -124,12 +607,13 @@ interface IERC20 {
   * For a generic mechanism see {ERC20PresetMinterPauser}.
   *
   * TIP: For a detailed writeup see our guide
@@ -635,7 +643,7 @@ index 37a034f..707dacd 100644
   *
   * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
   * This allows applications to reconstruct the allowance for all accounts just
-@@ -140,39 +616,32 @@ interface IERC20 {
+@@ -140,39 +624,32 @@ interface IERC20 {
   * functions have been added to mitigate the well-known issues around setting
   * allowances. See {IERC20-approve}.
   */
@@ -687,7 +695,7 @@ index 37a034f..707dacd 100644
      return _name;
    }
  
-@@ -180,38 +649,44 @@ contract ERC20 is Context, IERC20 {
+@@ -180,38 +657,44 @@ contract ERC20 is Context, IERC20 {
     * @dev Returns the symbol of the token, usually a shorter version of the
     * name.
     */
@@ -740,7 +748,7 @@ index 37a034f..707dacd 100644
      return _balances[account];
    }
  
-@@ -220,16 +695,17 @@ contract ERC20 is Context, IERC20 {
+@@ -220,16 +703,17 @@ contract ERC20 is Context, IERC20 {
     *
     * Requirements:
     *
@@ -761,7 +769,7 @@ index 37a034f..707dacd 100644
      return true;
    }
  
-@@ -249,6 +725,9 @@ contract ERC20 is Context, IERC20 {
+@@ -249,6 +733,9 @@ contract ERC20 is Context, IERC20 {
    /**
     * @dev See {IERC20-approve}.
     *
@@ -771,7 +779,7 @@ index 37a034f..707dacd 100644
     * Requirements:
     *
     * - `spender` cannot be the zero address.
-@@ -259,7 +738,8 @@ contract ERC20 is Context, IERC20 {
+@@ -259,7 +746,8 @@ contract ERC20 is Context, IERC20 {
      override
      returns (bool)
    {
@@ -781,7 +789,7 @@ index 37a034f..707dacd 100644
      return true;
    }
  
-@@ -267,28 +747,26 @@ contract ERC20 is Context, IERC20 {
+@@ -267,28 +755,26 @@ contract ERC20 is Context, IERC20 {
     * @dev See {IERC20-transferFrom}.
     *
     * Emits an {Approval} event indicating the updated allowance. This is not
@@ -823,7 +831,7 @@ index 37a034f..707dacd 100644
      return true;
    }
  
-@@ -309,11 +787,8 @@ contract ERC20 is Context, IERC20 {
+@@ -309,11 +795,8 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -837,7 +845,7 @@ index 37a034f..707dacd 100644
      return true;
    }
  
-@@ -336,47 +811,55 @@ contract ERC20 is Context, IERC20 {
+@@ -336,47 +819,55 @@ contract ERC20 is Context, IERC20 {
      virtual
      returns (bool)
    {
@@ -916,7 +924,7 @@ index 37a034f..707dacd 100644
    }
  
    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-@@ -384,18 +867,23 @@ contract ERC20 is Context, IERC20 {
+@@ -384,18 +875,23 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `from` set to the zero address.
     *
@@ -944,7 +952,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -404,7 +892,7 @@ contract ERC20 is Context, IERC20 {
+@@ -404,7 +900,7 @@ contract ERC20 is Context, IERC20 {
     *
     * Emits a {Transfer} event with `to` set to the zero address.
     *
@@ -953,7 +961,7 @@ index 37a034f..707dacd 100644
     *
     * - `account` cannot be the zero address.
     * - `account` must have at least `amount` tokens.
-@@ -414,18 +902,23 @@ contract ERC20 is Context, IERC20 {
+@@ -414,18 +910,23 @@ contract ERC20 is Context, IERC20 {
  
      _beforeTokenTransfer(account, address(0), amount);
  
@@ -984,7 +992,7 @@ index 37a034f..707dacd 100644
     * e.g. set automatic allowances for certain subsystems, etc.
     *
     * Emits an {Approval} event.
-@@ -448,14 +941,25 @@ contract ERC20 is Context, IERC20 {
+@@ -448,14 +949,25 @@ contract ERC20 is Context, IERC20 {
    }
  
    /**
@@ -1016,7 +1024,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -465,7 +969,7 @@ contract ERC20 is Context, IERC20 {
+@@ -465,7 +977,7 @@ contract ERC20 is Context, IERC20 {
     * Calling conditions:
     *
     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
@@ -1025,7 +1033,7 @@ index 37a034f..707dacd 100644
     * - when `from` is zero, `amount` tokens will be minted for `to`.
     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
     * - `from` and `to` are never both zero.
-@@ -477,349 +981,28 @@ contract ERC20 is Context, IERC20 {
+@@ -477,349 +989,28 @@ contract ERC20 is Context, IERC20 {
      address to,
      uint256 amount
    ) internal virtual {}
@@ -1391,7 +1399,7 @@ index 37a034f..707dacd 100644
  /**
   * @title VersionedInitializable
   *
-@@ -863,24 +1046,12 @@ abstract contract VersionedInitializable {
+@@ -863,24 +1054,12 @@ abstract contract VersionedInitializable {
    uint256[50] private ______gap;
  }
  
@@ -1418,7 +1426,7 @@ index 37a034f..707dacd 100644
    struct AssetData {
      uint128 emissionPerSecond;
      uint128 lastUpdateTimestamp;
-@@ -904,20 +1075,18 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -904,20 +1083,18 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 index
    );
  
@@ -1445,7 +1453,7 @@ index 37a034f..707dacd 100644
      for (uint256 i = 0; i < assetsConfigInput.length; i++) {
        AssetData storage assetConfig = assets[
          assetsConfigInput[i].underlyingAsset
-@@ -944,7 +1113,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -944,7 +1121,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param assetConfig Storage pointer to the distribution's config
     * @param totalStaked Current total of staked assets for this distribution
     * @return The new distribution index
@@ -1454,7 +1462,7 @@ index 37a034f..707dacd 100644
    function _updateAssetStateInternal(
      address underlyingAsset,
      AssetData storage assetConfig,
-@@ -981,7 +1150,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -981,7 +1158,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
     * @param totalStaked Total tokens staked in the distribution
     * @return The accrued rewards for the user until the moment
@@ -1463,7 +1471,7 @@ index 37a034f..707dacd 100644
    function _updateUserAssetInternal(
      address user,
      address asset,
-@@ -1011,7 +1180,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1011,7 +1188,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user The address of the user
     * @param stakes List of structs of the user data related with his stake
     * @return The accrued rewards for the user until the moment
@@ -1472,7 +1480,7 @@ index 37a034f..707dacd 100644
    function _claimRewards(
      address user,
      DistributionTypes.UserStakeInput[] memory stakes
-@@ -1019,14 +1188,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1019,14 +1196,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 accruedRewards = 0;
  
      for (uint256 i = 0; i < stakes.length; i++) {
@@ -1490,7 +1498,7 @@ index 37a034f..707dacd 100644
      }
  
      return accruedRewards;
-@@ -1037,7 +1206,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1037,7 +1214,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user The address of the user
     * @param stakes List of structs of the user data related with his stake
     * @return The accrued rewards for the user until the moment
@@ -1499,7 +1507,7 @@ index 37a034f..707dacd 100644
    function _getUnclaimedRewards(
      address user,
      DistributionTypes.UserStakeInput[] memory stakes
-@@ -1053,9 +1222,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1053,9 +1230,13 @@ contract AaveDistributionManager is IAaveDistributionManager {
          stakes[i].totalStaked
        );
  
@@ -1516,7 +1524,7 @@ index 37a034f..707dacd 100644
      }
      return accruedRewards;
    }
-@@ -1066,16 +1239,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1066,16 +1247,15 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param reserveIndex Current index of the distribution
     * @param userIndex Index stored for the user, representation his staking moment
     * @return The rewards
@@ -1536,7 +1544,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -1085,7 +1257,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1085,7 +1265,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param lastUpdateTimestamp Last moment this distribution was updated
     * @param totalBalance of tokens considered for the distribution
     * @return The new index.
@@ -1545,7 +1553,7 @@ index 37a034f..707dacd 100644
    function _getAssetIndex(
      uint256 currentIndex,
      uint256 emissionPerSecond,
-@@ -1104,13 +1276,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1104,13 +1284,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
      uint256 currentTimestamp = block.timestamp > DISTRIBUTION_END
        ? DISTRIBUTION_END
        : block.timestamp;
@@ -1562,7 +1570,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -1118,7 +1287,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1118,7 +1295,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     * @param user Address of the user
     * @param asset The address of the reference asset of the distribution
     * @return The new index
@@ -1571,7 +1579,7 @@ index 37a034f..707dacd 100644
    function getUserAssetData(address user, address asset)
      public
      view
-@@ -1128,21 +1297,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
+@@ -1128,21 +1305,14 @@ contract AaveDistributionManager is IAaveDistributionManager {
    }
  }
  
@@ -1599,7 +1607,7 @@ index 37a034f..707dacd 100644
  interface IGovernancePowerDelegationToken {
    enum DelegationType {
      VOTING_POWER,
-@@ -1179,14 +1341,13 @@ interface IGovernancePowerDelegationToken {
+@@ -1179,14 +1349,13 @@ interface IGovernancePowerDelegationToken {
     * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
     **/
    function delegateByType(address delegatee, DelegationType delegationType)
@@ -1616,7 +1624,7 @@ index 37a034f..707dacd 100644
  
    /**
     * @dev returns the delegatee of an user
-@@ -1195,7 +1356,6 @@ interface IGovernancePowerDelegationToken {
+@@ -1195,7 +1364,6 @@ interface IGovernancePowerDelegationToken {
    function getDelegateeByType(address delegator, DelegationType delegationType)
      external
      view
@@ -1624,7 +1632,7 @@ index 37a034f..707dacd 100644
      returns (address);
  
    /**
-@@ -1206,7 +1366,6 @@ interface IGovernancePowerDelegationToken {
+@@ -1206,7 +1374,6 @@ interface IGovernancePowerDelegationToken {
    function getPowerCurrent(address user, DelegationType delegationType)
      external
      view
@@ -1632,7 +1640,7 @@ index 37a034f..707dacd 100644
      returns (uint256);
  
    /**
-@@ -1217,20 +1376,14 @@ interface IGovernancePowerDelegationToken {
+@@ -1217,20 +1384,14 @@ interface IGovernancePowerDelegationToken {
      address user,
      uint256 blockNumber,
      DelegationType delegationType
@@ -1655,7 +1663,7 @@ index 37a034f..707dacd 100644
  /**
   * @notice implementation of the AAVE token contract
   * @author Aave
-@@ -1239,7 +1392,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1239,7 +1400,6 @@ abstract contract GovernancePowerDelegationERC20 is
    ERC20,
    IGovernancePowerDelegationToken
  {
@@ -1663,7 +1671,7 @@ index 37a034f..707dacd 100644
    /// @notice The EIP-712 typehash for the delegation struct used by the contract
    bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
      keccak256(
-@@ -1339,12 +1491,7 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1339,12 +1499,7 @@ abstract contract GovernancePowerDelegationERC20 is
     * In this initial implementation with no AAVE minting, simply returns the current supply
     * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
     **/
@@ -1677,7 +1685,7 @@ index 37a034f..707dacd 100644
      return super.totalSupply();
    }
  
-@@ -1419,10 +1566,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1419,10 +1574,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          from,
          uint128(previous),
@@ -1690,7 +1698,7 @@ index 37a034f..707dacd 100644
      }
      if (to != address(0)) {
        uint256 previous = 0;
-@@ -1438,10 +1585,10 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1438,10 +1593,10 @@ abstract contract GovernancePowerDelegationERC20 is
          snapshotsCounts,
          to,
          uint128(previous),
@@ -1703,7 +1711,7 @@ index 37a034f..707dacd 100644
      }
    }
  
-@@ -1457,7 +1604,7 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1457,7 +1612,7 @@ abstract contract GovernancePowerDelegationERC20 is
      mapping(address => uint256) storage snapshotsCounts,
      address user,
      uint256 blockNumber
@@ -1712,7 +1720,7 @@ index 37a034f..707dacd 100644
      require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
  
      uint256 snapshotsCount = snapshotsCounts[user];
-@@ -1466,30 +1613,40 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1466,30 +1621,40 @@ abstract contract GovernancePowerDelegationERC20 is
        return balanceOf(user);
      }
  
@@ -1771,7 +1779,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -1559,8 +1716,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1559,8 +1724,6 @@ abstract contract GovernancePowerDelegationERC20 is
    }
  }
  
@@ -1780,7 +1788,7 @@ index 37a034f..707dacd 100644
  /**
   * @title ERC20WithSnapshot
   * @notice ERC20 including snapshots of balances on transfer-related actions
-@@ -1569,8 +1724,6 @@ abstract contract GovernancePowerDelegationERC20 is
+@@ -1569,8 +1732,6 @@ abstract contract GovernancePowerDelegationERC20 is
  abstract contract GovernancePowerWithSnapshot is
    GovernancePowerDelegationERC20
  {
@@ -1789,7 +1797,7 @@ index 37a034f..707dacd 100644
    /**
     * @dev The following storage layout points to the prior StakedToken.sol implementation:
     * _snapshots => _votingSnapshots
-@@ -1583,44 +1736,34 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1583,44 +1744,34 @@ abstract contract GovernancePowerWithSnapshot is
    /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
    /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
    /// to control all potential reentrancies by calling back the this contract
@@ -1842,21 +1850,26 @@ index 37a034f..707dacd 100644
  
    /// @dev End of Storage layout from StakedToken v1
  
-@@ -1652,299 +1795,41 @@ contract StakedTokenBptRev2 is
-     uint256 amount
-   );
-   event Redeem(address indexed from, address indexed to, uint256 amount);
+@@ -1646,305 +1797,33 @@ contract StakedTokenBptRev2 is
+   /// @dev owner => next valid nonce to submit with permit()
+   mapping(address => uint256) public _nonces;
+ 
+-  event Staked(
+-    address indexed from,
+-    address indexed onBehalfOf,
+-    uint256 amount
+-  );
+-  event Redeem(address indexed from, address indexed to, uint256 amount);
 -
-   event RewardsAccrued(address user, uint256 amount);
-   event RewardsClaimed(
-     address indexed from,
-     address indexed to,
-     uint256 amount
-   );
+-  event RewardsAccrued(address user, uint256 amount);
+-  event RewardsClaimed(
+-    address indexed from,
+-    address indexed to,
+-    uint256 amount
+-  );
 -
 -  event Cooldown(address indexed user);
-+  event Cooldown(address indexed user, uint256 amount);
- 
+-
    constructor(
      IERC20 stakedToken,
      IERC20 rewardToken,
@@ -2154,7 +2167,7 @@ index 37a034f..707dacd 100644
    function getTotalRewardsBalance(address staker)
      external
      view
-@@ -1958,17 +1843,8 @@ contract StakedTokenBptRev2 is
+@@ -1958,17 +1837,8 @@ contract StakedTokenBptRev2 is
        totalStaked: totalSupply()
      });
      return
@@ -2174,7 +2187,7 @@ index 37a034f..707dacd 100644
    }
  
    /**
-@@ -1981,7 +1857,6 @@ contract StakedTokenBptRev2 is
+@@ -1981,7 +1851,6 @@ contract StakedTokenBptRev2 is
     * @param s signature param
     * @param r signature param
     */
@@ -2182,7 +2195,7 @@ index 37a034f..707dacd 100644
    function permit(
      address owner,
      address spender,
-@@ -2013,86 +1888,12 @@ contract StakedTokenBptRev2 is
+@@ -2013,86 +1882,12 @@ contract StakedTokenBptRev2 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -2272,7 +2285,7 @@ index 37a034f..707dacd 100644
    /**
     * @dev Delegates power from signatory to `delegatee`
     * @param delegatee The address to delegate votes to
-@@ -2161,4 +1962,2139 @@ contract StakedTokenBptRev2 is
+@@ -2161,4 +1956,2139 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
@@ -3873,7 +3886,7 @@ index 37a034f..707dacd 100644
 +  uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
 +  uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 +
-+  /// @notice lower bound to prevent spam & avoid excahngeRate issues
++  /// @notice lower bound to prevent spam & avoid exchangeRate issues
 +  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
 +  uint256 public immutable LOWER_BOUND;
 +

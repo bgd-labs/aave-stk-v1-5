@@ -61,20 +61,6 @@ abstract contract StakedTokenV2 is
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  event Staked(
-    address indexed from,
-    address indexed onBehalfOf,
-    uint256 amount
-  );
-  event Redeem(address indexed from, address indexed to, uint256 amount);
-  event RewardsAccrued(address user, uint256 amount);
-  event RewardsClaimed(
-    address indexed from,
-    address indexed to,
-    uint256 amount
-  );
-  event Cooldown(address indexed user, uint256 amount);
-
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
