@@ -20,7 +20,7 @@ interface IStakedAaveV3 is IStakedTokenV3 {
     external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param to Address to stake to
    * @param amount Amount to claim
    */
@@ -29,7 +29,7 @@ interface IStakedAaveV3 is IStakedTokenV3 {
     returns (uint256);
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes. Only the claim helper contract is allowed to call this function
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes. Only the claim helper contract is allowed to call this function
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim
