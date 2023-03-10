@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-interface IGhoVariableDebtToken {
+interface IGhoVariableDebtTokenTransferHook {
   /**
    * @dev updates the discount when discount token is transferred
    * @dev Only callable by discount token

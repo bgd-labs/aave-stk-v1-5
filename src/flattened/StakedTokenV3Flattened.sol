@@ -529,6 +529,14 @@ interface IStakedTokenV2 {
     uint216 amount;
   }
 
+  event RewardsAccrued(address user, uint256 amount);
+  event RewardsClaimed(
+    address indexed from,
+    address indexed to,
+    uint256 amount
+  );
+  event Cooldown(address indexed user, uint256 amount);
+
   /**
    * @dev Allows staking a specified amount of STAKED_TOKEN
    * @param to The address to receiving the shares
@@ -565,6 +573,26 @@ interface IStakedTokenV2 {
     external
     view
     returns (uint256);
+
+  /**
+   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
+   * @param owner the owner of the funds
+   * @param spender the spender
+   * @param value the amount
+   * @param deadline the deadline timestamp, type(uint256).max for no deadline
+   * @param v signature param
+   * @param s signature param
+   * @param r signature param
+   */
+  function permit(
+    address owner,
+    address spender,
+    uint256 value,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external;
 }
 
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
@@ -1789,20 +1817,6 @@ abstract contract StakedTokenV2 is
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  event Staked(
-    address indexed from,
-    address indexed onBehalfOf,
-    uint256 amount
-  );
-  event Redeem(address indexed from, address indexed to, uint256 amount);
-  event RewardsAccrued(address user, uint256 amount);
-  event RewardsClaimed(
-    address indexed from,
-    address indexed to,
-    uint256 amount
-  );
-  event Cooldown(address indexed user, uint256 amount);
-
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
@@ -1847,16 +1861,7 @@ abstract contract StakedTokenV2 is
       _getUnclaimedRewards(staker, userStakeInputs);
   }
 
-  /**
-   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner the owner of the funds
-   * @param spender the spender
-   * @param value the amount
-   * @param deadline the deadline timestamp, type(uint256).max for no deadline
-   * @param v signature param
-   * @param s signature param
-   * @param r signature param
-   */
+  /// @inheritdoc IStakedTokenV2
   function permit(
     address owner,
     address spender,
@@ -2103,7 +2108,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of shares that would be received for the provided number of assets
    * @param assets the number of assets to stake
-   * @return shares the number of shares that would be received
+   * @return uint256 shares the number of shares that would be received
    */
   function previewStake(uint256 assets) external view returns (uint256);
 
@@ -2128,7 +2133,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
    * @param shares the number of shares to redeem
-   * @return assets the number of assets that would be redeemed
+   * @return uint256 assets the number of assets that would be redeemed
    */
   function previewRedeem(uint256 shares) external view returns (uint256);
 
@@ -2145,10 +2150,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
-   * @param to Address to claim and unstake to
    */
   function claimRewardsAndRedeem(
     address to,
@@ -2159,7 +2164,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
    * @param from The address of the from
-   * @param to Address to claim and unstake to
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    */
@@ -2294,6 +2299,7 @@ contract RoleManager {
    **/
   function claimRoleAdmin(uint256 role) external onlyPendingRoleAdmin(role) {
     _admins[role] = msg.sender;
+    _pendingAdmins[role] = address(0);
     emit RoleClaimed(msg.sender, role);
   }
 
@@ -3558,7 +3564,7 @@ contract StakedTokenV3 is
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
-  /// @notice lower bound to prevent spam & avoid excahngeRate issues
+  /// @notice lower bound to prevent spam & avoid exchangeRate issues
   // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
   uint256 public immutable LOWER_BOUND;
 
@@ -3797,6 +3803,7 @@ contract StakedTokenV3 is
     returns (uint256)
   {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
+    require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
     uint256 balance = previewRedeem(currentShares);
 
@@ -3920,7 +3927,7 @@ contract StakedTokenV3 is
   }
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim

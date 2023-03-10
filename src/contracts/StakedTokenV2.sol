@@ -61,20 +61,6 @@ abstract contract StakedTokenV2 is
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  event Staked(
-    address indexed from,
-    address indexed onBehalfOf,
-    uint256 amount
-  );
-  event Redeem(address indexed from, address indexed to, uint256 amount);
-  event RewardsAccrued(address user, uint256 amount);
-  event RewardsClaimed(
-    address indexed from,
-    address indexed to,
-    uint256 amount
-  );
-  event Cooldown(address indexed user, uint256 amount);
-
   constructor(
     IERC20 stakedToken,
     IERC20 rewardToken,
@@ -119,16 +105,7 @@ abstract contract StakedTokenV2 is
       _getUnclaimedRewards(staker, userStakeInputs);
   }
 
-  /**
-   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner the owner of the funds
-   * @param spender the spender
-   * @param value the amount
-   * @param deadline the deadline timestamp, type(uint256).max for no deadline
-   * @param v signature param
-   * @param s signature param
-   * @param r signature param
-   */
+  /// @inheritdoc IStakedTokenV2
   function permit(
     address owner,
     address spender,

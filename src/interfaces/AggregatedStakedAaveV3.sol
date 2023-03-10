@@ -28,7 +28,6 @@ interface AggregatedStakedAaveV3 {
     uint256 assets,
     uint256 shares
   );
-  event Redeem(address indexed from, address indexed to, uint256 amount);
   event RewardsAccrued(address user, uint256 amount);
   event RewardsClaimed(
     address indexed from,
@@ -44,11 +43,6 @@ interface AggregatedStakedAaveV3 {
     address indexed to,
     uint256 assets,
     uint256 shares
-  );
-  event Staked(
-    address indexed from,
-    address indexed onBehalfOf,
-    uint256 amount
   );
   event Transfer(address indexed from, address indexed to, uint256 value);
   event UserIndexUpdated(

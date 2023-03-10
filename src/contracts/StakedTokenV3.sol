@@ -34,7 +34,7 @@ contract StakedTokenV3 is
   uint216 public constant INITIAL_EXCHANGE_RATE = 1e18;
   uint256 public constant EXCHANGE_RATE_UNIT = 1e18;
 
-  /// @notice lower bound to prevent spam & avoid excahngeRate issues
+  /// @notice lower bound to prevent spam & avoid exchangeRate issues
   // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
   uint256 public immutable LOWER_BOUND;
 
@@ -397,7 +397,7 @@ contract StakedTokenV3 is
   }
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and restakes.
+   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param from The address of the from from which to claim
    * @param to Address to stake to
    * @param amount Amount to claim

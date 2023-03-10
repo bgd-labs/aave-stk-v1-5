@@ -86,7 +86,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of shares that would be received for the provided number of assets
    * @param assets the number of assets to stake
-   * @return shares the number of shares that would be received
+   * @return uint256 shares the number of shares that would be received
    */
   function previewStake(uint256 assets) external view returns (uint256);
 
@@ -111,7 +111,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
    * @param shares the number of shares to redeem
-   * @return assets the number of assets that would be redeemed
+   * @return uint256 assets the number of assets that would be redeemed
    */
   function previewRedeem(uint256 shares) external view returns (uint256);
 
@@ -128,10 +128,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   ) external;
 
   /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and redeem
+   * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
-   * @param to Address to claim and unstake to
    */
   function claimRewardsAndRedeem(
     address to,
@@ -142,7 +142,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems the `redeemAmount` to an address. Only the claim helper contract is allowed to call this function
    * @param from The address of the from
-   * @param to Address to claim and unstake to
+   * @param to Address to claim and redeem to
    * @param claimAmount Amount to claim
    * @param redeemAmount Amount to redeem
    */
