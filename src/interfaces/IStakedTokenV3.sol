@@ -86,9 +86,9 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of shares that would be received for the provided number of assets
    * @param assets the number of assets to stake
-   * @return shares the number of shares that would be received
+   * @return uint256 shares the number of shares that would be received
    */
-  function previewStake(uint256 assets) external view returns (uint256 shares);
+  function previewStake(uint256 assets) external view returns (uint256);
 
   /**
    * @dev Activates the cooldown period to unstake
@@ -111,9 +111,9 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   /**
    * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
    * @param shares the number of shares to redeem
-   * @return assets the number of assets that would be redeemed
+   * @return uint256 assets the number of assets that would be redeemed
    */
-  function previewRedeem(uint256 shares) external view returns (uint256 assets);
+  function previewRedeem(uint256 shares) external view returns (uint256);
 
   /**
    * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function

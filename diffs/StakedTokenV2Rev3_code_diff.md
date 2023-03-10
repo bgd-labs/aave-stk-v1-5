@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 83f9691..d9d9d6d 100644
+index 83f9691..83996dc 100644
 --- a/src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,124 +1,26 @@
@@ -2923,9 +2923,9 @@ index 83f9691..d9d9d6d 100644
 +  /**
 +   * @dev returns the exact amount of shares that would be received for the provided number of assets
 +   * @param assets the number of assets to stake
-+   * @return shares the number of shares that would be received
++   * @return uint256 shares the number of shares that would be received
 +   */
-+  function previewStake(uint256 assets) external view returns (uint256 shares);
++  function previewStake(uint256 assets) external view returns (uint256);
 +
 +  /**
 +   * @dev Activates the cooldown period to unstake
@@ -2948,9 +2948,9 @@ index 83f9691..d9d9d6d 100644
 +  /**
 +   * @dev returns the exact amount of assets that would be redeemed for the provided number of shares
 +   * @param shares the number of shares to redeem
-+   * @return assets the number of assets that would be redeemed
++   * @return uint256 assets the number of assets that would be redeemed
 +   */
-+  function previewRedeem(uint256 shares) external view returns (uint256 assets);
++  function previewRedeem(uint256 shares) external view returns (uint256);
 +
 +  /**
 +   * @dev Redeems shares for a user. Only the claim helper contract is allowed to call this function
