@@ -4206,7 +4206,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   IGhoVariableDebtTokenTransferHook public ghoDebtToken;
 
   function REVISION() public pure virtual override returns (uint256) {
-    return 4;
+    return 5;
   }
 
   constructor(
