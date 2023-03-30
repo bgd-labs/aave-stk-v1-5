@@ -10,3 +10,6 @@
 [submodule "lib/aave-address-book"]
 	path = lib/aave-address-book
 	url = https://github.com/bgd-labs/aave-address-book
+[submodule "lib/aave-token-v3"]
+	path = lib/aave-token-v3
+	url = https://github.com/bgd-labs/aave-token-v3
