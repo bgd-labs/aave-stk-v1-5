@@ -17,12 +17,14 @@ git-diff :
 
 
 diff-all :
+	make download chain=mainnet address=0x7183143a9e223a12a83d1e28c98f7d01a68993e8
+	make download chain=mainnet address=0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19
 	forge flatten src/contracts/StakedAaveV3.sol --output src/flattened/StakedAaveV3Flattened.sol
 	forge flatten src/contracts/StakedTokenV3.sol --output src/flattened/StakedTokenV3Flattened.sol
 	npm run lint:fix
 	make git-diff before=src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol after=src/flattened/StakedTokenV3Flattened.sol out=StakedTokenBptRev2_code_diff
-	make git-diff before=src/etherscan/mainnet_0xe42f02713aec989132c1755117f768dbea523d2f/StakedTokenV2Rev3/Contract.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedTokenV2Rev3_code_diff
-	forge inspect StakedTokenV2Rev3 storage-layout --pretty > diffs/StakedTokenV2Rev3_layout.md
+	make git-diff before=src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedTokenV2Rev4_code_diff
+	forge inspect StakedTokenV2Rev4 storage-layout --pretty > diffs/StakedTokenV2Rev4_layout.md
 	forge inspect StakedTokenBptRev2 storage-layout --pretty > diffs/StakedTokenBptRev2_layout.md
 	forge inspect StakedAaveV3 storage-layout --pretty > diffs/StakedAaveV3_layout.md
 	forge inspect StakedTokenV3 storage-layout --pretty > diffs/StakedTokenV3_layout.md
