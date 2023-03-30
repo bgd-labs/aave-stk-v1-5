@@ -19,8 +19,7 @@ library GenericProposal {
 
   uint256 public constant MAX_SLASHING = 3000; // 30%
 
-  // TODO: should probably be increased to at least 12 days as with 10 days, even with perfect proposal timing pplt have a >60% chance of leaving before slashing
-  uint256 public constant COOLDOWN_SECONDS = 864000; // 10 days
+  uint256 public constant COOLDOWN_SECONDS = 1728000; // 20 days
 
   uint256 public constant UNSTAKE_WINDOW = 172800; // 2 days
 
