@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 import {IERC20} from '../interfaces/IERC20.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 
-import {ERC20} from '../lib/ERC20.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
 
 import {VersionedInitializable} from '../utils/VersionedInitializable.sol';
 import {AaveDistributionManager} from './AaveDistributionManager.sol';
 import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.sol';
+import {BaseMintableAaveToken} from './BaseMintableAaveToken.sol';
 
 /**
  * @title StakedTokenV2
@@ -19,6 +19,7 @@ import {GovernancePowerWithSnapshot} from '../lib/GovernancePowerWithSnapshot.so
  */
 abstract contract StakedTokenV2 is
   IStakedTokenV2,
+  BaseMintableAaveToken,
   GovernancePowerWithSnapshot,
   VersionedInitializable,
   AaveDistributionManager
@@ -68,7 +69,7 @@ abstract contract StakedTokenV2 is
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration
-  ) ERC20() AaveDistributionManager(emissionManager, distributionDuration) {
+  ) AaveDistributionManager(emissionManager, distributionDuration) {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
@@ -88,11 +89,9 @@ abstract contract StakedTokenV2 is
   function claimRewards(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256)
-  {
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256) {
     DistributionTypes.UserStakeInput[]
       memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
     userStakeInputs[0] = DistributionTypes.UserStakeInput({
@@ -144,75 +143,6 @@ abstract contract StakedTokenV2 is
   }
 
   /**
-   * @dev Delegates power from signatory to `delegatee`
-   * @param delegatee The address to delegate votes to
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   * @param nonce The contract state required to match the signature
-   * @param expiry The time at which to expire the signature
-   * @param v The recovery byte of the signature
-   * @param r Half of the ECDSA signature pair
-   * @param s Half of the ECDSA signature pair
-   */
-  function delegateByTypeBySig(
-    address delegatee,
-    DelegationType delegationType,
-    uint256 nonce,
-    uint256 expiry,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) public {
-    bytes32 structHash = keccak256(
-      abi.encode(
-        DELEGATE_BY_TYPE_TYPEHASH,
-        delegatee,
-        uint256(delegationType),
-        nonce,
-        expiry
-      )
-    );
-    bytes32 digest = keccak256(
-      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
-    );
-    address signatory = ecrecover(digest, v, r, s);
-    require(signatory != address(0), 'INVALID_SIGNATURE');
-    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
-    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
-    _delegateByType(signatory, delegatee, delegationType);
-  }
-
-  /**
-   * @dev Delegates power from signatory to `delegatee`
-   * @param delegatee The address to delegate votes to
-   * @param nonce The contract state required to match the signature
-   * @param expiry The time at which to expire the signature
-   * @param v The recovery byte of the signature
-   * @param r Half of the ECDSA signature pair
-   * @param s Half of the ECDSA signature pair
-   */
-  function delegateBySig(
-    address delegatee,
-    uint256 nonce,
-    uint256 expiry,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) public {
-    bytes32 structHash = keccak256(
-      abi.encode(DELEGATE_TYPEHASH, delegatee, nonce, expiry)
-    );
-    bytes32 digest = keccak256(
-      abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, structHash)
-    );
-    address signatory = ecrecover(digest, v, r, s);
-    require(signatory != address(0), 'INVALID_SIGNATURE');
-    require(nonce == _nonces[signatory]++, 'INVALID_NONCE');
-    require(block.timestamp <= expiry, 'INVALID_EXPIRATION');
-    _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
-    _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
-  }
-
-  /**
    * @dev Updates the user state related with his accrued rewards
    * @param user Address of the user
    * @param userBalance The current balance of the user
@@ -240,31 +170,5 @@ abstract contract StakedTokenV2 is
     }
 
     return unclaimedRewards;
-  }
-
-  /**
-   * @dev returns relevant storage slots for a DelegationType
-   * @param delegationType the requested DelegationType
-   * @return the relevant storage
-   */
-  function _getDelegationDataByType(DelegationType delegationType)
-    internal
-    view
-    override
-    returns (
-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-      mapping(address => uint256) storage, //snapshots count
-      mapping(address => address) storage //delegatees list
-    )
-  {
-    if (delegationType == DelegationType.VOTING_POWER) {
-      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
-    } else {
-      return (
-        _propositionPowerSnapshots,
-        _propositionPowerSnapshotsCounts,
-        _propositionPowerDelegates
-      );
-    }
   }
 }

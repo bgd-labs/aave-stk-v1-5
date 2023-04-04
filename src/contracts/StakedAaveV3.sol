@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from '../interfaces/IERC20.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
-import {GovernancePowerDelegationERC20} from '../lib/GovernancePowerDelegationERC20.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IGhoVariableDebtTokenTransferHook} from '../interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
@@ -18,9 +17,10 @@ import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
 
-  uint32 internal _exchangeRateSnapshotsCount;
+  uint32 internal deprecated_exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
+  mapping(uint256 => ExchangeRateSnapshot)
+    public deprecated_exchangeRateSnapshots;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtTokenTransferHook public ghoDebtToken;
@@ -73,20 +73,19 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external
-  {
+  function setGHODebtToken(
+    IGhoVariableDebtTokenTransferHook newGHODebtToken
+  ) external {
     require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
   }
 
   /// @inheritdoc IStakedAaveV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external override returns (uint256) {
     return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
@@ -145,102 +144,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
           amount
         )
       {} catch (bytes memory) {}
-    }
-    address votingFromDelegatee = _votingDelegates[from];
-    address votingToDelegatee = _votingDelegates[to];
-
-    if (votingFromDelegatee == address(0)) {
-      votingFromDelegatee = from;
-    }
-    if (votingToDelegatee == address(0)) {
-      votingToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      votingFromDelegatee,
-      votingToDelegatee,
-      amount,
-      DelegationType.VOTING_POWER
-    );
-
-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-    address propPowerToDelegatee = _propositionPowerDelegates[to];
-
-    if (propPowerFromDelegatee == address(0)) {
-      propPowerFromDelegatee = from;
-    }
-    if (propPowerToDelegatee == address(0)) {
-      propPowerToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      propPowerFromDelegatee,
-      propPowerToDelegatee,
-      amount,
-      DelegationType.PROPOSITION_POWER
-    );
-  }
-
-  /// @dev Modified version accounting for exchange rate at block
-  /// @inheritdoc GovernancePowerDelegationERC20
-  function _searchByBlockNumber(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address user,
-    uint256 blockNumber
-  ) internal view override returns (uint256) {
-    return
-      (super._searchByBlockNumber(
-        snapshots,
-        snapshotsCounts,
-        user,
-        blockNumber
-      ) * EXCHANGE_RATE_UNIT) /
-      _binarySearchExchangeRate(
-        _exchangeRateSnapshots,
-        _exchangeRateSnapshotsCount,
-        blockNumber
-      );
-  }
-
-  /**
-   * @dev Updates the exchangeRate and emits events accordingly
-   * @param newExchangeRate the new exchange rate
-   */
-  function _updateExchangeRate(uint216 newExchangeRate) internal override {
-    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = ExchangeRateSnapshot(
-      block.number.toUint40(),
-      newExchangeRate
-    );
-    ++_exchangeRateSnapshotsCount;
-    super._updateExchangeRate(newExchangeRate);
-  }
-
-  function _binarySearchExchangeRate(
-    mapping(uint256 => ExchangeRateSnapshot) storage snapshots,
-    uint256 snapshotsCount,
-    uint256 blockNumber
-  ) internal view returns (uint256) {
-    unchecked {
-      // First check most recent balance
-      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-        return snapshots[snapshotsCount - 1].value;
-      }
-
-      uint256 lower = 0;
-      uint256 upper = snapshotsCount - 1;
-      while (upper > lower) {
-        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-        ExchangeRateSnapshot memory snapshot = snapshots[center];
-        if (snapshot.blockNumber == blockNumber) {
-          return snapshot.value;
-        } else if (snapshot.blockNumber < blockNumber) {
-          lower = center;
-        } else {
-          upper = center - 1;
-        }
-      }
-      return snapshots[lower].value;
     }
   }
 }

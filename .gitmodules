@@ -13,3 +13,4 @@
 [submodule "lib/aave-token-v3"]
 	path = lib/aave-token-v3
 	url = https://github.com/bgd-labs/aave-token-v3
+  branch = feat/base-delegation-isolation
