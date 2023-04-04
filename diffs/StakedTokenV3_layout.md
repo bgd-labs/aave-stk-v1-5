@@ -22,7 +22,8 @@
 | _nonces                          | mapping(address => uint256)                                                            | 68   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
 | _admins                          | mapping(uint256 => address)                                                            | 69   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
 | _pendingAdmins                   | mapping(uint256 => address)                                                            | 70   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _cooldownSeconds                 | uint256                                                                                | 71   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _maxSlashablePercentage          | uint256                                                                                | 72   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| _currentExchangeRate             | uint216                                                                                | 73   | 0      | 27    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
-| inPostSlashingPeriod             | bool                                                                                   | 73   | 27     | 1     | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| ______gap                        | uint256[8]                                                                             | 71   | 0      | 256   | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| _cooldownSeconds                 | uint256                                                                                | 79   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| _maxSlashablePercentage          | uint256                                                                                | 80   | 0      | 32    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| _currentExchangeRate             | uint216                                                                                | 81   | 0      | 27    | src/contracts/StakedTokenV3.sol:StakedTokenV3 |
+| inPostSlashingPeriod             | bool                                                                                   | 81   | 27     | 1     | src/contracts/StakedTokenV3.sol:StakedTokenV3 |

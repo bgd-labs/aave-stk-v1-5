@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..58eb5a4 100644
+index 37a034f..82ba1ca 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2311,7 +2311,7 @@ index 37a034f..58eb5a4 100644
    /**
     * @dev Delegates power from signatory to `delegatee`
     * @param delegatee The address to delegate votes to
-@@ -2161,4 +1967,2139 @@ contract StakedTokenBptRev2 is
+@@ -2161,4 +1967,2141 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
@@ -3916,6 +3916,8 @@ index 37a034f..58eb5a4 100644
 +  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
 +  uint256 public immutable LOWER_BOUND;
 +
++  // Reserved storage space to allow for layout changes in the future.
++  uint256[8] private ______gap;
 +  /// @notice Seconds between starting cooldown and being able to withdraw
 +  uint256 internal _cooldownSeconds;
 +  /// @notice The maximum amount of funds that can be slashed at any given time

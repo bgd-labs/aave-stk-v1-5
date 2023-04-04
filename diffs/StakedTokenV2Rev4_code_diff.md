@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 708a687..c36f42d 100644
+index 708a687..609a651 100644
 --- a/src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,120 +1,26 @@
@@ -2730,7 +2730,7 @@ index 708a687..c36f42d 100644
    function permit(
      address owner,
      address spender,
-@@ -1964,10 +1893,2413 @@ contract StakedTokenV2Rev4 is
+@@ -1964,10 +1893,2415 @@ contract StakedTokenV2Rev4 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -4410,6 +4410,8 @@ index 708a687..c36f42d 100644
 +  // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
 +  uint256 public immutable LOWER_BOUND;
 +
++  // Reserved storage space to allow for layout changes in the future.
++  uint256[8] private ______gap;
 +  /// @notice Seconds between starting cooldown and being able to withdraw
 +  uint256 internal _cooldownSeconds;
 +  /// @notice The maximum amount of funds that can be slashed at any given time
@@ -5145,7 +5147,7 @@ index 708a687..c36f42d 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1982,6 +4314,18 @@ contract StakedTokenV2Rev4 is
+@@ -1982,6 +4316,18 @@ contract StakedTokenV2Rev4 is
      address to,
      uint256 amount
    ) internal override {
@@ -5164,7 +5166,7 @@ index 708a687..c36f42d 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2015,101 +4359,68 @@ contract StakedTokenV2Rev4 is
+@@ -2015,101 +4361,68 @@ contract StakedTokenV2Rev4 is
        amount,
        DelegationType.PROPOSITION_POWER
      );
