@@ -36,8 +36,10 @@ interface IGovernancePowerDelegationToken {
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external;
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external;
 
   /**
    * @dev delegates all the powers to a specific user
@@ -49,20 +51,20 @@ interface IGovernancePowerDelegationToken {
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    returns (address);
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view returns (address);
 
   /**
    * @dev returns the current delegated power of a user. The current power is the
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    returns (uint256);
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view returns (uint256);
 
   /**
    * @dev returns the delegated power of a user at a certain block

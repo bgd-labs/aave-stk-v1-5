@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../interfaces/IERC20.sol';
+import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
+import {IERC20Metadata} from 'openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
 import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
-import {IERC20Metadata} from '../interfaces/IERC20Metadata.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 import {StakedTokenV2} from './StakedTokenV2.sol';
 import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
@@ -41,6 +41,8 @@ contract StakedTokenV3 is
   // as returnFunds can be called permissionless an attacker could spam returnFunds(1) to produce exchangeRate snapshots making voting expensive
   uint256 public immutable LOWER_BOUND;
 
+  // Reserved storage space to allow for layout changes in the future.
+  uint256[6] private ______gap;
   /// @notice Seconds between starting cooldown and being able to withdraw
   uint256 internal _cooldownSeconds;
   /// @notice The maximum amount of funds that can be slashed at any given time

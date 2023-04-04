@@ -204,7 +204,7 @@ contract AaveDistributionManager {
   ) internal pure returns (uint256) {
     return
       (principalUserBalance * (reserveIndex - userIndex)) /
-      (10**uint256(PRECISION));
+      (10 ** uint256(PRECISION));
   }
 
   /**
@@ -235,7 +235,7 @@ contract AaveDistributionManager {
       : block.timestamp;
     uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
     return
-      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
+      ((emissionPerSecond * timeDelta * (10 ** uint256(PRECISION))) /
         totalBalance) + currentIndex;
   }
 
@@ -245,11 +245,10 @@ contract AaveDistributionManager {
    * @param asset The address of the reference asset of the distribution
    * @return The new index
    */
-  function getUserAssetData(address user, address asset)
-    public
-    view
-    returns (uint256)
-  {
+  function getUserAssetData(
+    address user,
+    address asset
+  ) public view returns (uint256) {
     return assets[asset].users[user];
   }
 }

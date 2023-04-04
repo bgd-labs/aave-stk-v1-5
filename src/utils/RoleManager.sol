@@ -52,10 +52,10 @@ contract RoleManager {
    * @param role the role associated with the new pending admin being set
    * @param newPendingAdmin the address of the new pending admin
    **/
-  function setPendingAdmin(uint256 role, address newPendingAdmin)
-    public
-    onlyRoleAdmin(role)
-  {
+  function setPendingAdmin(
+    uint256 role,
+    address newPendingAdmin
+  ) public onlyRoleAdmin(role) {
     _pendingAdmins[role] = newPendingAdmin;
     emit PendingAdminChanged(newPendingAdmin, role);
   }

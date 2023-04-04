@@ -97,28 +97,29 @@ interface AggregatedStakedAaveV3 {
 
   function _aaveGovernance() external view returns (address);
 
-  function _exchangeRateSnapshots(uint256)
-    external
-    view
-    returns (uint40 blockNumber, uint216 value);
+  function _exchangeRateSnapshots(
+    uint256
+  ) external view returns (uint40 blockNumber, uint216 value);
 
   function _nonces(address) external view returns (uint256);
 
-  function _votingSnapshots(address, uint256)
-    external
-    view
-    returns (uint128 blockNumber, uint128 value);
+  function _votingSnapshots(
+    address,
+    uint256
+  ) external view returns (uint128 blockNumber, uint128 value);
 
   function _votingSnapshotsCounts(address) external view returns (uint256);
 
-  function allowance(address owner, address spender)
-    external
-    view
-    returns (uint256);
+  function allowance(
+    address owner,
+    address spender
+  ) external view returns (uint256);
 
   function approve(address spender, uint256 amount) external returns (bool);
 
-  function assets(address)
+  function assets(
+    address
+  )
     external
     view
     returns (
@@ -144,9 +145,10 @@ interface AggregatedStakedAaveV3 {
     uint256 redeemAmount
   ) external;
 
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external returns (uint256);
 
   function claimRewardsAndStakeOnBehalf(
     address from,
@@ -172,9 +174,10 @@ interface AggregatedStakedAaveV3 {
 
   function decimals() external view returns (uint8);
 
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    external
-    returns (bool);
+  function decreaseAllowance(
+    address spender,
+    uint256 subtractedValue
+  ) external returns (bool);
 
   function delegate(address delegatee) external;
 
@@ -203,10 +206,10 @@ interface AggregatedStakedAaveV3 {
 
   function getCooldownSeconds() external view returns (uint256);
 
-  function getDelegateeByType(address delegator, uint8 delegationType)
-    external
-    view
-    returns (address);
+  function getDelegateeByType(
+    address delegator,
+    uint8 delegationType
+  ) external view returns (address);
 
   function getExchangeRate() external view returns (uint216);
 
@@ -220,28 +223,28 @@ interface AggregatedStakedAaveV3 {
     uint8 delegationType
   ) external view returns (uint256);
 
-  function getPowerCurrent(address user, uint8 delegationType)
-    external
-    view
-    returns (uint256);
+  function getPowerCurrent(
+    address user,
+    uint8 delegationType
+  ) external view returns (uint256);
 
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256);
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256);
 
-  function getUserAssetData(address user, address asset)
-    external
-    view
-    returns (uint256);
+  function getUserAssetData(
+    address user,
+    address asset
+  ) external view returns (uint256);
 
   function ghoDebtToken() external view returns (address);
 
   function inPostSlashingPeriod() external view returns (bool);
 
-  function increaseAllowance(address spender, uint256 addedValue)
-    external
-    returns (bool);
+  function increaseAllowance(
+    address spender,
+    uint256 addedValue
+  ) external returns (bool);
 
   function initialize(
     address slashingAdmin,
@@ -269,11 +272,7 @@ interface AggregatedStakedAaveV3 {
 
   function redeem(address to, uint256 amount) external;
 
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function redeemOnBehalf(address from, address to, uint256 amount) external;
 
   function returnFunds(uint256 amount) external;
 
@@ -287,9 +286,10 @@ interface AggregatedStakedAaveV3 {
 
   function settleSlashing() external;
 
-  function slash(address destination, uint256 amount)
-    external
-    returns (uint256);
+  function slash(
+    address destination,
+    uint256 amount
+  ) external returns (uint256);
 
   function stake(address to, uint256 amount) external;
 
@@ -304,10 +304,9 @@ interface AggregatedStakedAaveV3 {
 
   function stakerRewardsToClaim(address) external view returns (uint256);
 
-  function stakersCooldowns(address)
-    external
-    view
-    returns (uint40 timestamp, uint216 amount);
+  function stakersCooldowns(
+    address
+  ) external view returns (uint40 timestamp, uint216 amount);
 
   function symbol() external view returns (string memory);
 

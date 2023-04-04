@@ -41,9 +41,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
    */
-  function slash(address destination, uint256 amount)
-    external
-    returns (uint256);
+  function slash(
+    address destination,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Settles an ongoing slashing event
@@ -121,11 +122,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
    */
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function redeemOnBehalf(address from, address to, uint256 amount) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address

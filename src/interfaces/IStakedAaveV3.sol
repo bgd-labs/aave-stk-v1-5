@@ -16,17 +16,19 @@ interface IStakedAaveV3 is IStakedTokenV3 {
    * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
    * @param newGHODebtToken Address to GHO debt token
    */
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external;
+  function setGHODebtToken(
+    IGhoVariableDebtTokenTransferHook newGHODebtToken
+  ) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param to Address to stake to
    * @param amount Amount to claim
    */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and stakes. Only the claim helper contract is allowed to call this function

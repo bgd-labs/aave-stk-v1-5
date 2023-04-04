@@ -7,7 +7,7 @@ import {ProxyAdmin} from 'solidity-utils/contracts/transparent-proxy/ProxyAdmin.
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 import {StakedAaveV3} from './StakedAaveV3.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
+import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
 import {IInitializableAdminUpgradeabilityProxy} from '../interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 
 library GenericProposal {
