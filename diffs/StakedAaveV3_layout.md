@@ -22,10 +22,12 @@
 | _nonces                               | mapping(address => uint256)                                                         | 68   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _admins                               | mapping(uint256 => address)                                                         | 69   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
 | _pendingAdmins                        | mapping(uint256 => address)                                                         | 70   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _cooldownSeconds                      | uint256                                                                             | 71   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _maxSlashablePercentage               | uint256                                                                             | 72   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| _currentExchangeRate                  | uint216                                                                             | 73   | 0      | 27    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| inPostSlashingPeriod                  | bool                                                                                | 73   | 27     | 1     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| deprecated_exchangeRateSnapshotsCount | uint32                                                                              | 73   | 28     | 4     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| deprecated_exchangeRateSnapshots      | mapping(uint256 => struct IStakedAaveV3.ExchangeRateSnapshot)                       | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
-| ghoDebtToken                          | contract IGhoVariableDebtTokenTransferHook                                          | 75   | 0      | 20    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _votingDelegatee                      | mapping(address => address)                                                         | 71   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _propositionDelegatee                 | mapping(address => address)                                                         | 72   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _cooldownSeconds                      | uint256                                                                             | 73   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _maxSlashablePercentage               | uint256                                                                             | 74   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| _currentExchangeRate                  | uint216                                                                             | 75   | 0      | 27    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| inPostSlashingPeriod                  | bool                                                                                | 75   | 27     | 1     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| deprecated_exchangeRateSnapshotsCount | uint32                                                                              | 75   | 28     | 4     | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| deprecated_exchangeRateSnapshots      | mapping(uint256 => struct IStakedAaveV3.ExchangeRateSnapshot)                       | 76   | 0      | 32    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |
+| ghoDebtToken                          | contract IGhoVariableDebtTokenTransferHook                                          | 77   | 0      | 20    | src/contracts/StakedAaveV3.sol:StakedAaveV3 |

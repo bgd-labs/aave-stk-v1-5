@@ -12,6 +12,7 @@ import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
+import {BaseDelegation} from 'aave-token-v3/BaseDelegation.sol';
 
 /**
  * @title StakedTokenV3
@@ -22,7 +23,8 @@ contract StakedTokenV3 is
   StakedTokenV2,
   IStakedTokenV3,
   RoleManager,
-  IAaveDistributionManager
+  IAaveDistributionManager,
+  BaseDelegation
 {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
@@ -554,6 +556,52 @@ contract StakedTokenV3 is
       }
     }
 
+    _delegationChangeOnTransfer(
+      from,
+      to,
+      _getBalance(from),
+      _getBalance(to),
+      amount
+    );
+
     super._transfer(from, to, amount);
+  }
+
+  function _getDelegationState(
+    address user
+  ) internal view override returns (DelegationState memory) {
+    DelegationAwareBalance memory userState = _balances[user];
+    return
+      DelegationState({
+        delegatedPropositionBalance: userState.delegatedPropositionBalance,
+        delegatedVotingBalance: userState.delegatedVotingBalance,
+        delegationMode: userState.delegationMode
+      });
+  }
+
+  function _getBalance(address user) internal view override returns (uint256) {
+    return balanceOf(user);
+  }
+
+  function _setDelegationState(
+    address user,
+    DelegationState memory delegationState
+  ) internal override {
+    DelegationAwareBalance storage userState = _balances[user];
+    userState.delegatedPropositionBalance = delegationState
+      .delegatedPropositionBalance;
+    userState.delegatedVotingBalance = delegationState.delegatedVotingBalance;
+    userState.delegationMode = delegationState.delegationMode;
+  }
+
+  function _incrementNonces(address user) internal override returns (uint256) {
+    unchecked {
+      // Does not make sense to check because it's not realistic to reach uint256.max in nonce
+      return _nonces[user]++;
+    }
+  }
+
+  function _getDomainSeparator() internal view override returns (bytes32) {
+    return DOMAIN_SEPARATOR;
   }
 }
