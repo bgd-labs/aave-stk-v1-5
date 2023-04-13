@@ -2086,6 +2086,12 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function getCooldownSeconds() external view returns (uint256);
 
   /**
+   * @dev Getter of the cooldown seconds
+   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
+   */
+  function COOLDOWN_SECONDS() external view returns (uint256); // @deprecated
+
+  /**
    * @dev Setter of cooldown seconds
    * Can only be called by the cooldown admin
    * @param cooldownSeconds the new amount of seconds you have to wait between starting the cooldown and being able to redeem
@@ -3872,6 +3878,11 @@ contract StakedTokenV3 is
 
   /// @inheritdoc IStakedTokenV3
   function getCooldownSeconds() external view returns (uint256) {
+    return _cooldownSeconds;
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function COOLDOWN_SECONDS() external view returns (uint256) {
     return _cooldownSeconds;
   }
 

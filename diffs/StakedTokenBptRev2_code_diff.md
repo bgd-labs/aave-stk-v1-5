@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 37a034f..82ba1ca 100644
+index 37a034f..369eab7 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2311,7 +2311,7 @@ index 37a034f..82ba1ca 100644
    /**
     * @dev Delegates power from signatory to `delegatee`
     * @param delegatee The address to delegate votes to
-@@ -2161,4 +1967,2141 @@ contract StakedTokenBptRev2 is
+@@ -2161,4 +1967,2152 @@ contract StakedTokenBptRev2 is
      _delegateByType(signatory, delegatee, DelegationType.VOTING_POWER);
      _delegateByType(signatory, delegatee, DelegationType.PROPOSITION_POWER);
    }
@@ -2432,6 +2432,12 @@ index 37a034f..82ba1ca 100644
 +   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
 +   */
 +  function getCooldownSeconds() external view returns (uint256);
++
++  /**
++   * @dev Getter of the cooldown seconds
++   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
++   */
++  function COOLDOWN_SECONDS() external view returns (uint256); // @deprecated
 +
 +  /**
 +   * @dev Setter of cooldown seconds
@@ -4220,6 +4226,11 @@ index 37a034f..82ba1ca 100644
 +
 +  /// @inheritdoc IStakedTokenV3
 +  function getCooldownSeconds() external view returns (uint256) {
++    return _cooldownSeconds;
++  }
++
++  /// @inheritdoc IStakedTokenV3
++  function COOLDOWN_SECONDS() external view returns (uint256) {
 +    return _cooldownSeconds;
 +  }
 +
