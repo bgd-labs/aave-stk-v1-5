@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 708a687..609a651 100644
+index 708a687..39c188c 100644
 --- a/src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
 @@ -1,120 +1,26 @@
@@ -2730,7 +2730,7 @@ index 708a687..609a651 100644
    function permit(
      address owner,
      address spender,
-@@ -1964,10 +1893,2415 @@ contract StakedTokenV2Rev4 is
+@@ -1964,10 +1893,2426 @@ contract StakedTokenV2Rev4 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -2926,6 +2926,12 @@ index 708a687..609a651 100644
 +   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
 +   */
 +  function getCooldownSeconds() external view returns (uint256);
++
++  /**
++   * @dev Getter of the cooldown seconds
++   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
++   */
++  function COOLDOWN_SECONDS() external view returns (uint256); // @deprecated
 +
 +  /**
 +   * @dev Setter of cooldown seconds
@@ -4717,6 +4723,11 @@ index 708a687..609a651 100644
 +    return _cooldownSeconds;
 +  }
 +
++  /// @inheritdoc IStakedTokenV3
++  function COOLDOWN_SECONDS() external view returns (uint256) {
++    return _cooldownSeconds;
++  }
++
 +  /**
 +   * @dev sets the max slashable percentage
 +   * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
@@ -5147,7 +5158,7 @@ index 708a687..609a651 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -1982,6 +4316,18 @@ contract StakedTokenV2Rev4 is
+@@ -1982,6 +4327,18 @@ contract StakedTokenV2Rev4 is
      address to,
      uint256 amount
    ) internal override {
@@ -5166,7 +5177,7 @@ index 708a687..609a651 100644
      address votingFromDelegatee = _votingDelegates[from];
      address votingToDelegatee = _votingDelegates[to];
  
-@@ -2015,101 +4361,68 @@ contract StakedTokenV2Rev4 is
+@@ -2015,101 +4372,68 @@ contract StakedTokenV2Rev4 is
        amount,
        DelegationType.PROPOSITION_POWER
      );
