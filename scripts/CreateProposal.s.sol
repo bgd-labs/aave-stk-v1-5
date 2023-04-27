@@ -11,7 +11,7 @@ contract CreateStkAAVELongProposal is EthereumScript {
   function run() external broadcast {
     GovHelpers.Payload[] memory payloads = new GovHelpers.Payload[](1);
     payloads[0] = GovHelpers.buildMainnet(
-      address(0) // deployed long executor payload
+      0xe427FCbD54169136391cfEDf68E96abB13dA87A0
     );
     GovHelpers.createProposal(
       AaveGovernanceV2.LONG_EXECUTOR,
@@ -26,7 +26,7 @@ contract CreateStkABPTShortProposal is EthereumScript {
   function run() external broadcast {
     GovHelpers.Payload[] memory payloads = new GovHelpers.Payload[](1);
     payloads[0] = GovHelpers.buildMainnet(
-      address(0) // deployed short executor payload
+      0xe63eAf6DAb1045689BD3a332bC596FfcF54A5C88
     );
     GovHelpers.createProposal(
       payloads,
