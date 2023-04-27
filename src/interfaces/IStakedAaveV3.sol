@@ -13,6 +13,20 @@ interface IStakedAaveV3 is IStakedTokenV3 {
   event GHODebtTokenChanged(address indexed newDebtToken);
 
   /**
+   * @dev Returnes the number of excahngeRate snapshots
+   */
+  function getExchangeRateSnapshotsCount() external view returns (uint32);
+
+  /**
+   * @dev Returns the exchangeRate for a specified index
+   * @param index Index of the exchangeRate
+   */
+  function getExchangeRateSnapshot(uint32 index)
+    external
+    view
+    returns (ExchangeRateSnapshot memory);
+
+  /**
    * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
    * @param newGHODebtToken Address to GHO debt token
    */

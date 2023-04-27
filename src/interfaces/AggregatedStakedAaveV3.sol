@@ -30,6 +30,11 @@ interface AggregatedStakedAaveV3 {
         address underlyingAsset;
     }
 
+    struct ExchangeRateSnapshot {
+        uint40 blockNumber;
+        uint216 value;
+    }
+
     function CLAIM_HELPER_ROLE() external view returns (uint256);
     function COOLDOWN_ADMIN_ROLE() external view returns (uint256);
     function COOLDOWN_SECONDS() external view returns (uint256);
@@ -51,7 +56,6 @@ interface AggregatedStakedAaveV3 {
     function STAKED_TOKEN() external view returns (address);
     function UNSTAKE_WINDOW() external view returns (uint256);
     function _aaveGovernance() external view returns (address);
-    function _exchangeRateSnapshots(uint256) external view returns (uint40 blockNumber, uint216 value);
     function _nonces(address) external view returns (uint256);
     function _votingSnapshots(address, uint256) external view returns (uint128 blockNumber, uint128 value);
     function _votingSnapshotsCounts(address) external view returns (uint256);
@@ -91,6 +95,8 @@ interface AggregatedStakedAaveV3 {
     function getCooldownSeconds() external view returns (uint256);
     function getDelegateeByType(address delegator, uint8 delegationType) external view returns (address);
     function getExchangeRate() external view returns (uint216);
+    function getExchangeRateSnapshot(uint32 index) external view returns (ExchangeRateSnapshot memory);
+    function getExchangeRateSnapshotsCount() external view returns (uint32);
     function getMaxSlashablePercentage() external view returns (uint256);
     function getPendingAdmin(uint256 role) external view returns (address);
     function getPowerAtBlock(address user, uint256 blockNumber, uint8 delegationType) external view returns (uint256);
