@@ -20,7 +20,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
 
   uint32 internal _exchangeRateSnapshotsCount;
   /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
+  mapping(uint256 => ExchangeRateSnapshot) internal _exchangeRateSnapshots;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtTokenTransferHook public ghoDebtToken;
@@ -118,6 +118,20 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
       s
     );
     _stake(from, from, amount);
+  }
+
+  /// @inheritdoc IStakedAaveV3
+  function getExchangeRateSnapshotsCount() external view returns (uint32) {
+    return _exchangeRateSnapshotsCount;
+  }
+
+  /// @inheritdoc IStakedAaveV3
+  function getExchangeRateSnapshot(uint32 index)
+    external
+    view
+    returns (ExchangeRateSnapshot memory)
+  {
+    return _exchangeRateSnapshots[index];
   }
 
   /**
