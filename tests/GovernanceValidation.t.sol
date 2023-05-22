@@ -100,4 +100,32 @@ contract GovernanceValidation is BaseTest {
       0.001e18
     ); // allow for 0.1% derivation
   }
+
+  function test_delegateAfterSlash(uint256 amount) public {
+    uint256 slashingPercent = 10;
+    vm.assume(amount < type(uint128).max);
+    vm.assume(amount > 1 ether);
+    _stake(amount);
+    address delegatee = address(100);
+    STAKE_CONTRACT.delegate(delegatee);
+
+    address receiver = address(42);
+    uint256 amountToSlash = (STAKE_CONTRACT.totalSupply() * slashingPercent) /
+      100;
+    vm.startPrank(STAKE_CONTRACT.getAdmin(SLASHING_ADMIN));
+    STAKE_CONTRACT.slash(receiver, amountToSlash);
+    vm.stopPrank();
+
+    IGovernanceStrategy strategy = IGovernanceStrategy(
+      AaveGovernanceV2.GOV.getGovernanceStrategy()
+    );
+    uint256 power = strategy.getVotingPowerAt(delegatee, block.number);
+
+    assertLe(power, (amount * (100 - slashingPercent)) / 100);
+    assertApproxEqRel(
+      power,
+      (amount * (100 - slashingPercent)) / 100,
+      0.001e18
+    ); // allow for 0.1% derivation
+  }
 }

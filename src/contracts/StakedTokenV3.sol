@@ -585,6 +585,15 @@ contract StakedTokenV3 is
     return balanceOf(user);
   }
 
+  function getPowerCurrent(
+    address user,
+    GovernancePowerType delegationType
+  ) public view override returns (uint256) {
+    return
+      (super.getPowerCurrent(user, delegationType) * EXCHANGE_RATE_UNIT) /
+      getExchangeRate();
+  }
+
   function _setDelegationState(
     address user,
     DelegationState memory delegationState
