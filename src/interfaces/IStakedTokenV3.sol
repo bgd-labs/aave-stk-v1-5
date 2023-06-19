@@ -41,9 +41,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
    */
-  function slash(address destination, uint256 amount)
-    external
-    returns (uint256);
+  function slash(
+    address destination,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Settles an ongoing slashing event
@@ -127,11 +128,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
    */
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function redeemOnBehalf(address from, address to, uint256 amount) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
@@ -157,5 +154,23 @@ interface IStakedTokenV3 is IStakedTokenV2 {
     address to,
     uint256 claimAmount,
     uint256 redeemAmount
+  ) external;
+
+  /**
+   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
+   * @param from The address staking the token
+   * @param amount The amount to be staked
+   * @param deadline The permit execution deadline
+   * @param v The v component of the signed message
+   * @param r The r component of the signed message
+   * @param s The s component of the signed message
+   */
+  function stakeWithPermit(
+    address from,
+    uint256 amount,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
   ) external;
 }
