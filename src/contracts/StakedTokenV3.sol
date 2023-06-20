@@ -93,7 +93,7 @@ contract StakedTokenV3 is
     // brick initialize
     lastInitializedRevision = REVISION();
     uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
-    LOWER_BOUND = 10 ** decimals;
+    LOWER_BOUND = 10**decimals;
   }
 
   /**
@@ -169,10 +169,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function stake(
-    address to,
-    uint256 amount
-  ) external override(IStakedTokenV2, StakedTokenV2) {
+  function stake(address to, uint256 amount)
+    external
+    override(IStakedTokenV2, StakedTokenV2)
+  {
     _stake(msg.sender, to, amount);
   }
 
@@ -198,10 +198,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function redeem(
-    address to,
-    uint256 amount
-  ) external override(IStakedTokenV2, StakedTokenV2) {
+  function redeem(address to, uint256 amount)
+    external
+    override(IStakedTokenV2, StakedTokenV2)
+  {
     _redeem(msg.sender, to, amount);
   }
 
@@ -215,10 +215,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function claimRewards(
-    address to,
-    uint256 amount
-  ) external override(IStakedTokenV2, StakedTokenV2) {
+  function claimRewards(address to, uint256 amount)
+    external
+    override(IStakedTokenV2, StakedTokenV2)
+  {
     _claimRewards(msg.sender, to, amount);
   }
 
@@ -258,17 +258,22 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function previewRedeem(
-    uint256 shares
-  ) public view override returns (uint256) {
+  function previewRedeem(uint256 shares)
+    public
+    view
+    override
+    returns (uint256)
+  {
     return (EXCHANGE_RATE_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
-  function slash(
-    address destination,
-    uint256 amount
-  ) external override onlySlashingAdmin returns (uint256) {
+  function slash(address destination, uint256 amount)
+    external
+    override
+    onlySlashingAdmin
+    returns (uint256)
+  {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
     require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
@@ -309,9 +314,11 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setMaxSlashablePercentage(
-    uint256 percentage
-  ) external override onlySlashingAdmin {
+  function setMaxSlashablePercentage(uint256 percentage)
+    external
+    override
+    onlySlashingAdmin
+  {
     _setMaxSlashablePercentage(percentage);
   }
 
@@ -326,9 +333,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setCooldownSeconds(
-    uint256 cooldownSeconds
-  ) external onlyCooldownAdmin {
+  function setCooldownSeconds(uint256 cooldownSeconds)
+    external
+    onlyCooldownAdmin
+  {
     _setCooldownSeconds(cooldownSeconds);
   }
 
@@ -431,7 +439,11 @@ contract StakedTokenV3 is
    * @param to The address to receiving the shares
    * @param amount The amount of assets to be staked
    */
-  function _stake(address from, address to, uint256 amount) internal {
+  function _stake(
+    address from,
+    address to,
+    uint256 amount
+  ) internal {
     require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
@@ -464,7 +476,11 @@ contract StakedTokenV3 is
    * @param to Address to redeem to
    * @param amount Amount to redeem
    */
-  function _redeem(address from, address to, uint256 amount) internal {
+  function _redeem(
+    address from,
+    address to,
+    uint256 amount
+  ) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
@@ -526,10 +542,11 @@ contract StakedTokenV3 is
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint216
    */
-  function _getExchangeRate(
-    uint256 totalAssets,
-    uint256 totalShares
-  ) internal pure returns (uint216) {
+  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
+    internal
+    pure
+    returns (uint216)
+  {
     return
       (((totalShares * EXCHANGE_RATE_UNIT) + totalAssets - 1) / totalAssets)
         .toUint216();
