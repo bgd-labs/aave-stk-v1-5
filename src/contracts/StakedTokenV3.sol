@@ -483,42 +483,15 @@ contract StakedTokenV3 is
   ) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
-    CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
-    if (!inPostSlashingPeriod) {
-      require(
-        (block.timestamp >= cooldownSnapshot.timestamp + _cooldownSeconds),
-        'INSUFFICIENT_COOLDOWN'
-      );
-      require(
-        (block.timestamp - (cooldownSnapshot.timestamp + _cooldownSeconds) <=
-          UNSTAKE_WINDOW),
-        'UNSTAKE_WINDOW_FINISHED'
-      );
-    }
-
     uint256 balanceOfFrom = balanceOf(from);
-    uint256 maxRedeemable = inPostSlashingPeriod
-      ? balanceOfFrom
-      : cooldownSnapshot.amount;
-    require(maxRedeemable != 0, 'INVALID_ZERO_MAX_REDEEMABLE');
 
-    uint256 amountToRedeem = (amount > maxRedeemable) ? maxRedeemable : amount;
+    uint256 amountToRedeem = (amount > balanceOfFrom) ? balanceOfFrom : amount;
 
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
 
     uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
 
     _burn(from, amountToRedeem);
-
-    if (cooldownSnapshot.timestamp != 0) {
-      if (cooldownSnapshot.amount - amountToRedeem == 0) {
-        delete stakersCooldowns[from];
-      } else {
-        stakersCooldowns[from].amount =
-          stakersCooldowns[from].amount -
-          amountToRedeem.toUint184();
-      }
-    }
 
     IERC20(STAKED_TOKEN).safeTransfer(to, underlyingToRedeem);
 
