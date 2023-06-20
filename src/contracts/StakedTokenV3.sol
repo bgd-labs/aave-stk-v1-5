@@ -115,20 +115,8 @@ contract StakedTokenV3 is
   /**
    * @dev Called by the proxy contract
    */
-  function initialize(
-    address slashingAdmin,
-    address cooldownPauseAdmin,
-    address claimHelper,
-    uint256 maxSlashablePercentage,
-    uint256 cooldownSeconds
-  ) external virtual initializer {
-    _initialize(
-      slashingAdmin,
-      cooldownPauseAdmin,
-      claimHelper,
-      maxSlashablePercentage,
-      cooldownSeconds
-    );
+  function initialize() external virtual initializer {
+    inPostSlashingPeriod = true;
   }
 
   function _initialize(
