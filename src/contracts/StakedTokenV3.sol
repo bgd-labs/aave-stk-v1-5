@@ -118,21 +118,7 @@ contract StakedTokenV3 is
   /**
    * @dev Called by the proxy contract
    */
-  function initialize(
-    address slashingAdmin,
-    address cooldownPauseAdmin,
-    address claimHelper,
-    uint256 maxSlashablePercentage,
-    uint256 cooldownSeconds
-  ) external virtual initializer {
-    _initialize(
-      slashingAdmin,
-      cooldownPauseAdmin,
-      claimHelper,
-      maxSlashablePercentage,
-      cooldownSeconds
-    );
-  }
+  function initialize() external virtual initializer {}
 
   function _initialize(
     address slashingAdmin,
@@ -613,6 +599,6 @@ contract StakedTokenV3 is
   }
 
   function _getDomainSeparator() internal view override returns (bytes32) {
-    return DOMAIN_SEPARATOR;
+    return DOMAIN_SEPARATOR();
   }
 }

@@ -50,15 +50,7 @@ contract BaseTest is Test {
         address(STAKE_CONTRACT)
       );
 
-    try
-      StakedTokenV3(impl).initialize(
-        GenericProposal.SLASHING_ADMIN,
-        GenericProposal.COOLDOWN_ADMIN,
-        GenericProposal.CLAIM_HELPER,
-        GenericProposal.MAX_SLASHING,
-        GenericProposal.COOLDOWN_SECONDS
-      )
-    {} catch Error(string memory reason) {
+    try StakedTokenV3(impl).initialize() {} catch Error(string memory reason) {
       require(
         keccak256(bytes(reason)) ==
           keccak256(bytes('Contract instance has already been initialized'))
@@ -67,7 +59,7 @@ contract BaseTest is Test {
   }
 
   function _setUp(bool stkAAVE) internal {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), 16698041);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), 17563079);
 
     address stake = address(0);
     if (stkAAVE) {

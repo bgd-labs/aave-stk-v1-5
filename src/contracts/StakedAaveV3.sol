@@ -53,24 +53,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   /**
    * @dev Called by the proxy contract
    */
-  function initialize(
-    address slashingAdmin,
-    address cooldownPauseAdmin,
-    address claimHelper,
-    uint256 maxSlashablePercentage,
-    uint256 cooldownSeconds
-  ) external override initializer {
-    _initialize(
-      slashingAdmin,
-      cooldownPauseAdmin,
-      claimHelper,
-      maxSlashablePercentage,
-      cooldownSeconds
-    );
-
-    // needed to claimRewardsAndStake works without a custom approval each time
-    STAKED_TOKEN.approve(address(this), type(uint256).max);
-  }
+  function initialize() external override initializer {}
 
   /// @inheritdoc IStakedAaveV3
   function setGHODebtToken(

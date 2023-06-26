@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
+import {EIP712, ECDSA} from 'aave-token-v3/utils/EIP712.sol';
 import {IStakedTokenV2} from '../interfaces/IStakedTokenV2.sol';
 
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
@@ -22,7 +23,8 @@ abstract contract StakedTokenV2 is
   BaseMintableAaveToken,
   GovernancePowerWithSnapshot,
   VersionedInitializable,
-  AaveDistributionManager
+  AaveDistributionManager,
+  EIP712
 {
   using SafeERC20 for IERC20;
 
@@ -48,12 +50,8 @@ abstract contract StakedTokenV2 is
   mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
   mapping(address => address) internal _propositionPowerDelegates;
 
-  bytes32 public DOMAIN_SEPARATOR;
-  bytes public constant EIP712_REVISION = bytes('1');
-  bytes32 internal constant EIP712_DOMAIN =
-    keccak256(
-      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
-    );
+  bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
+
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256(
       'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
@@ -69,11 +67,25 @@ abstract contract StakedTokenV2 is
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration
-  ) AaveDistributionManager(emissionManager, distributionDuration) {
+  ) AaveDistributionManager(emissionManager, distributionDuration) EIP712('Staked Aave','2') {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
     REWARDS_VAULT = rewardsVault;
+  }
+
+  /**
+   * @notice Get the domain separator for the token
+   * @dev Return cached value if chainId matches cache, otherwise recomputes separator
+   * @return The domain separator of the token at current chain
+   */
+  function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
+    return _domainSeparatorV4();
+  }
+
+  /// @dev maintained for backwards compatibility. See EIP712 _EIP712Version
+  function EIP712_REVISION() external returns (bytes memory) {
+    return bytes(_EIP712Version());
   }
 
   /// @inheritdoc IStakedTokenV2
@@ -118,24 +130,12 @@ abstract contract StakedTokenV2 is
     //solium-disable-next-line
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     uint256 currentValidNonce = _nonces[owner];
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        '\x19\x01',
-        DOMAIN_SEPARATOR,
-        keccak256(
-          abi.encode(
-            PERMIT_TYPEHASH,
-            owner,
-            spender,
-            value,
-            currentValidNonce,
-            deadline
-          )
-        )
-      )
+    bytes32 digest = _hashTypedDataV4(
+      keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
     );
 
-    require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
+
+    require(owner == ECDSA.recover(digest, v, r, s), 'INVALID_SIGNATURE');
     unchecked {
       _nonces[owner] = currentValidNonce + 1;
     }
