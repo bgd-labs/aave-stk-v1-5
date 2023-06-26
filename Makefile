@@ -17,17 +17,19 @@ git-diff :
 
 
 diff-all :
-	make download chain=mainnet address=0x7183143a9e223a12a83d1e28c98f7d01a68993e8
-	make download chain=mainnet address=0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19
+	make download chain=mainnet address=0xAa9FAa887bce5182C39F68Ac46C43F36723C395b
+	make download chain=mainnet address=0x9921c8cea5815364d0f8350e6cbe9042A92448c9
 	forge flatten src/contracts/StakedAaveV3.sol --output src/flattened/StakedAaveV3Flattened.sol
+	forge flatten src/etherscan/mainnet_0xAa9FAa887bce5182C39F68Ac46C43F36723C395b/StakedAaveV3/src/contracts/StakedAaveV3.sol --output src/flattened/CurrentStakedAaveV3Flattened.sol
 	forge flatten src/contracts/StakedTokenV3.sol --output src/flattened/StakedTokenV3Flattened.sol
+	forge flatten src/etherscan/mainnet_0x9921c8cea5815364d0f8350e6cbe9042A92448c9/StakedTokenV3/src/contracts/StakedTokenV3.sol --output src/flattened/CurrentStakedTokenV3Flattened.sol
 	npm run lint:fix
-	make git-diff before=src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol after=src/flattened/StakedTokenV3Flattened.sol out=StakedTokenBptRev2_code_diff
-	make git-diff before=src/etherscan/mainnet_0xE2E8Badc5d50f8a6188577B89f50701cDE2D4e19/StakedTokenV2Rev4/src/contracts/StakedTokenV2Rev4.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedTokenV2Rev4_code_diff
-	forge inspect StakedTokenV2Rev4 storage-layout --pretty > diffs/StakedTokenV2Rev4_layout.md
-	forge inspect StakedTokenBptRev2 storage-layout --pretty > diffs/StakedTokenBptRev2_layout.md
-	forge inspect StakedAaveV3 storage-layout --pretty > diffs/StakedAaveV3_layout.md
-	forge inspect StakedTokenV3 storage-layout --pretty > diffs/StakedTokenV3_layout.md
+	make git-diff before=src/flattened/CurrentStakedTokenV3Flattened.sol after=src/flattened/StakedTokenV3Flattened.sol out=StakedTokenDidd
+	make git-diff before=src/flattened/CurrentStakedAaveV3Flattened.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedAaveDiff
+	forge inspect src/flattened/CurrentStakedAaveV3Flattened.sol:StakedAaveV3 storage-layout --pretty > diffs/currentStakedAave.md
+	forge inspect src/flattened/CurrentStakedTokenV3Flattened.sol:StakedTokenV3 storage-layout --pretty > diffs/currentStakedToken.md
+	forge inspect src/flattened/StakedAaveV3Flattened.sol:StakedAaveV3 storage-layout --pretty > diffs/nextStakedAave.md
+	forge inspect src/flattened/StakedTokenV3Flattened.sol:StakedTokenV3 storage-layout --pretty > diffs/nextStakedToken.md
 
 interface :
 	cast interface --name AggregatedStakedAaveV3 -o ./src/interfaces/AggregatedStakedAaveV3.sol ./out/StakedAaveV3.sol/StakedAaveV3.json
