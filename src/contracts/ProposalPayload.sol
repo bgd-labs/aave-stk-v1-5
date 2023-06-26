@@ -54,12 +54,12 @@ contract ProposalPayloadStkAave {
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
       abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint256)',
-        GenericProposal.SLASHING_ADMIN,
-        GenericProposal.COOLDOWN_ADMIN,
-        GenericProposal.CLAIM_HELPER,
-        GenericProposal.MAX_SLASHING,
-        GenericProposal.COOLDOWN_SECONDS
+        'initialize()'
+        //        GenericProposal.SLASHING_ADMIN,
+        //        GenericProposal.COOLDOWN_ADMIN,
+        //        GenericProposal.CLAIM_HELPER,
+        //        GenericProposal.MAX_SLASHING,
+        //        GenericProposal.COOLDOWN_SECONDS
       )
     );
   }
@@ -92,12 +92,12 @@ contract ProposalPayloadStkAbpt {
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
       abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint256)',
-        GenericProposal.SLASHING_ADMIN,
-        GenericProposal.COOLDOWN_ADMIN,
-        GenericProposal.CLAIM_HELPER,
-        GenericProposal.MAX_SLASHING,
-        GenericProposal.COOLDOWN_SECONDS
+        'initialize()'
+        //        GenericProposal.SLASHING_ADMIN,
+        //        GenericProposal.COOLDOWN_ADMIN,
+        //        GenericProposal.CLAIM_HELPER,
+        //        GenericProposal.MAX_SLASHING,
+        //        GenericProposal.COOLDOWN_SECONDS
       )
     );
   }

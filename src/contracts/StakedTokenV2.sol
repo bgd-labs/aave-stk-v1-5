@@ -67,7 +67,10 @@ abstract contract StakedTokenV2 is
     address rewardsVault,
     address emissionManager,
     uint128 distributionDuration
-  ) AaveDistributionManager(emissionManager, distributionDuration) EIP712('Staked Aave','2') {
+  )
+    AaveDistributionManager(emissionManager, distributionDuration)
+    EIP712('Staked Aave', '2')
+  {
     STAKED_TOKEN = stakedToken;
     REWARD_TOKEN = rewardToken;
     UNSTAKE_WINDOW = unstakeWindow;
@@ -84,7 +87,7 @@ abstract contract StakedTokenV2 is
   }
 
   /// @dev maintained for backwards compatibility. See EIP712 _EIP712Version
-  function EIP712_REVISION() external returns (bytes memory) {
+  function EIP712_REVISION() external view returns (bytes memory) {
     return bytes(_EIP712Version());
   }
 
@@ -131,9 +134,17 @@ abstract contract StakedTokenV2 is
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     uint256 currentValidNonce = _nonces[owner];
     bytes32 digest = _hashTypedDataV4(
-      keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
+      keccak256(
+        abi.encode(
+          PERMIT_TYPEHASH,
+          owner,
+          spender,
+          value,
+          currentValidNonce,
+          deadline
+        )
+      )
     );
-
 
     require(owner == ECDSA.recover(digest, v, r, s), 'INVALID_SIGNATURE');
     unchecked {
