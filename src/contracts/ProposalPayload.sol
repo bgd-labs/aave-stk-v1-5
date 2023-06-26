@@ -36,11 +36,7 @@ contract ProposalPayloadStkAave {
   address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   function execute() external {
-    // 1. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
-      address(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG)
-    );
-    // 2. deploy newimplementation
+    // 1. deploy newimplementation
     StakedAaveV3 newImpl = new StakedAaveV3(
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
@@ -49,18 +45,11 @@ contract ProposalPayloadStkAave {
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
       GenericProposal.DISTRIBUTION_DURATION
     );
-    // 3. upgrade & initialize on proxy
+    // 2. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
-      abi.encodeWithSignature(
-        'initialize()'
-        //        GenericProposal.SLASHING_ADMIN,
-        //        GenericProposal.COOLDOWN_ADMIN,
-        //        GenericProposal.CLAIM_HELPER,
-        //        GenericProposal.MAX_SLASHING,
-        //        GenericProposal.COOLDOWN_SECONDS
-      )
+      abi.encodeWithSignature('initialize()')
     );
   }
 }
@@ -74,11 +63,7 @@ contract ProposalPayloadStkAbpt {
   address public constant STK_ABPT = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
 
   function execute() external {
-    // 1. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STK_ABPT).changeAdmin(
-      AaveMisc.PROXY_ADMIN_ETHEREUM
-    );
-    // 2. deploy newimplementation
+    // 1. deploy newimplementation
     StakedTokenV3 newImpl = new StakedTokenV3(
       IERC20(0x41A08648C3766F9F9d85598fF102a08f4ef84F84),
       IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
@@ -87,18 +72,11 @@ contract ProposalPayloadStkAbpt {
       0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
       GenericProposal.DISTRIBUTION_DURATION
     );
-    // 3. upgrade & initialize on proxy
+    // 2. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
-      abi.encodeWithSignature(
-        'initialize()'
-        //        GenericProposal.SLASHING_ADMIN,
-        //        GenericProposal.COOLDOWN_ADMIN,
-        //        GenericProposal.CLAIM_HELPER,
-        //        GenericProposal.MAX_SLASHING,
-        //        GenericProposal.COOLDOWN_SECONDS
-      )
+      abi.encodeWithSignature('initialize()')
     );
   }
 }

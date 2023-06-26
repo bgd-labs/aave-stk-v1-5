@@ -104,7 +104,7 @@ contract StakedTokenV3 is
    * @return The revision
    */
   function REVISION() public pure virtual returns (uint256) {
-    return 3;
+    return 4;
   }
 
   /**
