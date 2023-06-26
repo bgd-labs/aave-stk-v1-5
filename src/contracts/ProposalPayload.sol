@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import {AaveMisc} from 'aave-address-book/AaveMisc.sol';
 import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
+import {AaveV2EthereumAssets} from 'aave-address-book/AaveV2Ethereum.sol';
 import {ProxyAdmin} from 'solidity-utils/contracts/transparent-proxy/ProxyAdmin.sol';
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 import {StakedAaveV3} from './StakedAaveV3.sol';
@@ -17,10 +18,13 @@ library GenericProposal {
 
   address public constant CLAIM_HELPER = AaveGovernanceV2.SHORT_EXECUTOR;
 
+  address public constant REWARDS_VAULT = AaveMisc.ECOSYSTEM_RESERVE;
+
+  address public constant EMISSION_MANAGER = AaveGovernanceV2.SHORT_EXECUTOR;
+
   uint256 public constant MAX_SLASHING = 3000; // 30%
 
-  // TODO: should probably be increased to at least 12 days as with 10 days, even with perfect proposal timing pplt have a >60% chance of leaving before slashing
-  uint256 public constant COOLDOWN_SECONDS = 864000; // 10 days
+  uint256 public constant COOLDOWN_SECONDS = 1728000; // 20 days
 
   uint256 public constant UNSTAKE_WINDOW = 172800; // 2 days
 
@@ -42,11 +46,11 @@ contract ProposalPayloadStkAave {
     );
     // 2. deploy newimplementation
     StakedAaveV3 newImpl = new StakedAaveV3(
-      IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
-      IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
+      IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
+      IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
       GenericProposal.UNSTAKE_WINDOW,
-      0x25F2226B597E8F9514B3F68F00f494cF4f286491,
-      0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
+      GenericProposal.REWARDS_VAULT,
+      GenericProposal.EMISSION_MANAGER,
       GenericProposal.DISTRIBUTION_DURATION
     );
     // 3. upgrade & initialize on proxy
@@ -72,6 +76,7 @@ contract ProposalPayloadStkAave {
  */
 contract ProposalPayloadStkAbpt {
   address public constant STK_ABPT = 0xa1116930326D21fB917d5A27F1E9943A9595fb47;
+  address public constant ABPT = 0x41A08648C3766F9F9d85598fF102a08f4ef84F84;
 
   function execute() external {
     // 1. move ownership of current token to new proxy
@@ -80,11 +85,11 @@ contract ProposalPayloadStkAbpt {
     );
     // 2. deploy newimplementation
     StakedTokenV3 newImpl = new StakedTokenV3(
-      IERC20(0x41A08648C3766F9F9d85598fF102a08f4ef84F84),
-      IERC20(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9),
+      IERC20(ABPT),
+      IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
       GenericProposal.UNSTAKE_WINDOW,
-      0x25F2226B597E8F9514B3F68F00f494cF4f286491,
-      0xEE56e2B3D491590B5b31738cC34d5232F378a8D5,
+      GenericProposal.REWARDS_VAULT,
+      GenericProposal.EMISSION_MANAGER,
       GenericProposal.DISTRIBUTION_DURATION
     );
     // 3. upgrade & initialize on proxy

@@ -1,6 +1,6 @@
 ```diff
 diff --git a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 9a75706..4e14381 100644
+index 9a75706..ae92352 100644
 --- a/src/etherscan/mainnet_0x7183143a9e223a12a83d1e28c98f7d01a68993e8/StakedTokenBptRev2/Contract.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
 @@ -1,42 +1,26 @@
@@ -2441,7 +2441,7 @@ index 9a75706..4e14381 100644
    function permit(
      address owner,
      address spender,
-@@ -1981,154 +1332,2773 @@ contract StakedTokenBptRev2 is
+@@ -1981,154 +1332,2793 @@ contract StakedTokenBptRev2 is
      );
  
      require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
@@ -2552,6 +2552,12 @@ index 9a75706..4e14381 100644
 +   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
 +   */
 +  function getCooldownSeconds() external view returns (uint256);
++
++  /**
++   * @dev Getter of the cooldown seconds
++   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
++   */
++  function COOLDOWN_SECONDS() external view returns (uint256); // @deprecated
 +
 +  /**
 +   * @dev Setter of cooldown seconds
@@ -2682,19 +2688,11 @@ index 9a75706..4e14381 100644
 +    require(
 +      value <= (type(uint256).max) / percentage,
 +      'MATH_MULTIPLICATION_OVERFLOW'
-     );
- 
--    address propPowerFromDelegatee = _propositionPowerDelegates[from];
--    address propPowerToDelegatee = _propositionPowerDelegates[to];
++    );
++
 +    return (value * percentage) / PERCENTAGE_FACTOR;
 +  }
- 
--    if (propPowerFromDelegatee == address(0)) {
--      propPowerFromDelegatee = from;
--    }
--    if (propPowerToDelegatee == address(0)) {
--      propPowerToDelegatee = to;
--    }
++
 +  /**
 +   * @dev Executes a percentage division
 +   * @param value The value of which the percentage needs to be calculated
@@ -2706,45 +2704,24 @@ index 9a75706..4e14381 100644
 +    uint256 percentage
 +  ) internal pure returns (uint256) {
 +    require(percentage != 0, 'MATH_DIVISION_BY_ZERO');
- 
--    _moveDelegatesByType(
--      propPowerFromDelegatee,
--      propPowerToDelegatee,
--      amount,
--      DelegationType.PROPOSITION_POWER
++
 +    require(
 +      value <= type(uint256).max / PERCENTAGE_FACTOR,
 +      'MATH_MULTIPLICATION_OVERFLOW'
      );
  
--    // caching the aave governance address to avoid multiple state loads
--    ITransferHook aaveGovernance = _aaveGovernance;
--    if (aaveGovernance != ITransferHook(0)) {
--      aaveGovernance.onTransfer(from, to, amount);
--    }
+-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
+-    address propPowerToDelegatee = _propositionPowerDelegates[to];
 +    return (value * PERCENTAGE_FACTOR) / percentage;
-   }
++  }
 +}
  
--  function _getDelegationDataByType(
--    DelegationType delegationType
--  )
--    internal
--    view
--    override
--    returns (
--      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
--      mapping(address => uint256) storage, //snapshots count
--      mapping(address => address) storage //delegatees list
--    )
--  {
--    if (delegationType == DelegationType.VOTING_POWER) {
--      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
--    } else {
--      return (
--        _propositionPowerSnapshots,
--        _propositionPowerSnapshotsCounts,
--        _propositionPowerDelegates
+-    if (propPowerFromDelegatee == address(0)) {
+-      propPowerFromDelegatee = from;
+-    }
+-    if (propPowerToDelegatee == address(0)) {
+-      propPowerToDelegatee = to;
+-    }
 +/**
 + * @title RoleManager
 + * @notice Generic role manager to manage slashing and cooldown admin in StakedAaveV3.
@@ -2767,23 +2744,52 @@ index 9a75706..4e14381 100644
 +    require(_admins[role] == msg.sender, 'CALLER_NOT_ROLE_ADMIN');
 +    _;
 +  }
-+
+ 
+-    _moveDelegatesByType(
+-      propPowerFromDelegatee,
+-      propPowerToDelegatee,
+-      amount,
+-      DelegationType.PROPOSITION_POWER
 +  modifier onlyPendingRoleAdmin(uint256 role) {
 +    require(
 +      _pendingAdmins[role] == msg.sender,
 +      'CALLER_NOT_PENDING_ROLE_ADMIN'
-+    );
+     );
 +    _;
 +  }
-+
+ 
+-    // caching the aave governance address to avoid multiple state loads
+-    ITransferHook aaveGovernance = _aaveGovernance;
+-    if (aaveGovernance != ITransferHook(0)) {
+-      aaveGovernance.onTransfer(from, to, amount);
+-    }
 +  /**
 +   * @dev returns the admin associated with the specific role
 +   * @param role the role associated with the admin being returned
 +   **/
 +  function getAdmin(uint256 role) public view returns (address) {
 +    return _admins[role];
-+  }
-+
+   }
+ 
+-  function _getDelegationDataByType(
+-    DelegationType delegationType
+-  )
+-    internal
+-    view
+-    override
+-    returns (
+-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+-      mapping(address => uint256) storage, //snapshots count
+-      mapping(address => address) storage //delegatees list
+-    )
+-  {
+-    if (delegationType == DelegationType.VOTING_POWER) {
+-      return (_votingSnapshots, _votingSnapshotsCounts, _votingDelegates);
+-    } else {
+-      return (
+-        _propositionPowerSnapshots,
+-        _propositionPowerSnapshotsCounts,
+-        _propositionPowerDelegates
 +  /**
 +   * @dev returns the pending admin associated with the specific role
 +   * @param role the role associated with the pending admin being returned
@@ -2827,7 +2833,7 @@ index 9a75706..4e14381 100644
      }
    }
 +}
-+
+ 
 +// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/SafeCast.sol)
 +// This file was procedurally generated from scripts/generate/templates/SafeCast.js.
 +
@@ -2847,7 +2853,15 @@ index 9a75706..4e14381 100644
 + * all math on `uint256` and `int256` and then downcasting.
 + */
 +library SafeCast {
-+  /**
+   /**
+-   * @dev Delegates power from signatory to `delegatee`
+-   * @param delegatee The address to delegate votes to
+-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+-   * @param nonce The contract state required to match the signature
+-   * @param expiry The time at which to expire the signature
+-   * @param v The recovery byte of the signature
+-   * @param r Half of the ECDSA signature pair
+-   * @param s Half of the ECDSA signature pair
 +   * @dev Returns the downcasted uint248 from uint256, reverting on
 +   * overflow (when the input is greater than largest uint248).
 +   *
@@ -2858,7 +2872,19 @@ index 9a75706..4e14381 100644
 +   * - input must fit into 248 bits
 +   *
 +   * _Available since v4.7._
-+   */
+    */
+-  function delegateByTypeBySig(
+-    address delegatee,
+-    DelegationType delegationType,
+-    uint256 nonce,
+-    uint256 expiry,
+-    uint8 v,
+-    bytes32 r,
+-    bytes32 s
+-  ) public {
+-    bytes32 structHash = keccak256(
+-      abi.encode(
+-        DELEGATE_BY_TYPE_TYPEHASH,
 +  function toUint248(uint256 value) internal pure returns (uint248) {
 +    require(
 +      value <= type(uint248).max,
@@ -4261,21 +4287,12 @@ index 9a75706..4e14381 100644
 +   * @return current nonce before increase
 +   */
 +  function _incrementNonces(address user) internal virtual returns (uint256);
- 
-   /**
--   * @dev Delegates power from signatory to `delegatee`
--   * @param delegatee The address to delegate votes to
--   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
--   * @param nonce The contract state required to match the signature
--   * @param expiry The time at which to expire the signature
--   * @param v The recovery byte of the signature
--   * @param r Half of the ECDSA signature pair
--   * @param s Half of the ECDSA signature pair
++
++  /**
 +   * @notice sets the delegation state of a user
 +   * @param user address
 +   * @param delegationState state of a user's delegation
-    */
--  function delegateByTypeBySig(
++   */
 +  function _setDelegationState(
 +    address user,
 +    DelegationState memory delegationState
@@ -4331,7 +4348,7 @@ index 9a75706..4e14381 100644
 +  function getPowerCurrent(
 +    address user,
 +    GovernancePowerType delegationType
-+  ) public view override returns (uint256) {
++  ) public view virtual override returns (uint256) {
 +    DelegationState memory userState = _getDelegationState(user);
 +    uint256 userOwnPower = uint8(userState.delegationMode) &
 +      (uint8(delegationType) + 1) ==
@@ -4392,18 +4409,11 @@ index 9a75706..4e14381 100644
 +  /// @inheritdoc IGovernancePowerDelegationToken
 +  function metaDelegate(
 +    address delegator,
-     address delegatee,
--    DelegationType delegationType,
--    uint256 nonce,
--    uint256 expiry,
++    address delegatee,
 +    uint256 deadline,
-     uint8 v,
-     bytes32 r,
-     bytes32 s
--  ) public {
--    bytes32 structHash = keccak256(
--      abi.encode(
--        DELEGATE_BY_TYPE_TYPEHASH,
++    uint8 v,
++    bytes32 r,
++    bytes32 s
 +  ) external override {
 +    require(delegator != address(0), 'INVALID_OWNER');
 +    //solium-disable-next-line
@@ -5068,6 +5078,11 @@ index 9a75706..4e14381 100644
 +    return _cooldownSeconds;
 +  }
 +
++  /// @inheritdoc IStakedTokenV3
++  function COOLDOWN_SECONDS() external view returns (uint256) {
++    return _cooldownSeconds;
++  }
++
 +  /**
 +   * @dev sets the max slashable percentage
 +   * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
@@ -5196,7 +5211,7 @@ index 9a75706..4e14381 100644
 +    CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
 +    if (!inPostSlashingPeriod) {
 +      require(
-+        (block.timestamp > cooldownSnapshot.timestamp + _cooldownSeconds),
++        (block.timestamp >= cooldownSnapshot.timestamp + _cooldownSeconds),
 +        'INSUFFICIENT_COOLDOWN'
 +      );
 +      require(
@@ -5281,7 +5296,7 @@ index 9a75706..4e14381 100644
 +        if (balanceOfFrom == amount) {
 +          delete stakersCooldowns[from];
 +        } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
-+          stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
++          stakersCooldowns[from].amount = uint216(balanceOfFrom - amount);
 +        }
 +      }
 +    }
@@ -5311,6 +5326,15 @@ index 9a75706..4e14381 100644
 +
 +  function _getBalance(address user) internal view override returns (uint256) {
 +    return balanceOf(user);
++  }
++
++  function getPowerCurrent(
++    address user,
++    GovernancePowerType delegationType
++  ) public view override returns (uint256) {
++    return
++      (super.getPowerCurrent(user, delegationType) * EXCHANGE_RATE_UNIT) /
++      getExchangeRate();
 +  }
 +
 +  function _setDelegationState(
