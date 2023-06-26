@@ -67,7 +67,7 @@ contract BaseTest is Test {
   }
 
   function _setUp(bool stkAAVE) internal {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), 16698041);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), 16890980);
 
     address stake = address(0);
     if (stkAAVE) {
