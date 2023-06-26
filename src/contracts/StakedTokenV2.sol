@@ -46,9 +46,10 @@ abstract contract StakedTokenV2 is
   mapping(address => address) internal _votingDelegates;
 
   mapping(address => mapping(uint256 => Snapshot))
-    internal _propositionPowerSnapshots;
-  mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
-  mapping(address => address) internal _propositionPowerDelegates;
+    internal deprecated_propositionPowerSnapshots;
+  mapping(address => uint256)
+    internal deprecated_propositionPowerSnapshotsCounts;
+  mapping(address => address) internal deprecated_propositionPowerDelegates;
 
   bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
 

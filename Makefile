@@ -30,10 +30,13 @@ diff-all :
 	forge inspect src/flattened/CurrentStakedTokenV3Flattened.sol:StakedTokenV3 storage-layout --pretty > diffs/currentStakedToken.md
 	forge inspect src/flattened/StakedAaveV3Flattened.sol:StakedAaveV3 storage-layout --pretty > diffs/nextStakedAave.md
 	forge inspect src/flattened/StakedTokenV3Flattened.sol:StakedTokenV3 storage-layout --pretty > diffs/nextStakedToken.md
+	make git-diff before=diffs/currentStakedAave.md after=diffs/nextStakedAave.md out=StakedAave_layoutDiff
 
 interface :
 	cast interface --name AggregatedStakedAaveV3 -o ./src/interfaces/AggregatedStakedAaveV3.sol ./out/StakedAaveV3.sol/StakedAaveV3.json
 	cast interface --name AggregatedStakedTokenV3 -o ./src/interfaces/AggregatedStakedTokenV3.sol ./out/StakedTokenV3.sol/StakedTokenV3.json
+
+
 
 deploy-payloads :;  forge script scripts/DeployPayload.s.sol:DeployPayloads --rpc-url mainnet --broadcast --ledger --mnemonic-indexes ${MNEMONIC_INDEX} --sender ${LEDGER_SENDER} --verify -vvvv
 create-stkabpt-proposal :; forge script scripts/CreateProposal.s.sol:CreateStkABPTShortProposal --rpc-url mainnet --broadcast --legacy --ledger --mnemonic-indexes ${MNEMONIC_INDEX} --sender ${LEDGER_SENDER} -vvvv
