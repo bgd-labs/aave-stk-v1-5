@@ -1431,6 +1431,12 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   function getCooldownSeconds() external view returns (uint256);
 
   /**
+   * @dev Getter of the cooldown seconds
+   * @return cooldownSeconds the amount of seconds between starting the cooldown and being able to redeem
+   */
+  function COOLDOWN_SECONDS() external view returns (uint256); // @deprecated
+
+  /**
    * @dev Setter of cooldown seconds
    * Can only be called by the cooldown admin
    * @param cooldownSeconds the new amount of seconds you have to wait between starting the cooldown and being able to redeem
@@ -3149,7 +3155,7 @@ abstract contract BaseDelegation is IGovernancePowerDelegationToken {
   function getPowerCurrent(
     address user,
     GovernancePowerType delegationType
-  ) public view override returns (uint256) {
+  ) public view virtual override returns (uint256) {
     DelegationState memory userState = _getDelegationState(user);
     uint256 userOwnPower = uint8(userState.delegationMode) &
       (uint8(delegationType) + 1) ==
@@ -3835,6 +3841,11 @@ contract StakedTokenV3 is
     return _cooldownSeconds;
   }
 
+  /// @inheritdoc IStakedTokenV3
+  function COOLDOWN_SECONDS() external view returns (uint256) {
+    return _cooldownSeconds;
+  }
+
   /**
    * @dev sets the max slashable percentage
    * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
@@ -3963,7 +3974,7 @@ contract StakedTokenV3 is
     CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
     if (!inPostSlashingPeriod) {
       require(
-        (block.timestamp > cooldownSnapshot.timestamp + _cooldownSeconds),
+        (block.timestamp >= cooldownSnapshot.timestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
@@ -4048,7 +4059,7 @@ contract StakedTokenV3 is
         if (balanceOfFrom == amount) {
           delete stakersCooldowns[from];
         } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
-          stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
+          stakersCooldowns[from].amount = uint216(balanceOfFrom - amount);
         }
       }
     }
@@ -4078,6 +4089,15 @@ contract StakedTokenV3 is
 
   function _getBalance(address user) internal view override returns (uint256) {
     return balanceOf(user);
+  }
+
+  function getPowerCurrent(
+    address user,
+    GovernancePowerType delegationType
+  ) public view override returns (uint256) {
+    return
+      (super.getPowerCurrent(user, delegationType) * EXCHANGE_RATE_UNIT) /
+      getExchangeRate();
   }
 
   function _setDelegationState(

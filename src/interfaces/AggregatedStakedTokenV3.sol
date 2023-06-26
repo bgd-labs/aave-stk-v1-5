@@ -1,5 +1,4 @@
 pragma solidity ^0.8.10;
-import {DistributionTypes} from '../lib/DistributionTypes.sol';
 
 interface AggregatedStakedTokenV3 {
   event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -10,11 +9,6 @@ interface AggregatedStakedTokenV3 {
   event DelegateChanged(
     address indexed delegator,
     address indexed delegatee,
-    uint8 delegationType
-  );
-  event DelegatedPowerChanged(
-    address indexed user,
-    uint256 amount,
     uint8 delegationType
   );
   event ExchangeRateChanged(uint216 exchangeRate);
@@ -60,6 +54,8 @@ interface AggregatedStakedTokenV3 {
 
   function COOLDOWN_ADMIN_ROLE() external view returns (uint256);
 
+  function COOLDOWN_SECONDS() external view returns (uint256);
+
   function DELEGATE_BY_TYPE_TYPEHASH() external view returns (bytes32);
 
   function DELEGATE_TYPEHASH() external view returns (bytes32);
@@ -80,6 +76,8 @@ interface AggregatedStakedTokenV3 {
 
   function PERMIT_TYPEHASH() external view returns (bytes32);
 
+  function POWER_SCALE_FACTOR() external view returns (uint256);
+
   function PRECISION() external view returns (uint8);
 
   function REVISION() external pure returns (uint256);
@@ -94,16 +92,7 @@ interface AggregatedStakedTokenV3 {
 
   function UNSTAKE_WINDOW() external view returns (uint256);
 
-  function _aaveGovernance() external view returns (address);
-
   function _nonces(address) external view returns (uint256);
-
-  function _votingSnapshots(
-    address,
-    uint256
-  ) external view returns (uint128 blockNumber, uint128 value);
-
-  function _votingSnapshotsCounts(address) external view returns (uint256);
 
   function allowance(
     address owner,
@@ -149,7 +138,7 @@ interface AggregatedStakedTokenV3 {
   function claimRoleAdmin(uint256 role) external;
 
   function configureAssets(
-    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+    AssetConfigInput[] memory assetsConfigInput
   ) external;
 
   function cooldown() external;
@@ -165,26 +154,18 @@ interface AggregatedStakedTokenV3 {
 
   function delegate(address delegatee) external;
 
-  function delegateBySig(
-    address delegatee,
-    uint256 nonce,
-    uint256 expiry,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-
   function delegateByType(address delegatee, uint8 delegationType) external;
 
-  function delegateByTypeBySig(
-    address delegatee,
-    uint8 delegationType,
-    uint256 nonce,
-    uint256 expiry,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
+  function deprecated_aaveGovernance() external view returns (address);
+
+  function deprecated_votingSnapshots(
+    address,
+    uint256
+  ) external view returns (uint128 blockNumber, uint128 value);
+
+  function deprecated_votingSnapshotsCounts(
+    address
+  ) external view returns (uint256);
 
   function getAdmin(uint256 role) external view returns (address);
 
@@ -195,22 +176,24 @@ interface AggregatedStakedTokenV3 {
     uint8 delegationType
   ) external view returns (address);
 
+  function getDelegates(
+    address delegator
+  ) external view returns (address, address);
+
   function getExchangeRate() external view returns (uint216);
 
   function getMaxSlashablePercentage() external view returns (uint256);
 
   function getPendingAdmin(uint256 role) external view returns (address);
 
-  function getPowerAtBlock(
-    address user,
-    uint256 blockNumber,
-    uint8 delegationType
-  ) external view returns (uint256);
-
   function getPowerCurrent(
     address user,
     uint8 delegationType
   ) external view returns (uint256);
+
+  function getPowersCurrent(
+    address user
+  ) external view returns (uint256, uint256);
 
   function getTotalRewardsBalance(
     address staker
@@ -234,6 +217,25 @@ interface AggregatedStakedTokenV3 {
     address claimHelper,
     uint256 maxSlashablePercentage,
     uint256 cooldownSeconds
+  ) external;
+
+  function metaDelegate(
+    address delegator,
+    address delegatee,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external;
+
+  function metaDelegateByType(
+    address delegator,
+    address delegatee,
+    uint8 delegationType,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
   ) external;
 
   function name() external view returns (string memory);
@@ -282,8 +284,6 @@ interface AggregatedStakedTokenV3 {
   function symbol() external view returns (string memory);
 
   function totalSupply() external view returns (uint256);
-
-  function totalSupplyAt(uint256) external view returns (uint256);
 
   function transfer(address to, uint256 amount) external returns (bool);
 

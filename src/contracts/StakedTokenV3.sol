@@ -326,6 +326,11 @@ contract StakedTokenV3 is
     return _cooldownSeconds;
   }
 
+  /// @inheritdoc IStakedTokenV3
+  function COOLDOWN_SECONDS() external view returns (uint256) {
+    return _cooldownSeconds;
+  }
+
   /**
    * @dev sets the max slashable percentage
    * @param percentage must be strictly lower 100% as otherwise the exchange rate calculation would result in 0 division
@@ -454,7 +459,7 @@ contract StakedTokenV3 is
     CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
     if (!inPostSlashingPeriod) {
       require(
-        (block.timestamp > cooldownSnapshot.timestamp + _cooldownSeconds),
+        (block.timestamp >= cooldownSnapshot.timestamp + _cooldownSeconds),
         'INSUFFICIENT_COOLDOWN'
       );
       require(
@@ -539,7 +544,7 @@ contract StakedTokenV3 is
         if (balanceOfFrom == amount) {
           delete stakersCooldowns[from];
         } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
-          stakersCooldowns[from].amount = uint184(balanceOfFrom - amount);
+          stakersCooldowns[from].amount = uint216(balanceOfFrom - amount);
         }
       }
     }

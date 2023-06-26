@@ -63,6 +63,7 @@ contract GovernanceValidation is BaseTest {
       delegatee,
       IGovernancePowerDelegationToken.GovernancePowerType.VOTING
     );
+
     assertLe(power, (amount * (100 - slashingPercent)) / 100);
     assertApproxEqRel(
       power,
