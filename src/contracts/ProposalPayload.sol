@@ -9,22 +9,11 @@ import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-
 import {StakedAaveV3} from './StakedAaveV3.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
-import {IInitializableAdminUpgradeabilityProxy} from '../interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 
 library GenericProposal {
-  address public constant SLASHING_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  address public constant COOLDOWN_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  address public constant CLAIM_HELPER = AaveGovernanceV2.SHORT_EXECUTOR;
-
   address public constant REWARDS_VAULT = AaveMisc.ECOSYSTEM_RESERVE;
 
   address public constant EMISSION_MANAGER = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  uint256 public constant MAX_SLASHING = 3000; // 30%
-
-  uint256 public constant COOLDOWN_SECONDS = 1728000; // 20 days
 
   uint256 public constant UNSTAKE_WINDOW = 172800; // 2 days
 
