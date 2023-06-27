@@ -1,8 +1,17 @@
 ```diff
 diff --git a/src/flattened/CurrentStakedAaveV3Flattened.sol b/src/flattened/StakedAaveV3Flattened.sol
-index 12d5367..fc5e5da 100644
+index 12d5367..8279957 100644
 --- a/src/flattened/CurrentStakedAaveV3Flattened.sol
 +++ b/src/flattened/StakedAaveV3Flattened.sol
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: agpl-3.0
+ pragma solidity ^0.8.0;
+ 
+-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/IERC20.sol)
+ 
+ /**
+  * @dev Interface of the ERC20 standard as defined in the EIP.
 @@ -98,8 +98,6 @@ library DistributionTypes {
    }
  }
@@ -851,7 +860,7 @@ index 12d5367..fc5e5da 100644
  // OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
  
  // OpenZeppelin Contracts (last updated v4.8.0) (utils/Address.sol)
-@@ -1419,6 +585,1235 @@ interface IStakedTokenV2 {
+@@ -1419,6 +585,1357 @@ interface IStakedTokenV2 {
    ) external;
  }
  
@@ -859,20 +868,91 @@ index 12d5367..fc5e5da 100644
 +// fallback storage variables, so contract does not affect on existing storage layout. This works as its used on contracts
 +// that have name and revision < 32 bytes
 +
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/ECDSA.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/cryptography/ECDSA.sol)
 +
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/Strings.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
 +
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/Math.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/math/Math.sol)
 +
 +/**
 + * @dev Standard math utilities missing in the Solidity language.
 + */
 +library Math {
++  /**
++   * @dev Muldiv operation overflow.
++   */
++  error MathOverflowedMulDiv();
++
 +  enum Rounding {
 +    Down, // Toward negative infinity
 +    Up, // Toward infinity
 +    Zero // Toward zero
++  }
++
++  /**
++   * @dev Returns the addition of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      uint256 c = a + b;
++      if (c < a) return (false, 0);
++      return (true, c);
++    }
++  }
++
++  /**
++   * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b > a) return (false, 0);
++      return (true, a - b);
++    }
++  }
++
++  /**
++   * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
++      // benefit is lost if 'b' is also tested.
++      // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
++      if (a == 0) return (true, 0);
++      uint256 c = a * b;
++      if (c / a != b) return (false, 0);
++      return (true, c);
++    }
++  }
++
++  /**
++   * @dev Returns the division of two unsigned integers, with a division by zero flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b == 0) return (false, 0);
++      return (true, a / b);
++    }
++  }
++
++  /**
++   * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b == 0) return (false, 0);
++      return (true, a % b);
++    }
 +  }
 +
 +  /**
@@ -905,6 +985,11 @@ index 12d5367..fc5e5da 100644
 +   * of rounding down.
 +   */
 +  function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256) {
++    if (b == 0) {
++      // Guarantee the same behavior as in a regular Solidity division.
++      return a / b;
++    }
++
 +    // (a + b - 1) / b can overflow on addition, so we distribute.
 +    return a == 0 ? 0 : (a - 1) / b + 1;
 +  }
@@ -940,7 +1025,9 @@ index 12d5367..fc5e5da 100644
 +      }
 +
 +      // Make sure the result is less than 2^256. Also prevents denominator == 0.
-+      require(denominator > prod1, 'Math: mulDiv overflow');
++      if (denominator <= prod1) {
++        revert MathOverflowedMulDiv();
++      }
 +
 +      ///////////////////////////////////////////////
 +      // 512 by 256 division.
@@ -1269,6 +1356,11 @@ index 12d5367..fc5e5da 100644
 +  uint8 private constant _ADDRESS_LENGTH = 20;
 +
 +  /**
++   * @dev The `value` string doesn't fit in the specified `length`.
++   */
++  error StringsInsufficientHexLength(uint256 value, uint256 length);
++
++  /**
 +   * @dev Converts a `uint256` to its ASCII `string` decimal representation.
 +   */
 +  function toString(uint256 value) internal pure returns (string memory) {
@@ -1296,11 +1388,8 @@ index 12d5367..fc5e5da 100644
 +  /**
 +   * @dev Converts a `int256` to its ASCII `string` decimal representation.
 +   */
-+  function toString(int256 value) internal pure returns (string memory) {
-+    return
-+      string(
-+        abi.encodePacked(value < 0 ? '-' : '', toString(SignedMath.abs(value)))
-+      );
++  function toStringSigned(int256 value) internal pure returns (string memory) {
++    return string.concat(value < 0 ? '-' : '', toString(SignedMath.abs(value)));
 +  }
 +
 +  /**
@@ -1319,14 +1408,17 @@ index 12d5367..fc5e5da 100644
 +    uint256 value,
 +    uint256 length
 +  ) internal pure returns (string memory) {
++    uint256 localValue = value;
 +    bytes memory buffer = new bytes(2 * length + 2);
 +    buffer[0] = '0';
 +    buffer[1] = 'x';
 +    for (uint256 i = 2 * length + 1; i > 1; --i) {
-+      buffer[i] = _SYMBOLS[value & 0xf];
-+      value >>= 4;
++      buffer[i] = _SYMBOLS[localValue & 0xf];
++      localValue >>= 4;
 +    }
-+    require(value == 0, 'Strings: hex length insufficient');
++    if (localValue != 0) {
++      revert StringsInsufficientHexLength(value, length);
++    }
 +    return string(buffer);
 +  }
 +
@@ -1344,7 +1436,9 @@ index 12d5367..fc5e5da 100644
 +    string memory a,
 +    string memory b
 +  ) internal pure returns (bool) {
-+    return keccak256(bytes(a)) == keccak256(bytes(b));
++    return
++      bytes(a).length == bytes(b).length &&
++      keccak256(bytes(a)) == keccak256(bytes(b));
 +  }
 +}
 +
@@ -1359,19 +1453,33 @@ index 12d5367..fc5e5da 100644
 +    NoError,
 +    InvalidSignature,
 +    InvalidSignatureLength,
-+    InvalidSignatureS,
-+    InvalidSignatureV // Deprecated in v4.8
++    InvalidSignatureS
 +  }
 +
-+  function _throwError(RecoverError error) private pure {
++  /**
++   * @dev The signature derives the `address(0)`.
++   */
++  error ECDSAInvalidSignature();
++
++  /**
++   * @dev The signature has an invalid length.
++   */
++  error ECDSAInvalidSignatureLength(uint256 length);
++
++  /**
++   * @dev The signature has an S value that is in the upper half order.
++   */
++  error ECDSAInvalidSignatureS(bytes32 s);
++
++  function _throwError(RecoverError error, bytes32 errorArg) private pure {
 +    if (error == RecoverError.NoError) {
 +      return; // no error: do nothing
 +    } else if (error == RecoverError.InvalidSignature) {
-+      revert('ECDSA: invalid signature');
++      revert ECDSAInvalidSignature();
 +    } else if (error == RecoverError.InvalidSignatureLength) {
-+      revert('ECDSA: invalid signature length');
++      revert ECDSAInvalidSignatureLength(uint256(errorArg));
 +    } else if (error == RecoverError.InvalidSignatureS) {
-+      revert("ECDSA: invalid signature 's' value");
++      revert ECDSAInvalidSignatureS(errorArg);
 +    }
 +  }
 +
@@ -1379,7 +1487,7 @@ index 12d5367..fc5e5da 100644
 +   * @dev Returns the address that signed a hashed message (`hash`) with
 +   * `signature` or error string. This address can then be used for verification purposes.
 +   *
-+   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
++   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
 +   * this function rejects them by requiring the `s` value to be in the lower
 +   * half order, and the `v` value to be either 27 or 28.
 +   *
@@ -1398,7 +1506,7 @@ index 12d5367..fc5e5da 100644
 +  function tryRecover(
 +    bytes32 hash,
 +    bytes memory signature
-+  ) internal pure returns (address, RecoverError) {
++  ) internal pure returns (address, RecoverError, bytes32) {
 +    if (signature.length == 65) {
 +      bytes32 r;
 +      bytes32 s;
@@ -1413,7 +1521,11 @@ index 12d5367..fc5e5da 100644
 +      }
 +      return tryRecover(hash, v, r, s);
 +    } else {
-+      return (address(0), RecoverError.InvalidSignatureLength);
++      return (
++        address(0),
++        RecoverError.InvalidSignatureLength,
++        bytes32(signature.length)
++      );
 +    }
 +  }
 +
@@ -1421,7 +1533,7 @@ index 12d5367..fc5e5da 100644
 +   * @dev Returns the address that signed a hashed message (`hash`) with
 +   * `signature`. This address can then be used for verification purposes.
 +   *
-+   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
++   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
 +   * this function rejects them by requiring the `s` value to be in the lower
 +   * half order, and the `v` value to be either 27 or 28.
 +   *
@@ -1435,8 +1547,11 @@ index 12d5367..fc5e5da 100644
 +    bytes32 hash,
 +    bytes memory signature
 +  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, signature);
-+    _throwError(error);
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      signature
++    );
++    _throwError(error, errorArg);
 +    return recovered;
 +  }
 +
@@ -1451,13 +1566,16 @@ index 12d5367..fc5e5da 100644
 +    bytes32 hash,
 +    bytes32 r,
 +    bytes32 vs
-+  ) internal pure returns (address, RecoverError) {
-+    bytes32 s = vs &
-+      bytes32(
-+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-+      );
-+    uint8 v = uint8((uint256(vs) >> 255) + 27);
-+    return tryRecover(hash, v, r, s);
++  ) internal pure returns (address, RecoverError, bytes32) {
++    unchecked {
++      bytes32 s = vs &
++        bytes32(
++          0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
++        );
++      // We do not check for an overflow here since the shift operation results in 0 or 1.
++      uint8 v = uint8((uint256(vs) >> 255) + 27);
++      return tryRecover(hash, v, r, s);
++    }
 +  }
 +
 +  /**
@@ -1470,8 +1588,12 @@ index 12d5367..fc5e5da 100644
 +    bytes32 r,
 +    bytes32 vs
 +  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, r, vs);
-+    _throwError(error);
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      r,
++      vs
++    );
++    _throwError(error, errorArg);
 +    return recovered;
 +  }
 +
@@ -1486,7 +1608,7 @@ index 12d5367..fc5e5da 100644
 +    uint8 v,
 +    bytes32 r,
 +    bytes32 s
-+  ) internal pure returns (address, RecoverError) {
++  ) internal pure returns (address, RecoverError, bytes32) {
 +    // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
 +    // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
 +    // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -1500,16 +1622,16 @@ index 12d5367..fc5e5da 100644
 +      uint256(s) >
 +      0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
 +    ) {
-+      return (address(0), RecoverError.InvalidSignatureS);
++      return (address(0), RecoverError.InvalidSignatureS, s);
 +    }
 +
 +    // If the signature is valid (and not malleable), return the signer address
 +    address signer = ecrecover(hash, v, r, s);
 +    if (signer == address(0)) {
-+      return (address(0), RecoverError.InvalidSignature);
++      return (address(0), RecoverError.InvalidSignature, bytes32(0));
 +    }
 +
-+    return (signer, RecoverError.NoError);
++    return (signer, RecoverError.NoError, bytes32(0));
 +  }
 +
 +  /**
@@ -1522,8 +1644,13 @@ index 12d5367..fc5e5da 100644
 +    bytes32 r,
 +    bytes32 s
 +  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, v, r, s);
-+    _throwError(error);
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      v,
++      r,
++      s
++    );
++    _throwError(error, errorArg);
 +    return recovered;
 +  }
 +
@@ -1585,7 +1712,7 @@ index 12d5367..fc5e5da 100644
 +    /// @solidity memory-safe-assembly
 +    assembly {
 +      let ptr := mload(0x40)
-+      mstore(ptr, '\x19\x01')
++      mstore(ptr, hex'19_01')
 +      mstore(add(ptr, 0x02), domainSeparator)
 +      mstore(add(ptr, 0x22), structHash)
 +      data := keccak256(ptr, 0x42)
@@ -1602,11 +1729,13 @@ index 12d5367..fc5e5da 100644
 +    address validator,
 +    bytes memory data
 +  ) internal pure returns (bytes32) {
-+    return keccak256(abi.encodePacked('\x19\x00', validator, data));
++    return keccak256(abi.encodePacked(hex'19_00', validator, data));
 +  }
 +}
 +
-+// OpenZeppelin Contracts (last updated v4.7.0) (utils/StorageSlot.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/ShortStrings.sol)
++
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/StorageSlot.sol)
 +// This file was procedurally generated from scripts/generate/templates/StorageSlot.js.
 +
 +/**
@@ -1627,7 +1756,7 @@ index 12d5367..fc5e5da 100644
 + *     }
 + *
 + *     function _setImplementation(address newImplementation) internal {
-+ *         require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
++ *         require(newImplementation.code.length > 0);
 + *         StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
 + *     }
 + * }
@@ -1886,6 +2015,8 @@ index 12d5367..fc5e5da 100644
 +  }
 +}
 +
++// OpenZeppelin Contracts (last updated v4.9.0) (interfaces/IERC5267.sol)
++
 +interface IERC5267 {
 +  /**
 +   * @dev MAY be emitted to signal that the domain could have changed.
@@ -2087,7 +2218,7 @@ index 12d5367..fc5e5da 100644
  /**
   * @title VersionedInitializable
   *
-@@ -1721,23 +2116,325 @@ interface ITransferHook {
+@@ -1721,23 +2238,317 @@ interface ITransferHook {
   * @notice ERC20 including snapshots of balances on transfer-related actions
   * @author Aave
   **/
@@ -2095,17 +2226,7 @@ index 12d5367..fc5e5da 100644
 -  GovernancePowerDelegationERC20
 -{
 +abstract contract GovernancePowerWithSnapshot {
-+  struct Snapshot {
-+    uint128 blockNumber;
-+    uint128 value;
-+  }
-+  /// @dev DEPRECATED
-+  mapping(address => mapping(uint256 => Snapshot))
-+    public deprecated_votingSnapshots;
-+  /// @dev DEPRECATED
-+  mapping(address => uint256) public deprecated_votingSnapshotsCounts;
-+  /// @dev DEPRECATED
-+  ITransferHook public deprecated_aaveGovernance;
++  uint256[3] private __________DEPRECATED_GOV_V2_PART;
 +}
 +
 +// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -2159,24 +2280,13 @@ index 12d5367..fc5e5da 100644
 +  // kept for backwards compatibility with old storage layout
 +  uint8 private ______DEPRECATED_OLD_ERC20_DECIMALS;
 +
-   /**
--   * @dev The following storage layout points to the prior StakedToken.sol implementation:
--   * _snapshots => _votingSnapshots
--   * _snapshotsCounts =>  _votingSnapshotsCounts
--   * _aaveGovernance => _aaveGovernance
++  /**
 +   * @dev Returns the name of the token.
-    */
--  mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
--  mapping(address => uint256) public _votingSnapshotsCounts;
++   */
 +  function name() public view virtual override returns (string memory) {
 +    return _name;
 +  }
- 
--  /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
--  /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
--  /// to control all potential reentrancies by calling back the this contract
--  /// @dev DEPRECATED
--  ITransferHook public _aaveGovernance;
++
 +  /**
 +   * @dev Returns the symbol of the token, usually a shorter version of the
 +   * name.
@@ -2269,20 +2379,22 @@ index 12d5367..fc5e5da 100644
 +    require(from != address(0), 'ERC20: transfer from the zero address');
 +    require(to != address(0), 'ERC20: transfer to the zero address');
 +
-+    uint104 fromBalanceBefore = _balances[from].balance;
-+    uint104 toBalanceBefore = _balances[to].balance;
++    if (from != to) {
++      uint104 fromBalanceBefore = _balances[from].balance;
++      uint104 toBalanceBefore = _balances[to].balance;
 +
-+    require(
-+      fromBalanceBefore >= amount,
-+      'ERC20: transfer amount exceeds balance'
-+    );
-+    unchecked {
-+      _balances[from].balance = fromBalanceBefore - uint104(amount);
++      require(
++        fromBalanceBefore >= amount,
++        'ERC20: transfer amount exceeds balance'
++      );
++      unchecked {
++        _balances[from].balance = fromBalanceBefore - uint104(amount);
++      }
++
++      _balances[to].balance = toBalanceBefore + uint104(amount);
++
++      _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
 +    }
-+
-+    _balances[to].balance = toBalanceBefore + uint104(amount);
-+
-+    _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
 +    emit Transfer(from, to, amount);
 +  }
 +
@@ -2405,7 +2517,11 @@ index 12d5367..fc5e5da 100644
 +    uint256 amount
 +  ) internal virtual {}
 +
-+  /**
+   /**
+-   * @dev The following storage layout points to the prior StakedToken.sol implementation:
+-   * _snapshots => _votingSnapshots
+-   * _snapshotsCounts =>  _votingSnapshotsCounts
+-   * _aaveGovernance => _aaveGovernance
 +   * @dev Hook that is called after any transfer of tokens. This includes
 +   * minting and burning.
 +   *
@@ -2418,7 +2534,15 @@ index 12d5367..fc5e5da 100644
 +   * - `from` and `to` are never both zero.
 +   *
 +   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-+   */
+    */
+-  mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
+-  mapping(address => uint256) public _votingSnapshotsCounts;
+-
+-  /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
+-  /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
+-  /// to control all potential reentrancies by calling back the this contract
+-  /// @dev DEPRECATED
+-  ITransferHook public _aaveGovernance;
 +  function _afterTokenTransfer(
 +    address from,
 +    address to,
@@ -2427,7 +2551,7 @@ index 12d5367..fc5e5da 100644
  }
  
  /**
-@@ -1747,9 +2444,11 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1747,9 +2558,11 @@ abstract contract GovernancePowerWithSnapshot is
   */
  abstract contract StakedTokenV2 is
    IStakedTokenV2,
@@ -2440,20 +2564,20 @@ index 12d5367..fc5e5da 100644
  {
    using SafeERC20 for IERC20;
  
-@@ -1771,16 +2470,13 @@ abstract contract StakedTokenV2 is
-   mapping(address => address) internal _votingDelegates;
+@@ -1766,21 +2579,8 @@ abstract contract StakedTokenV2 is
+   mapping(address => CooldownSnapshot) public stakersCooldowns;
  
-   mapping(address => mapping(uint256 => Snapshot))
+   /// @dev End of Storage layout from StakedToken v1
++  uint256[5] private ______DEPRECATED_FROM_STK_AAVE_V2;
+ 
+-  /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
+-  mapping(address => address) internal _votingDelegates;
+-
+-  mapping(address => mapping(uint256 => Snapshot))
 -    internal _propositionPowerSnapshots;
 -  mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
 -  mapping(address => address) internal _propositionPowerDelegates;
-+    internal deprecated_propositionPowerSnapshots;
-+  mapping(address => uint256)
-+    internal deprecated_propositionPowerSnapshotsCounts;
-+  mapping(address => address) internal deprecated_propositionPowerDelegates;
-+
-+  bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
- 
+-
 -  bytes32 public DOMAIN_SEPARATOR;
 -  bytes public constant EIP712_REVISION = bytes('1');
 -  bytes32 internal constant EIP712_DOMAIN =
@@ -2463,7 +2587,7 @@ index 12d5367..fc5e5da 100644
    bytes32 public constant PERMIT_TYPEHASH =
      keccak256(
        'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-@@ -1796,13 +2492,30 @@ abstract contract StakedTokenV2 is
+@@ -1796,13 +2596,30 @@ abstract contract StakedTokenV2 is
      address rewardsVault,
      address emissionManager,
      uint128 distributionDuration
@@ -2495,7 +2619,7 @@ index 12d5367..fc5e5da 100644
    /// @inheritdoc IStakedTokenV2
    function stake(address onBehalfOf, uint256 amount) external virtual override;
  
-@@ -1845,99 +2558,26 @@ abstract contract StakedTokenV2 is
+@@ -1845,99 +2662,26 @@ abstract contract StakedTokenV2 is
      //solium-disable-next-line
      require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
      uint256 currentValidNonce = _nonces[owner];
@@ -2605,7 +2729,7 @@ index 12d5367..fc5e5da 100644
    /**
     * @dev Updates the user state related with his accrued rewards
     * @param user Address of the user
-@@ -1967,34 +2607,6 @@ abstract contract StakedTokenV2 is
+@@ -1967,34 +2711,6 @@ abstract contract StakedTokenV2 is
  
      return unclaimedRewards;
    }
@@ -2640,7 +2764,7 @@ index 12d5367..fc5e5da 100644
  }
  
  interface IStakedTokenV3 is IStakedTokenV2 {
-@@ -3516,6 +4128,627 @@ library SafeCast {
+@@ -3516,6 +4232,627 @@ library SafeCast {
    }
  }
  
@@ -3268,7 +3392,7 @@ index 12d5367..fc5e5da 100644
  /**
   * @title StakedTokenV3
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-@@ -3525,11 +4758,13 @@ contract StakedTokenV3 is
+@@ -3525,11 +4862,13 @@ contract StakedTokenV3 is
    StakedTokenV2,
    IStakedTokenV3,
    RoleManager,
@@ -3283,7 +3407,7 @@ index 12d5367..fc5e5da 100644
  
    uint256 public constant SLASH_ADMIN_ROLE = 0;
    uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
-@@ -3542,7 +4777,7 @@ contract StakedTokenV3 is
+@@ -3542,7 +4881,7 @@ contract StakedTokenV3 is
    uint256 public immutable LOWER_BOUND;
  
    // Reserved storage space to allow for layout changes in the future.
@@ -3292,7 +3416,7 @@ index 12d5367..fc5e5da 100644
    /// @notice Seconds between starting cooldown and being able to withdraw
    uint256 internal _cooldownSeconds;
    /// @notice The maximum amount of funds that can be slashed at any given time
-@@ -3604,7 +4839,7 @@ contract StakedTokenV3 is
+@@ -3604,7 +4943,7 @@ contract StakedTokenV3 is
     * @return The revision
     */
    function REVISION() public pure virtual returns (uint256) {
@@ -3301,7 +3425,7 @@ index 12d5367..fc5e5da 100644
    }
  
    /**
-@@ -3618,21 +4853,7 @@ contract StakedTokenV3 is
+@@ -3618,21 +4957,7 @@ contract StakedTokenV3 is
    /**
     * @dev Called by the proxy contract
     */
@@ -3324,7 +3448,7 @@ index 12d5367..fc5e5da 100644
  
    function _initialize(
      address slashingAdmin,
-@@ -3705,7 +4926,7 @@ contract StakedTokenV3 is
+@@ -3705,7 +5030,7 @@ contract StakedTokenV3 is
      address to,
      uint256 amount
    ) external override(IStakedTokenV2, StakedTokenV2) {
@@ -3333,7 +3457,7 @@ index 12d5367..fc5e5da 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3714,7 +4935,7 @@ contract StakedTokenV3 is
+@@ -3714,7 +5039,7 @@ contract StakedTokenV3 is
      address to,
      uint256 amount
    ) external override onlyClaimHelper {
@@ -3342,7 +3466,7 @@ index 12d5367..fc5e5da 100644
    }
  
    /// @inheritdoc IStakedTokenV2
-@@ -3741,7 +4962,7 @@ contract StakedTokenV3 is
+@@ -3741,7 +5066,7 @@ contract StakedTokenV3 is
      uint256 redeemAmount
    ) external override {
      _claimRewards(msg.sender, to, claimAmount);
@@ -3351,7 +3475,7 @@ index 12d5367..fc5e5da 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3752,7 +4973,7 @@ contract StakedTokenV3 is
+@@ -3752,7 +5077,7 @@ contract StakedTokenV3 is
      uint256 redeemAmount
    ) external override onlyClaimHelper {
      _claimRewards(from, to, claimAmount);
@@ -3360,7 +3484,7 @@ index 12d5367..fc5e5da 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3956,7 +5177,7 @@ contract StakedTokenV3 is
+@@ -3956,7 +5281,7 @@ contract StakedTokenV3 is
  
      STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
  
@@ -3369,7 +3493,7 @@ index 12d5367..fc5e5da 100644
  
      emit Staked(from, to, amount, sharesToMint);
    }
-@@ -3967,13 +5188,13 @@ contract StakedTokenV3 is
+@@ -3967,13 +5292,13 @@ contract StakedTokenV3 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     */
@@ -3385,7 +3509,7 @@ index 12d5367..fc5e5da 100644
          'INSUFFICIENT_COOLDOWN'
        );
        require(
-@@ -3995,7 +5216,7 @@ contract StakedTokenV3 is
+@@ -3995,7 +5320,7 @@ contract StakedTokenV3 is
  
      uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
  
@@ -3394,7 +3518,7 @@ index 12d5367..fc5e5da 100644
  
      if (cooldownSnapshot.timestamp != 0) {
        if (cooldownSnapshot.amount - amountToRedeem == 0) {
-@@ -4058,13 +5279,68 @@ contract StakedTokenV3 is
+@@ -4058,13 +5383,68 @@ contract StakedTokenV3 is
          if (balanceOfFrom == amount) {
            delete stakersCooldowns[from];
          } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {
@@ -3464,7 +3588,7 @@ index 12d5367..fc5e5da 100644
  }
  
  interface IGhoVariableDebtTokenTransferHook {
-@@ -4094,19 +5370,6 @@ interface IStakedAaveV3 is IStakedTokenV3 {
+@@ -4094,19 +5474,6 @@ interface IStakedAaveV3 is IStakedTokenV3 {
  
    event GHODebtTokenChanged(address indexed newDebtToken);
  
@@ -3484,16 +3608,14 @@ index 12d5367..fc5e5da 100644
    /**
     * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
     * @param newGHODebtToken Address to GHO debt token
-@@ -4176,15 +5439,16 @@ interface IERC20WithPermit is IERC20 {
+@@ -4176,15 +5543,13 @@ interface IERC20WithPermit is IERC20 {
  contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
    using SafeCast for uint256;
  
 -  uint32 internal _exchangeRateSnapshotsCount;
-+  uint32 internal deprecated_exchangeRateSnapshotsCount;
-   /// @notice Snapshots of the exchangeRate for a given block
+-  /// @notice Snapshots of the exchangeRate for a given block
 -  mapping(uint256 => ExchangeRateSnapshot) internal _exchangeRateSnapshots;
-+  mapping(uint256 => ExchangeRateSnapshot)
-+    internal deprecated_exchangeRateSnapshots;
++  uint256[1] private ______DEPRECATED_FROM_STK_AAVE_V3;
  
    /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
    IGhoVariableDebtTokenTransferHook public ghoDebtToken;
@@ -3504,7 +3626,7 @@ index 12d5367..fc5e5da 100644
    }
  
    constructor(
-@@ -4211,24 +5475,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
+@@ -4211,24 +5576,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
    /**
     * @dev Called by the proxy contract
     */
@@ -3530,7 +3652,7 @@ index 12d5367..fc5e5da 100644
  
    /// @inheritdoc IStakedAaveV3
    function setGHODebtToken(
-@@ -4277,18 +5524,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
+@@ -4277,18 +5625,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
      _stake(from, from, amount);
    }
  
@@ -3549,7 +3671,7 @@ index 12d5367..fc5e5da 100644
    /**
     * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
     * - On _transfer, it writes snapshots for both "from" and "to"
-@@ -4315,101 +5550,5 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
+@@ -4315,101 +5651,5 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
          )
        {} catch (bytes memory) {}
      }

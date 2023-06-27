@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/IERC20.sol)
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -589,20 +589,91 @@ interface IStakedTokenV2 {
 // fallback storage variables, so contract does not affect on existing storage layout. This works as its used on contracts
 // that have name and revision < 32 bytes
 
-// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/ECDSA.sol)
+// OpenZeppelin Contracts (last updated v4.9.0) (utils/cryptography/ECDSA.sol)
 
-// OpenZeppelin Contracts (last updated v4.8.0) (utils/Strings.sol)
+// OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
 
-// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/Math.sol)
+// OpenZeppelin Contracts (last updated v4.9.0) (utils/math/Math.sol)
 
 /**
  * @dev Standard math utilities missing in the Solidity language.
  */
 library Math {
+  /**
+   * @dev Muldiv operation overflow.
+   */
+  error MathOverflowedMulDiv();
+
   enum Rounding {
     Down, // Toward negative infinity
     Up, // Toward infinity
     Zero // Toward zero
+  }
+
+  /**
+   * @dev Returns the addition of two unsigned integers, with an overflow flag.
+   *
+   * _Available since v5.0._
+   */
+  function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      uint256 c = a + b;
+      if (c < a) return (false, 0);
+      return (true, c);
+    }
+  }
+
+  /**
+   * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
+   *
+   * _Available since v5.0._
+   */
+  function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      if (b > a) return (false, 0);
+      return (true, a - b);
+    }
+  }
+
+  /**
+   * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
+   *
+   * _Available since v5.0._
+   */
+  function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+      // benefit is lost if 'b' is also tested.
+      // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+      if (a == 0) return (true, 0);
+      uint256 c = a * b;
+      if (c / a != b) return (false, 0);
+      return (true, c);
+    }
+  }
+
+  /**
+   * @dev Returns the division of two unsigned integers, with a division by zero flag.
+   *
+   * _Available since v5.0._
+   */
+  function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      if (b == 0) return (false, 0);
+      return (true, a / b);
+    }
+  }
+
+  /**
+   * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+   *
+   * _Available since v5.0._
+   */
+  function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      if (b == 0) return (false, 0);
+      return (true, a % b);
+    }
   }
 
   /**
@@ -635,6 +706,11 @@ library Math {
    * of rounding down.
    */
   function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256) {
+    if (b == 0) {
+      // Guarantee the same behavior as in a regular Solidity division.
+      return a / b;
+    }
+
     // (a + b - 1) / b can overflow on addition, so we distribute.
     return a == 0 ? 0 : (a - 1) / b + 1;
   }
@@ -670,7 +746,9 @@ library Math {
       }
 
       // Make sure the result is less than 2^256. Also prevents denominator == 0.
-      require(denominator > prod1, 'Math: mulDiv overflow');
+      if (denominator <= prod1) {
+        revert MathOverflowedMulDiv();
+      }
 
       ///////////////////////////////////////////////
       // 512 by 256 division.
@@ -999,6 +1077,11 @@ library Strings {
   uint8 private constant _ADDRESS_LENGTH = 20;
 
   /**
+   * @dev The `value` string doesn't fit in the specified `length`.
+   */
+  error StringsInsufficientHexLength(uint256 value, uint256 length);
+
+  /**
    * @dev Converts a `uint256` to its ASCII `string` decimal representation.
    */
   function toString(uint256 value) internal pure returns (string memory) {
@@ -1026,11 +1109,8 @@ library Strings {
   /**
    * @dev Converts a `int256` to its ASCII `string` decimal representation.
    */
-  function toString(int256 value) internal pure returns (string memory) {
-    return
-      string(
-        abi.encodePacked(value < 0 ? '-' : '', toString(SignedMath.abs(value)))
-      );
+  function toStringSigned(int256 value) internal pure returns (string memory) {
+    return string.concat(value < 0 ? '-' : '', toString(SignedMath.abs(value)));
   }
 
   /**
@@ -1049,14 +1129,17 @@ library Strings {
     uint256 value,
     uint256 length
   ) internal pure returns (string memory) {
+    uint256 localValue = value;
     bytes memory buffer = new bytes(2 * length + 2);
     buffer[0] = '0';
     buffer[1] = 'x';
     for (uint256 i = 2 * length + 1; i > 1; --i) {
-      buffer[i] = _SYMBOLS[value & 0xf];
-      value >>= 4;
+      buffer[i] = _SYMBOLS[localValue & 0xf];
+      localValue >>= 4;
     }
-    require(value == 0, 'Strings: hex length insufficient');
+    if (localValue != 0) {
+      revert StringsInsufficientHexLength(value, length);
+    }
     return string(buffer);
   }
 
@@ -1074,7 +1157,9 @@ library Strings {
     string memory a,
     string memory b
   ) internal pure returns (bool) {
-    return keccak256(bytes(a)) == keccak256(bytes(b));
+    return
+      bytes(a).length == bytes(b).length &&
+      keccak256(bytes(a)) == keccak256(bytes(b));
   }
 }
 
@@ -1089,19 +1174,33 @@ library ECDSA {
     NoError,
     InvalidSignature,
     InvalidSignatureLength,
-    InvalidSignatureS,
-    InvalidSignatureV // Deprecated in v4.8
+    InvalidSignatureS
   }
 
-  function _throwError(RecoverError error) private pure {
+  /**
+   * @dev The signature derives the `address(0)`.
+   */
+  error ECDSAInvalidSignature();
+
+  /**
+   * @dev The signature has an invalid length.
+   */
+  error ECDSAInvalidSignatureLength(uint256 length);
+
+  /**
+   * @dev The signature has an S value that is in the upper half order.
+   */
+  error ECDSAInvalidSignatureS(bytes32 s);
+
+  function _throwError(RecoverError error, bytes32 errorArg) private pure {
     if (error == RecoverError.NoError) {
       return; // no error: do nothing
     } else if (error == RecoverError.InvalidSignature) {
-      revert('ECDSA: invalid signature');
+      revert ECDSAInvalidSignature();
     } else if (error == RecoverError.InvalidSignatureLength) {
-      revert('ECDSA: invalid signature length');
+      revert ECDSAInvalidSignatureLength(uint256(errorArg));
     } else if (error == RecoverError.InvalidSignatureS) {
-      revert("ECDSA: invalid signature 's' value");
+      revert ECDSAInvalidSignatureS(errorArg);
     }
   }
 
@@ -1109,7 +1208,7 @@ library ECDSA {
    * @dev Returns the address that signed a hashed message (`hash`) with
    * `signature` or error string. This address can then be used for verification purposes.
    *
-   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
+   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
    * this function rejects them by requiring the `s` value to be in the lower
    * half order, and the `v` value to be either 27 or 28.
    *
@@ -1128,7 +1227,7 @@ library ECDSA {
   function tryRecover(
     bytes32 hash,
     bytes memory signature
-  ) internal pure returns (address, RecoverError) {
+  ) internal pure returns (address, RecoverError, bytes32) {
     if (signature.length == 65) {
       bytes32 r;
       bytes32 s;
@@ -1143,7 +1242,11 @@ library ECDSA {
       }
       return tryRecover(hash, v, r, s);
     } else {
-      return (address(0), RecoverError.InvalidSignatureLength);
+      return (
+        address(0),
+        RecoverError.InvalidSignatureLength,
+        bytes32(signature.length)
+      );
     }
   }
 
@@ -1151,7 +1254,7 @@ library ECDSA {
    * @dev Returns the address that signed a hashed message (`hash`) with
    * `signature`. This address can then be used for verification purposes.
    *
-   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
+   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
    * this function rejects them by requiring the `s` value to be in the lower
    * half order, and the `v` value to be either 27 or 28.
    *
@@ -1165,8 +1268,11 @@ library ECDSA {
     bytes32 hash,
     bytes memory signature
   ) internal pure returns (address) {
-    (address recovered, RecoverError error) = tryRecover(hash, signature);
-    _throwError(error);
+    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+      hash,
+      signature
+    );
+    _throwError(error, errorArg);
     return recovered;
   }
 
@@ -1181,13 +1287,16 @@ library ECDSA {
     bytes32 hash,
     bytes32 r,
     bytes32 vs
-  ) internal pure returns (address, RecoverError) {
-    bytes32 s = vs &
-      bytes32(
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-      );
-    uint8 v = uint8((uint256(vs) >> 255) + 27);
-    return tryRecover(hash, v, r, s);
+  ) internal pure returns (address, RecoverError, bytes32) {
+    unchecked {
+      bytes32 s = vs &
+        bytes32(
+          0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        );
+      // We do not check for an overflow here since the shift operation results in 0 or 1.
+      uint8 v = uint8((uint256(vs) >> 255) + 27);
+      return tryRecover(hash, v, r, s);
+    }
   }
 
   /**
@@ -1200,8 +1309,12 @@ library ECDSA {
     bytes32 r,
     bytes32 vs
   ) internal pure returns (address) {
-    (address recovered, RecoverError error) = tryRecover(hash, r, vs);
-    _throwError(error);
+    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+      hash,
+      r,
+      vs
+    );
+    _throwError(error, errorArg);
     return recovered;
   }
 
@@ -1216,7 +1329,7 @@ library ECDSA {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) internal pure returns (address, RecoverError) {
+  ) internal pure returns (address, RecoverError, bytes32) {
     // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
     // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
     // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -1230,16 +1343,16 @@ library ECDSA {
       uint256(s) >
       0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
     ) {
-      return (address(0), RecoverError.InvalidSignatureS);
+      return (address(0), RecoverError.InvalidSignatureS, s);
     }
 
     // If the signature is valid (and not malleable), return the signer address
     address signer = ecrecover(hash, v, r, s);
     if (signer == address(0)) {
-      return (address(0), RecoverError.InvalidSignature);
+      return (address(0), RecoverError.InvalidSignature, bytes32(0));
     }
 
-    return (signer, RecoverError.NoError);
+    return (signer, RecoverError.NoError, bytes32(0));
   }
 
   /**
@@ -1252,8 +1365,13 @@ library ECDSA {
     bytes32 r,
     bytes32 s
   ) internal pure returns (address) {
-    (address recovered, RecoverError error) = tryRecover(hash, v, r, s);
-    _throwError(error);
+    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+      hash,
+      v,
+      r,
+      s
+    );
+    _throwError(error, errorArg);
     return recovered;
   }
 
@@ -1315,7 +1433,7 @@ library ECDSA {
     /// @solidity memory-safe-assembly
     assembly {
       let ptr := mload(0x40)
-      mstore(ptr, '\x19\x01')
+      mstore(ptr, hex'19_01')
       mstore(add(ptr, 0x02), domainSeparator)
       mstore(add(ptr, 0x22), structHash)
       data := keccak256(ptr, 0x42)
@@ -1332,11 +1450,13 @@ library ECDSA {
     address validator,
     bytes memory data
   ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked('\x19\x00', validator, data));
+    return keccak256(abi.encodePacked(hex'19_00', validator, data));
   }
 }
 
-// OpenZeppelin Contracts (last updated v4.7.0) (utils/StorageSlot.sol)
+// OpenZeppelin Contracts (last updated v4.9.0) (utils/ShortStrings.sol)
+
+// OpenZeppelin Contracts (last updated v4.9.0) (utils/StorageSlot.sol)
 // This file was procedurally generated from scripts/generate/templates/StorageSlot.js.
 
 /**
@@ -1357,7 +1477,7 @@ library ECDSA {
  *     }
  *
  *     function _setImplementation(address newImplementation) internal {
- *         require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
+ *         require(newImplementation.code.length > 0);
  *         StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
  *     }
  * }
@@ -1615,6 +1735,8 @@ library ShortStrings {
     }
   }
 }
+
+// OpenZeppelin Contracts (last updated v4.9.0) (interfaces/IERC5267.sol)
 
 interface IERC5267 {
   /**
@@ -2117,17 +2239,7 @@ interface ITransferHook {
  * @author Aave
  **/
 abstract contract GovernancePowerWithSnapshot {
-  struct Snapshot {
-    uint128 blockNumber;
-    uint128 value;
-  }
-  /// @dev DEPRECATED
-  mapping(address => mapping(uint256 => Snapshot))
-    public deprecated_votingSnapshots;
-  /// @dev DEPRECATED
-  mapping(address => uint256) public deprecated_votingSnapshotsCounts;
-  /// @dev DEPRECATED
-  ITransferHook public deprecated_aaveGovernance;
+  uint256[3] private __________DEPRECATED_GOV_V2_PART;
 }
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
@@ -2280,20 +2392,22 @@ abstract contract BaseAaveToken is Context, IERC20Metadata {
     require(from != address(0), 'ERC20: transfer from the zero address');
     require(to != address(0), 'ERC20: transfer to the zero address');
 
-    uint104 fromBalanceBefore = _balances[from].balance;
-    uint104 toBalanceBefore = _balances[to].balance;
+    if (from != to) {
+      uint104 fromBalanceBefore = _balances[from].balance;
+      uint104 toBalanceBefore = _balances[to].balance;
 
-    require(
-      fromBalanceBefore >= amount,
-      'ERC20: transfer amount exceeds balance'
-    );
-    unchecked {
-      _balances[from].balance = fromBalanceBefore - uint104(amount);
+      require(
+        fromBalanceBefore >= amount,
+        'ERC20: transfer amount exceeds balance'
+      );
+      unchecked {
+        _balances[from].balance = fromBalanceBefore - uint104(amount);
+      }
+
+      _balances[to].balance = toBalanceBefore + uint104(amount);
+
+      _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
     }
-
-    _balances[to].balance = toBalanceBefore + uint104(amount);
-
-    _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
     emit Transfer(from, to, amount);
   }
 
@@ -2465,17 +2579,7 @@ abstract contract StakedTokenV2 is
   mapping(address => CooldownSnapshot) public stakersCooldowns;
 
   /// @dev End of Storage layout from StakedToken v1
-
-  /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
-  mapping(address => address) internal _votingDelegates;
-
-  mapping(address => mapping(uint256 => Snapshot))
-    internal deprecated_propositionPowerSnapshots;
-  mapping(address => uint256)
-    internal deprecated_propositionPowerSnapshotsCounts;
-  mapping(address => address) internal deprecated_propositionPowerDelegates;
-
-  bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
+  uint256[5] private ______DEPRECATED_FROM_STK_AAVE_V2;
 
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256(

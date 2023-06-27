@@ -1,8 +1,17 @@
 ```diff
 diff --git a/src/flattened/CurrentStakedTokenV3Flattened.sol b/src/flattened/StakedTokenV3Flattened.sol
-index 6b21e42..0e45f5c 100644
+index 6b21e42..619a695 100644
 --- a/src/flattened/CurrentStakedTokenV3Flattened.sol
 +++ b/src/flattened/StakedTokenV3Flattened.sol
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: agpl-3.0
+ pragma solidity ^0.8.0;
+ 
+-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/IERC20.sol)
+ 
+ /**
+  * @dev Interface of the ERC20 standard as defined in the EIP.
 @@ -84,6 +84,30 @@ interface IERC20 {
    ) external returns (bool);
  }
@@ -65,7 +74,7 @@ index 6b21e42..0e45f5c 100644
  interface IStakedTokenV2 {
    struct CooldownSnapshot {
      uint40 timestamp;
-@@ -585,427 +585,1233 @@ interface IStakedTokenV2 {
+@@ -585,427 +585,1355 @@ interface IStakedTokenV2 {
    ) external;
  }
  
@@ -75,13 +84,9 @@ index 6b21e42..0e45f5c 100644
 +// that have name and revision < 32 bytes
  
 -// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/ECDSA.sol)
-+
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/Strings.sol)
-+
-+// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/Math.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/cryptography/ECDSA.sol)
  
- /**
+-/**
 - * @dev Provides information about the current execution context, including the
 - * sender of the transaction and its data. While these are generally available
 - * via msg.sender and msg.data, they should not be accessed in such a direct
@@ -90,29 +95,20 @@ index 6b21e42..0e45f5c 100644
 - * is concerned).
 - *
 - * This contract is only required for intermediate, library-like contracts.
-+ * @dev Standard math utilities missing in the Solidity language.
-  */
+- */
 -abstract contract Context {
 -  function _msgSender() internal view virtual returns (address) {
 -    return msg.sender;
-+library Math {
-+  enum Rounding {
-+    Down, // Toward negative infinity
-+    Up, // Toward infinity
-+    Zero // Toward zero
-   }
+-  }
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
  
 -  function _msgData() internal view virtual returns (bytes calldata) {
 -    return msg.data;
-+  /**
-+   * @dev Returns the largest of two numbers.
-+   */
-+  function max(uint256 a, uint256 b) internal pure returns (uint256) {
-+    return a > b ? a : b;
-   }
+-  }
 -}
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/math/Math.sol)
  
--/**
+ /**
 - * @dev Implementation of the {IERC20} interface.
 - *
 - * This implementation is agnostic to the way tokens are created. This means
@@ -136,41 +132,165 @@ index 6b21e42..0e45f5c 100644
 - * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
 - * functions have been added to mitigate the well-known issues around setting
 - * allowances. See {IERC20-approve}.
-- */
++ * @dev Standard math utilities missing in the Solidity language.
+  */
 -contract ERC20 is Context, IERC20, IERC20Metadata {
 -  mapping(address => uint256) internal _balances;
++library Math {
 +  /**
-+   * @dev Returns the smallest of two numbers.
++   * @dev Muldiv operation overflow.
 +   */
-+  function min(uint256 a, uint256 b) internal pure returns (uint256) {
-+    return a < b ? a : b;
++  error MathOverflowedMulDiv();
++
++  enum Rounding {
++    Down, // Toward negative infinity
++    Up, // Toward infinity
++    Zero // Toward zero
++  }
+ 
+-  mapping(address => mapping(address => uint256)) private _allowances;
++  /**
++   * @dev Returns the addition of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      uint256 c = a + b;
++      if (c < a) return (false, 0);
++      return (true, c);
++    }
++  }
+ 
+-  uint256 internal _totalSupply;
++  /**
++   * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b > a) return (false, 0);
++      return (true, a - b);
++    }
++  }
+ 
+-  string private _name;
+-  string private _symbol;
+-  uint8 private _decimals; // @deprecated
++  /**
++   * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
++   *
++   * _Available since v5.0._
++   */
++  function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
++      // benefit is lost if 'b' is also tested.
++      // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
++      if (a == 0) return (true, 0);
++      uint256 c = a * b;
++      if (c / a != b) return (false, 0);
++      return (true, c);
++    }
++  }
+ 
+   /**
+-   * @dev Sets the values for {name} and {symbol}.
++   * @dev Returns the division of two unsigned integers, with a division by zero flag.
+    *
+-   * The default value of {decimals} is 18. To select a different value for
+-   * {decimals} you should overload it.
++   * _Available since v5.0._
++   */
++  function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b == 0) return (false, 0);
++      return (true, a / b);
++    }
 +  }
 +
 +  /**
++   * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+    *
+-   * All two of these values are immutable: they can only be set once during
+-   * construction.
++   * _Available since v5.0._
++   */
++  function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
++    unchecked {
++      if (b == 0) return (false, 0);
++      return (true, a % b);
++    }
++  }
++
++  /**
++   * @dev Returns the largest of two numbers.
+    */
+-  constructor() {}
++  function max(uint256 a, uint256 b) internal pure returns (uint256) {
++    return a > b ? a : b;
++  }
+ 
+   /**
+-   * @dev Returns the name of the token.
++   * @dev Returns the smallest of two numbers.
+    */
+-  function name() public view virtual override returns (string memory) {
+-    return _name;
++  function min(uint256 a, uint256 b) internal pure returns (uint256) {
++    return a < b ? a : b;
+   }
+ 
+   /**
+-   * @dev Returns the symbol of the token, usually a shorter version of the
+-   * name.
 +   * @dev Returns the average of two numbers. The result is rounded towards
 +   * zero.
-+   */
+    */
+-  function symbol() public view virtual override returns (string memory) {
+-    return _symbol;
 +  function average(uint256 a, uint256 b) internal pure returns (uint256) {
 +    // (a + b) / 2 can overflow.
 +    return (a & b) + (a ^ b) / 2;
-+  }
-+
-+  /**
+   }
+ 
+   /**
+-   * @dev Returns the number of decimals used to get its user representation.
+-   * For example, if `decimals` equals `2`, a balance of `505` tokens should
+-   * be displayed to a user as `5.05` (`505 / 10 ** 2`).
+-   *
+-   * Tokens usually opt for a value of 18, imitating the relationship between
+-   * Ether and Wei. This is the value {ERC20} uses, unless this function is
+-   * overridden;
 +   * @dev Returns the ceiling of the division of two numbers.
-+   *
+    *
+-   * NOTE: This information is only used for _display_ purposes: it in
+-   * no way affects any of the arithmetic of the contract, including
+-   * {IERC20-balanceOf} and {IERC20-transfer}.
 +   * This differs from standard division with `/` in that it rounds up instead
 +   * of rounding down.
-+   */
+    */
+-  function decimals() public view virtual override returns (uint8) {
+-    return 18;
 +  function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256) {
++    if (b == 0) {
++      // Guarantee the same behavior as in a regular Solidity division.
++      return a / b;
++    }
++
 +    // (a + b - 1) / b can overflow on addition, so we distribute.
 +    return a == 0 ? 0 : (a - 1) / b + 1;
-+  }
-+
-+  /**
+   }
+ 
+   /**
+-   * @dev See {IERC20-totalSupply}.
 +   * @notice Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or denominator == 0
 +   * @dev Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv)
 +   * with further edits by Uniswap Labs also under MIT license.
-+   */
+    */
+-  function totalSupply() public view virtual override returns (uint256) {
+-    return _totalSupply;
 +  function mulDiv(
 +    uint256 x,
 +    uint256 y,
@@ -197,7 +317,9 @@ index 6b21e42..0e45f5c 100644
 +      }
 +
 +      // Make sure the result is less than 2^256. Also prevents denominator == 0.
-+      require(denominator > prod1, 'Math: mulDiv overflow');
++      if (denominator <= prod1) {
++        revert MathOverflowedMulDiv();
++      }
 +
 +      ///////////////////////////////////////////////
 +      // 512 by 256 division.
@@ -229,20 +351,15 @@ index 6b21e42..0e45f5c 100644
 +        // Flip twos such that it is 2^256 / twos. If twos is zero, then it becomes one.
 +        twos := add(div(sub(0, twos), twos), 1)
 +      }
- 
--  mapping(address => mapping(address => uint256)) private _allowances;
++
 +      // Shift in bits from prod1 into prod0.
 +      prod0 |= prod1 * twos;
- 
--  uint256 internal _totalSupply;
++
 +      // Invert denominator mod 2^256. Now that denominator is an odd number, it has an inverse modulo 2^256 such
 +      // that denominator * inv = 1 mod 2^256. Compute the inverse by starting with a seed that is correct for
 +      // four bits. That is, denominator * inv = 1 mod 2^4.
 +      uint256 inverse = (3 * denominator) ^ 2;
- 
--  string private _name;
--  string private _symbol;
--  uint8 private _decimals; // @deprecated
++
 +      // Use the Newton-Raphson iteration to improve the precision. Thanks to Hensel's lifting lemma, this also works
 +      // in modular arithmetic, doubling the correct bits in each step.
 +      inverse *= 2 - denominator * inverse; // inverse mod 2^8
@@ -259,15 +376,16 @@ index 6b21e42..0e45f5c 100644
 +      result = prod0 * inverse;
 +      return result;
 +    }
-+  }
+   }
  
    /**
--   * @dev Sets the values for {name} and {symbol}.
--   *
--   * The default value of {decimals} is 18. To select a different value for
--   * {decimals} you should overload it.
+-   * @dev See {IERC20-balanceOf}.
 +   * @notice Calculates x * y / denominator with full precision, following the selected rounding direction.
-+   */
+    */
+-  function balanceOf(
+-    address account
+-  ) public view virtual override returns (uint256) {
+-    return _balances[account];
 +  function mulDiv(
 +    uint256 x,
 +    uint256 y,
@@ -279,16 +397,18 @@ index 6b21e42..0e45f5c 100644
 +      result += 1;
 +    }
 +    return result;
-+  }
-+
-+  /**
+   }
+ 
+   /**
+-   * @dev See {IERC20-transfer}.
+-   *
+-   * Requirements:
 +   * @dev Returns the square root of a number. If the number is not a perfect square, the value is rounded down.
     *
--   * All two of these values are immutable: they can only be set once during
--   * construction.
+-   * - `to` cannot be the zero address.
+-   * - the caller must have a balance of at least `amount`.
 +   * Inspired by Henry S. Warren, Jr.'s "Hacker's Delight" (Chapter 11).
-    */
--  constructor() {}
++   */
 +  function sqrt(uint256 a) internal pure returns (uint256) {
 +    if (a == 0) {
 +      return 0;
@@ -321,13 +441,17 @@ index 6b21e42..0e45f5c 100644
 +      return min(result, a / result);
 +    }
 +  }
- 
-   /**
--   * @dev Returns the name of the token.
++
++  /**
 +   * @notice Calculates sqrt(a), following the selected rounding direction.
     */
--  function name() public view virtual override returns (string memory) {
--    return _name;
+-  function transfer(
+-    address to,
+-    uint256 amount
+-  ) public virtual override returns (bool) {
+-    address owner = _msgSender();
+-    _transfer(owner, to, amount);
+-    return true;
 +  function sqrt(uint256 a, Rounding rounding) internal pure returns (uint256) {
 +    unchecked {
 +      uint256 result = sqrt(a);
@@ -336,13 +460,15 @@ index 6b21e42..0e45f5c 100644
    }
  
    /**
--   * @dev Returns the symbol of the token, usually a shorter version of the
--   * name.
+-   * @dev See {IERC20-allowance}.
 +   * @dev Return the log in base 2, rounded down, of a positive value.
 +   * Returns 0 if given 0.
     */
--  function symbol() public view virtual override returns (string memory) {
--    return _symbol;
+-  function allowance(
+-    address owner,
+-    address spender
+-  ) public view virtual override returns (uint256) {
+-    return _allowances[owner][spender];
 +  function log2(uint256 value) internal pure returns (uint256) {
 +    uint256 result = 0;
 +    unchecked {
@@ -382,22 +508,15 @@ index 6b21e42..0e45f5c 100644
    }
  
    /**
--   * @dev Returns the number of decimals used to get its user representation.
--   * For example, if `decimals` equals `2`, a balance of `505` tokens should
--   * be displayed to a user as `5.05` (`505 / 10 ** 2`).
+-   * @dev See {IERC20-approve}.
 -   *
--   * Tokens usually opt for a value of 18, imitating the relationship between
--   * Ether and Wei. This is the value {ERC20} uses, unless this function is
--   * overridden;
+-   * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
+-   * `transferFrom`. This is semantically equivalent to an infinite approval.
 -   *
--   * NOTE: This information is only used for _display_ purposes: it in
--   * no way affects any of the arithmetic of the contract, including
--   * {IERC20-balanceOf} and {IERC20-transfer}.
+-   * Requirements:
 +   * @dev Return the log in base 2, following the selected rounding direction, of a positive value.
 +   * Returns 0 if given 0.
-    */
--  function decimals() public view virtual override returns (uint8) {
--    return 18;
++   */
 +  function log2(
 +    uint256 value,
 +    Rounding rounding
@@ -406,15 +525,12 @@ index 6b21e42..0e45f5c 100644
 +      uint256 result = log2(value);
 +      return result + (rounding == Rounding.Up && 1 << result < value ? 1 : 0);
 +    }
-   }
- 
-   /**
--   * @dev See {IERC20-totalSupply}.
++  }
++
++  /**
 +   * @dev Return the log in base 10, rounded down, of a positive value.
 +   * Returns 0 if given 0.
-    */
--  function totalSupply() public view virtual override returns (uint256) {
--    return _totalSupply;
++   */
 +  function log10(uint256 value) internal pure returns (uint256) {
 +    uint256 result = 0;
 +    unchecked {
@@ -447,17 +563,12 @@ index 6b21e42..0e45f5c 100644
 +      }
 +    }
 +    return result;
-   }
- 
-   /**
--   * @dev See {IERC20-balanceOf}.
++  }
++
++  /**
 +   * @dev Return the log in base 10, following the selected rounding direction, of a positive value.
 +   * Returns 0 if given 0.
-    */
--  function balanceOf(
--    address account
--  ) public view virtual override returns (uint256) {
--    return _balances[account];
++   */
 +  function log10(
 +    uint256 value,
 +    Rounding rounding
@@ -466,26 +577,15 @@ index 6b21e42..0e45f5c 100644
 +      uint256 result = log10(value);
 +      return result + (rounding == Rounding.Up && 10 ** result < value ? 1 : 0);
 +    }
-   }
- 
-   /**
--   * @dev See {IERC20-transfer}.
--   *
--   * Requirements:
++  }
++
++  /**
 +   * @dev Return the log in base 256, rounded down, of a positive value.
 +   * Returns 0 if given 0.
     *
--   * - `to` cannot be the zero address.
--   * - the caller must have a balance of at least `amount`.
+-   * - `spender` cannot be the zero address.
 +   * Adding one to the result gives the number of pairs of hex symbols needed to represent `value` as a hex string.
-    */
--  function transfer(
--    address to,
--    uint256 amount
--  ) public virtual override returns (bool) {
--    address owner = _msgSender();
--    _transfer(owner, to, amount);
--    return true;
++   */
 +  function log256(uint256 value) internal pure returns (uint256) {
 +    uint256 result = 0;
 +    unchecked {
@@ -510,18 +610,12 @@ index 6b21e42..0e45f5c 100644
 +      }
 +    }
 +    return result;
-   }
- 
-   /**
--   * @dev See {IERC20-allowance}.
++  }
++
++  /**
 +   * @dev Return the log in base 256, following the selected rounding direction, of a positive value.
 +   * Returns 0 if given 0.
-    */
--  function allowance(
--    address owner,
--    address spender
--  ) public view virtual override returns (uint256) {
--    return _allowances[owner][spender];
++   */
 +  function log256(
 +    uint256 value,
 +    Rounding rounding
@@ -532,24 +626,16 @@ index 6b21e42..0e45f5c 100644
 +        result +
 +        (rounding == Rounding.Up && 1 << (result << 3) < value ? 1 : 0);
 +    }
-   }
++  }
 +}
 +
 +// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/SignedMath.sol)
- 
++
 +/**
 + * @dev Standard signed math utilities missing in the Solidity language.
 + */
 +library SignedMath {
-   /**
--   * @dev See {IERC20-approve}.
--   *
--   * NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
--   * `transferFrom`. This is semantically equivalent to an infinite approval.
--   *
--   * Requirements:
--   *
--   * - `spender` cannot be the zero address.
++  /**
 +   * @dev Returns the largest of two signed numbers.
 +   */
 +  function max(int256 a, int256 b) internal pure returns (int256) {
@@ -592,6 +678,11 @@ index 6b21e42..0e45f5c 100644
 +  uint8 private constant _ADDRESS_LENGTH = 20;
 +
 +  /**
++   * @dev The `value` string doesn't fit in the specified `length`.
++   */
++  error StringsInsufficientHexLength(uint256 value, uint256 length);
++
++  /**
 +   * @dev Converts a `uint256` to its ASCII `string` decimal representation.
 +   */
 +  function toString(uint256 value) internal pure returns (string memory) {
@@ -618,23 +709,12 @@ index 6b21e42..0e45f5c 100644
 +
 +  /**
 +   * @dev Converts a `int256` to its ASCII `string` decimal representation.
-    */
--  function approve(
--    address spender,
--    uint256 amount
--  ) public virtual override returns (bool) {
--    address owner = _msgSender();
--    _approve(owner, spender, amount);
--    return true;
-+  function toString(int256 value) internal pure returns (string memory) {
-+    return
-+      string(
-+        abi.encodePacked(value < 0 ? '-' : '', toString(SignedMath.abs(value)))
-+      );
-   }
- 
-   /**
--   * @dev See {IERC20-transferFrom}.
++   */
++  function toStringSigned(int256 value) internal pure returns (string memory) {
++    return string.concat(value < 0 ? '-' : '', toString(SignedMath.abs(value)));
++  }
++
++  /**
 +   * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation.
 +   */
 +  function toHexString(uint256 value) internal pure returns (string memory) {
@@ -650,14 +730,17 @@ index 6b21e42..0e45f5c 100644
 +    uint256 value,
 +    uint256 length
 +  ) internal pure returns (string memory) {
++    uint256 localValue = value;
 +    bytes memory buffer = new bytes(2 * length + 2);
 +    buffer[0] = '0';
 +    buffer[1] = 'x';
 +    for (uint256 i = 2 * length + 1; i > 1; --i) {
-+      buffer[i] = _SYMBOLS[value & 0xf];
-+      value >>= 4;
++      buffer[i] = _SYMBOLS[localValue & 0xf];
++      localValue >>= 4;
 +    }
-+    require(value == 0, 'Strings: hex length insufficient');
++    if (localValue != 0) {
++      revert StringsInsufficientHexLength(value, length);
++    }
 +    return string(buffer);
 +  }
 +
@@ -675,7 +758,9 @@ index 6b21e42..0e45f5c 100644
 +    string memory a,
 +    string memory b
 +  ) internal pure returns (bool) {
-+    return keccak256(bytes(a)) == keccak256(bytes(b));
++    return
++      bytes(a).length == bytes(b).length &&
++      keccak256(bytes(a)) == keccak256(bytes(b));
 +  }
 +}
 +
@@ -690,29 +775,51 @@ index 6b21e42..0e45f5c 100644
 +    NoError,
 +    InvalidSignature,
 +    InvalidSignatureLength,
-+    InvalidSignatureS,
-+    InvalidSignatureV // Deprecated in v4.8
-+  }
-+
-+  function _throwError(RecoverError error) private pure {
-+    if (error == RecoverError.NoError) {
-+      return; // no error: do nothing
-+    } else if (error == RecoverError.InvalidSignature) {
-+      revert('ECDSA: invalid signature');
-+    } else if (error == RecoverError.InvalidSignatureLength) {
-+      revert('ECDSA: invalid signature length');
-+    } else if (error == RecoverError.InvalidSignatureS) {
-+      revert("ECDSA: invalid signature 's' value");
-+    }
++    InvalidSignatureS
 +  }
 +
 +  /**
++   * @dev The signature derives the `address(0)`.
++   */
++  error ECDSAInvalidSignature();
++
++  /**
++   * @dev The signature has an invalid length.
++   */
++  error ECDSAInvalidSignatureLength(uint256 length);
++
++  /**
++   * @dev The signature has an S value that is in the upper half order.
+    */
+-  function approve(
+-    address spender,
+-    uint256 amount
+-  ) public virtual override returns (bool) {
+-    address owner = _msgSender();
+-    _approve(owner, spender, amount);
+-    return true;
++  error ECDSAInvalidSignatureS(bytes32 s);
++
++  function _throwError(RecoverError error, bytes32 errorArg) private pure {
++    if (error == RecoverError.NoError) {
++      return; // no error: do nothing
++    } else if (error == RecoverError.InvalidSignature) {
++      revert ECDSAInvalidSignature();
++    } else if (error == RecoverError.InvalidSignatureLength) {
++      revert ECDSAInvalidSignatureLength(uint256(errorArg));
++    } else if (error == RecoverError.InvalidSignatureS) {
++      revert ECDSAInvalidSignatureS(errorArg);
++    }
+   }
+ 
+   /**
+-   * @dev See {IERC20-transferFrom}.
 +   * @dev Returns the address that signed a hashed message (`hash`) with
 +   * `signature` or error string. This address can then be used for verification purposes.
     *
 -   * Emits an {Approval} event indicating the updated allowance. This is not
 -   * required by the EIP. See the note at the beginning of {ERC20}.
-+   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
++   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
 +   * this function rejects them by requiring the `s` value to be in the lower
 +   * half order, and the `v` value to be either 27 or 28.
     *
@@ -747,7 +854,7 @@ index 6b21e42..0e45f5c 100644
 +  function tryRecover(
 +    bytes32 hash,
 +    bytes memory signature
-+  ) internal pure returns (address, RecoverError) {
++  ) internal pure returns (address, RecoverError, bytes32) {
 +    if (signature.length == 65) {
 +      bytes32 r;
 +      bytes32 s;
@@ -762,25 +869,29 @@ index 6b21e42..0e45f5c 100644
 +      }
 +      return tryRecover(hash, v, r, s);
 +    } else {
-+      return (address(0), RecoverError.InvalidSignatureLength);
++      return (
++        address(0),
++        RecoverError.InvalidSignatureLength,
++        bytes32(signature.length)
++      );
 +    }
    }
  
    /**
 -   * @dev Atomically increases the allowance granted to `spender` by the caller.
--   *
--   * This is an alternative to {approve} that can be used as a mitigation for
--   * problems described in {IERC20-approve}.
--   *
--   * Emits an {Approval} event indicating the updated allowance.
 +   * @dev Returns the address that signed a hashed message (`hash`) with
 +   * `signature`. This address can then be used for verification purposes.
     *
--   * Requirements:
-+   * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
+-   * This is an alternative to {approve} that can be used as a mitigation for
+-   * problems described in {IERC20-approve}.
++   * The `ecrecover` EVM precompile allows for malleable (non-unique) signatures:
 +   * this function rejects them by requiring the `s` value to be in the lower
 +   * half order, and the `v` value to be either 27 or 28.
     *
+-   * Emits an {Approval} event indicating the updated allowance.
+-   *
+-   * Requirements:
+-   *
 -   * - `spender` cannot be the zero address.
 +   * IMPORTANT: `hash` _must_ be the result of a hash operation for the
 +   * verification to be secure: it is possible to craft signatures that
@@ -799,8 +910,11 @@ index 6b21e42..0e45f5c 100644
 +    bytes32 hash,
 +    bytes memory signature
 +  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, signature);
-+    _throwError(error);
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      signature
++    );
++    _throwError(error, errorArg);
 +    return recovered;
    }
  
@@ -813,45 +927,34 @@ index 6b21e42..0e45f5c 100644
 +   * See https://eips.ethereum.org/EIPS/eip-2098[EIP-2098 short signatures]
     *
 -   * Emits an {Approval} event indicating the updated allowance.
+-   *
+-   * Requirements:
 +   * _Available since v4.3._
 +   */
 +  function tryRecover(
 +    bytes32 hash,
 +    bytes32 r,
 +    bytes32 vs
-+  ) internal pure returns (address, RecoverError) {
-+    bytes32 s = vs &
-+      bytes32(
-+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-+      );
-+    uint8 v = uint8((uint256(vs) >> 255) + 27);
-+    return tryRecover(hash, v, r, s);
++  ) internal pure returns (address, RecoverError, bytes32) {
++    unchecked {
++      bytes32 s = vs &
++        bytes32(
++          0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
++        );
++      // We do not check for an overflow here since the shift operation results in 0 or 1.
++      uint8 v = uint8((uint256(vs) >> 255) + 27);
++      return tryRecover(hash, v, r, s);
++    }
 +  }
 +
 +  /**
 +   * @dev Overload of {ECDSA-recover} that receives the `r and `vs` short-signature fields separately.
     *
--   * Requirements:
-+   * _Available since v4.2._
-+   */
-+  function recover(
-+    bytes32 hash,
-+    bytes32 r,
-+    bytes32 vs
-+  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, r, vs);
-+    _throwError(error);
-+    return recovered;
-+  }
-+
-+  /**
-+   * @dev Overload of {ECDSA-tryRecover} that receives the `v`,
-+   * `r` and `s` signature fields separately.
-    *
 -   * - `spender` cannot be the zero address.
 -   * - `spender` must have allowance for the caller of at least
 -   * `subtractedValue`.
--   */
++   * _Available since v4.2._
+    */
 -  function decreaseAllowance(
 -    address spender,
 -    uint256 subtractedValue
@@ -861,9 +964,26 @@ index 6b21e42..0e45f5c 100644
 -    require(
 -      currentAllowance >= subtractedValue,
 -      'ERC20: decreased allowance below zero'
--    );
++  function recover(
++    bytes32 hash,
++    bytes32 r,
++    bytes32 vs
++  ) internal pure returns (address) {
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      r,
++      vs
+     );
 -    unchecked {
 -      _approve(owner, spender, currentAllowance - subtractedValue);
++    _throwError(error, errorArg);
++    return recovered;
++  }
++
++  /**
++   * @dev Overload of {ECDSA-tryRecover} that receives the `v`,
++   * `r` and `s` signature fields separately.
++   *
 +   * _Available since v4.3._
 +   */
 +  function tryRecover(
@@ -871,7 +991,7 @@ index 6b21e42..0e45f5c 100644
 +    uint8 v,
 +    bytes32 r,
 +    bytes32 s
-+  ) internal pure returns (address, RecoverError) {
++  ) internal pure returns (address, RecoverError, bytes32) {
 +    // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
 +    // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
 +    // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -885,21 +1005,20 @@ index 6b21e42..0e45f5c 100644
 +      uint256(s) >
 +      0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
 +    ) {
-+      return (address(0), RecoverError.InvalidSignatureS);
++      return (address(0), RecoverError.InvalidSignatureS, s);
 +    }
 +
 +    // If the signature is valid (and not malleable), return the signer address
 +    address signer = ecrecover(hash, v, r, s);
 +    if (signer == address(0)) {
-+      return (address(0), RecoverError.InvalidSignature);
++      return (address(0), RecoverError.InvalidSignature, bytes32(0));
      }
  
 -    return true;
-+    return (signer, RecoverError.NoError);
-   }
- 
-   /**
--   * @dev Moves `amount` of tokens from `from` to `to`.
++    return (signer, RecoverError.NoError, bytes32(0));
++  }
++
++  /**
 +   * @dev Overload of {ECDSA-recover} that receives the `v`,
 +   * `r` and `s` signature fields separately.
 +   */
@@ -909,12 +1028,18 @@ index 6b21e42..0e45f5c 100644
 +    bytes32 r,
 +    bytes32 s
 +  ) internal pure returns (address) {
-+    (address recovered, RecoverError error) = tryRecover(hash, v, r, s);
-+    _throwError(error);
++    (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
++      hash,
++      v,
++      r,
++      s
++    );
++    _throwError(error, errorArg);
 +    return recovered;
-+  }
-+
-+  /**
+   }
+ 
+   /**
+-   * @dev Moves `amount` of tokens from `from` to `to`.
 +   * @dev Returns an Ethereum Signed Message, created from a `hash`. This
 +   * produces hash corresponding to the one signed with the
 +   * https://eth.wiki/json-rpc/API#eth_sign[`eth_sign`]
@@ -976,7 +1101,7 @@ index 6b21e42..0e45f5c 100644
 +    /// @solidity memory-safe-assembly
 +    assembly {
 +      let ptr := mload(0x40)
-+      mstore(ptr, '\x19\x01')
++      mstore(ptr, hex'19_01')
 +      mstore(add(ptr, 0x02), domainSeparator)
 +      mstore(add(ptr, 0x22), structHash)
 +      data := keccak256(ptr, 0x42)
@@ -990,7 +1115,8 @@ index 6b21e42..0e45f5c 100644
 -   * - `from` cannot be the zero address.
 -   * - `to` cannot be the zero address.
 -   * - `from` must have a balance of at least `amount`.
--   */
++   * See {recover}.
+    */
 -  function _transfer(
 -    address from,
 -    address to,
@@ -998,9 +1124,17 @@ index 6b21e42..0e45f5c 100644
 -  ) internal virtual {
 -    require(from != address(0), 'ERC20: transfer from the zero address');
 -    require(to != address(0), 'ERC20: transfer to the zero address');
--
++  function toDataWithIntendedValidatorHash(
++    address validator,
++    bytes memory data
++  ) internal pure returns (bytes32) {
++    return keccak256(abi.encodePacked(hex'19_00', validator, data));
++  }
++}
+ 
 -    _beforeTokenTransfer(from, to, amount);
--
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/ShortStrings.sol)
+ 
 -    uint256 fromBalance = _balances[from];
 -    require(fromBalance >= amount, 'ERC20: transfer amount exceeds balance');
 -    unchecked {
@@ -1008,17 +1142,7 @@ index 6b21e42..0e45f5c 100644
 -      // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
 -      // decrementing then incrementing.
 -      _balances[to] += amount;
-+   * See {recover}.
-+   */
-+  function toDataWithIntendedValidatorHash(
-+    address validator,
-+    bytes memory data
-+  ) internal pure returns (bytes32) {
-+    return keccak256(abi.encodePacked('\x19\x00', validator, data));
-+  }
-+}
-+
-+// OpenZeppelin Contracts (last updated v4.7.0) (utils/StorageSlot.sol)
++// OpenZeppelin Contracts (last updated v4.9.0) (utils/StorageSlot.sol)
 +// This file was procedurally generated from scripts/generate/templates/StorageSlot.js.
 +
 +/**
@@ -1039,7 +1163,7 @@ index 6b21e42..0e45f5c 100644
 + *     }
 + *
 + *     function _setImplementation(address newImplementation) internal {
-+ *         require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
++ *         require(newImplementation.code.length > 0);
 + *         StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
 + *     }
 + * }
@@ -1339,6 +1463,8 @@ index 6b21e42..0e45f5c 100644
 +  }
 +}
 +
++// OpenZeppelin Contracts (last updated v4.9.0) (interfaces/IERC5267.sol)
++
 +interface IERC5267 {
 +  /**
 +   * @dev MAY be emitted to signal that the domain could have changed.
@@ -1453,7 +1579,8 @@ index 6b21e42..0e45f5c 100644
 -   * Revert if not enough allowance is available.
 -   *
 -   * Might emit an {Approval} event.
--   */
++   * @dev Returns the domain separator for the current chain.
+    */
 -  function _spendAllowance(
 -    address owner,
 -    address spender,
@@ -1465,8 +1592,6 @@ index 6b21e42..0e45f5c 100644
 -      unchecked {
 -        _approve(owner, spender, currentAllowance - amount);
 -      }
-+   * @dev Returns the domain separator for the current chain.
-+   */
 +  function _domainSeparatorV4() internal view returns (bytes32) {
 +    if (address(this) == _cachedThis && block.chainid == _cachedChainId) {
 +      return _cachedDomainSeparator;
@@ -1557,11 +1682,16 @@ index 6b21e42..0e45f5c 100644
 -   * @dev Hook that is called after any transfer of tokens. This includes
 -   * minting and burning.
 +   * @dev The name parameter for the EIP712 domain.
-+   *
+    *
+-   * Calling conditions:
 +   * NOTE: By default this function reads _name which is an immutable value.
 +   * It only reads from storage if necessary (in case the value is too large to fit in a ShortString).
     *
--   * Calling conditions:
+-   * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+-   * has been transferred to `to`.
+-   * - when `from` is zero, `amount` tokens have been minted for `to`.
+-   * - when `to` is zero, `amount` of ``from``'s tokens have been burned.
+-   * - `from` and `to` are never both zero.
 +   * _Available since v5.0._
 +   */
 +  /// @dev BGD: we use toString instead of toStringWithFallback as we dont have fallback, to not modify previous storage layout
@@ -1572,12 +1702,7 @@ index 6b21e42..0e45f5c 100644
 +
 +  /**
 +   * @dev The version parameter for the EIP712 domain.
-    *
--   * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
--   * has been transferred to `to`.
--   * - when `from` is zero, `amount` tokens have been minted for `to`.
--   * - when `to` is zero, `amount` of ``from``'s tokens have been burned.
--   * - `from` and `to` are never both zero.
++   *
 +   * NOTE: By default this function reads _version which is an immutable value.
 +   * It only reads from storage if necessary (in case the value is too large to fit in a ShortString).
     *
@@ -1597,7 +1722,7 @@ index 6b21e42..0e45f5c 100644
  }
  
  /**
-@@ -1305,439 +2111,330 @@ interface ITransferHook {
+@@ -1305,439 +2233,322 @@ interface ITransferHook {
    function onTransfer(address from, address to, uint256 amount) external;
  }
  
@@ -1682,11 +1807,9 @@ index 6b21e42..0e45f5c 100644
 -  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
 -}
 -
- /**
+-/**
 - * @notice implementation of the AAVE token contract
-+ * @title ERC20WithSnapshot
-+ * @notice ERC20 including snapshots of balances on transfer-related actions
-  * @author Aave
+- * @author Aave
 - */
 -abstract contract GovernancePowerDelegationERC20 is
 -  ERC20,
@@ -1702,21 +1825,11 @@ index 6b21e42..0e45f5c 100644
 -    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
 -
 -  /// @dev snapshot of a value on a specific block, used for votes
-+ **/
-+abstract contract GovernancePowerWithSnapshot {
-   struct Snapshot {
-     uint128 blockNumber;
-     uint128 value;
-   }
-+  /// @dev DEPRECATED
-+  mapping(address => mapping(uint256 => Snapshot))
-+    public deprecated_votingSnapshots;
-+  /// @dev DEPRECATED
-+  mapping(address => uint256) public deprecated_votingSnapshotsCounts;
-+  /// @dev DEPRECATED
-+  ITransferHook public deprecated_aaveGovernance;
-+}
- 
+-  struct Snapshot {
+-    uint128 blockNumber;
+-    uint128 value;
+-  }
+-
 -  /**
 -   * @dev delegates one specific power to a delegatee
 -   * @param delegatee the user which delegated power has changed
@@ -1727,23 +1840,8 @@ index 6b21e42..0e45f5c 100644
 -    DelegationType delegationType
 -  ) external override {
 -    _delegateByType(msg.sender, delegatee, delegationType);
-+// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
-+
-+/**
-+ * @dev Provides information about the current execution context, including the
-+ * sender of the transaction and its data. While these are generally available
-+ * via msg.sender and msg.data, they should not be accessed in such a direct
-+ * manner, since when dealing with meta-transactions the account sending and
-+ * paying for execution may not be the actual sender (as far as an application
-+ * is concerned).
-+ *
-+ * This contract is only required for intermediate, library-like contracts.
-+ */
-+abstract contract Context {
-+  function _msgSender() internal view virtual returns (address) {
-+    return msg.sender;
-   }
- 
+-  }
+-
 -  /**
 -   * @dev delegates all the powers to a specific user
 -   * @param delegatee the user to which the power will be delegated
@@ -1751,11 +1849,8 @@ index 6b21e42..0e45f5c 100644
 -  function delegate(address delegatee) external override {
 -    _delegateByType(msg.sender, delegatee, DelegationType.VOTING_POWER);
 -    _delegateByType(msg.sender, delegatee, DelegationType.PROPOSITION_POWER);
-+  function _msgData() internal view virtual returns (bytes calldata) {
-+    return msg.data;
-   }
-+}
- 
+-  }
+-
 -  /**
 -   * @dev returns the delegatee of an user
 -   * @param delegator the address of the delegator
@@ -1771,22 +1866,8 @@ index 6b21e42..0e45f5c 100644
 -    ) = _getDelegationDataByType(delegationType);
 -
 -    return _getDelegatee(delegator, delegates);
-+enum DelegationMode {
-+  NO_DELEGATION,
-+  VOTING_DELEGATED,
-+  PROPOSITION_DELEGATED,
-+  FULL_POWER_DELEGATED
-+}
-+
-+// Inspired by OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
-+abstract contract BaseAaveToken is Context, IERC20Metadata {
-+  struct DelegationAwareBalance {
-+    uint104 balance;
-+    uint72 delegatedPropositionBalance;
-+    uint72 delegatedVotingBalance;
-+    DelegationMode delegationMode;
-   }
- 
+-  }
+-
 -  /**
 -   * @dev returns the current delegated power of a user. The current power is the
 -   * power delegated at the time of the last snapshot
@@ -1799,15 +1880,12 @@ index 6b21e42..0e45f5c 100644
 -    (
 -      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
 -      mapping(address => uint256) storage snapshotsCounts,
-+  mapping(address => DelegationAwareBalance) internal _balances;
- 
+-
 -    ) = _getDelegationDataByType(delegationType);
-+  mapping(address => mapping(address => uint256)) internal _allowances;
- 
+-
 -    return _searchByBlockNumber(snapshots, snapshotsCounts, user, block.number);
 -  }
-+  uint256 internal _totalSupply;
- 
+-
 -  /**
 -   * @dev returns the delegated power of a user at a certain block
 -   * @param user the user
@@ -1825,14 +1903,8 @@ index 6b21e42..0e45f5c 100644
 -
 -    return _searchByBlockNumber(snapshots, snapshotsCounts, user, blockNumber);
 -  }
-+  string internal _name;
-+  string internal _symbol;
-+
-+  // @dev DEPRECATED
-+  // kept for backwards compatibility with old storage layout
-+  uint8 private ______DEPRECATED_OLD_ERC20_DECIMALS;
- 
-   /**
+-
+-  /**
 -   * @dev returns the total supply at a certain block number
 -   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
 -   * In this initial implementation with no AAVE minting, simply returns the current supply
@@ -1840,13 +1912,9 @@ index 6b21e42..0e45f5c 100644
 -   **/
 -  function totalSupplyAt(uint256) external view override returns (uint256) {
 -    return super.totalSupply();
-+   * @dev Returns the name of the token.
-+   */
-+  function name() public view virtual override returns (string memory) {
-+    return _name;
-   }
- 
-   /**
+-  }
+-
+-  /**
 -   * @dev delegates the specific power to a delegatee
 -   * @param delegatee the user which delegated power has changed
 -   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
@@ -1877,13 +1945,8 @@ index 6b21e42..0e45f5c 100644
 -      delegationType
 -    );
 -    emit DelegateChanged(delegator, delegatee, delegationType);
-+   * @dev Returns the symbol of the token, usually a shorter version of the
-+   * name.
-+   */
-+  function symbol() public view virtual override returns (string memory) {
-+    return _symbol;
-   }
- 
+-  }
+-
 -  /**
 -   * @dev moves delegated power from one user to another
 -   * @param from the user from which delegated power is moved
@@ -1900,48 +1963,23 @@ index 6b21e42..0e45f5c 100644
 -    if (from == to) {
 -      return;
 -    }
-+  function decimals() public view virtual override returns (uint8) {
-+    return 18;
-+  }
- 
+-
 -    (
 -      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
 -      mapping(address => uint256) storage snapshotsCounts,
-+  function totalSupply() public view virtual override returns (uint256) {
-+    return _totalSupply;
-+  }
- 
+-
 -    ) = _getDelegationDataByType(delegationType);
-+  function balanceOf(
-+    address account
-+  ) public view virtual override returns (uint256) {
-+    return _balances[account].balance;
-+  }
- 
+-
 -    if (from != address(0)) {
 -      uint256 previous = 0;
 -      uint256 fromSnapshotsCount = snapshotsCounts[from];
-+  function transfer(
-+    address to,
-+    uint256 amount
-+  ) public virtual override returns (bool) {
-+    address owner = _msgSender();
-+    _transfer(owner, to, amount);
-+    return true;
-+  }
- 
+-
 -      if (fromSnapshotsCount != 0) {
 -        previous = snapshots[from][fromSnapshotsCount - 1].value;
 -      } else {
 -        previous = balanceOf(from);
 -      }
-+  function allowance(
-+    address owner,
-+    address spender
-+  ) public view virtual override returns (uint256) {
-+    return _allowances[owner][spender];
-+  }
- 
+-
 -      _writeSnapshot(
 -        snapshots,
 -        snapshotsCounts,
@@ -1949,15 +1987,7 @@ index 6b21e42..0e45f5c 100644
 -        uint128(previous),
 -        uint128(previous - amount)
 -      );
-+  function approve(
-+    address spender,
-+    uint256 amount
-+  ) public virtual override returns (bool) {
-+    address owner = _msgSender();
-+    _approve(owner, spender, amount);
-+    return true;
-+  }
- 
+-
 -      emit DelegatedPowerChanged(from, previous - amount, delegationType);
 -    }
 -    if (to != address(0)) {
@@ -1968,17 +1998,7 @@ index 6b21e42..0e45f5c 100644
 -      } else {
 -        previous = balanceOf(to);
 -      }
-+  function transferFrom(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) public virtual override returns (bool) {
-+    address spender = _msgSender();
-+    _spendAllowance(from, spender, amount);
-+    _transfer(from, to, amount);
-+    return true;
-+  }
- 
+-
 -      _writeSnapshot(
 -        snapshots,
 -        snapshotsCounts,
@@ -1986,33 +2006,11 @@ index 6b21e42..0e45f5c 100644
 -        uint128(previous),
 -        uint128(previous + amount)
 -      );
-+  function increaseAllowance(
-+    address spender,
-+    uint256 addedValue
-+  ) public virtual returns (bool) {
-+    address owner = _msgSender();
-+    _approve(owner, spender, _allowances[owner][spender] + addedValue);
-+    return true;
-+  }
- 
+-
 -      emit DelegatedPowerChanged(to, previous + amount, delegationType);
-+  function decreaseAllowance(
-+    address spender,
-+    uint256 subtractedValue
-+  ) public virtual returns (bool) {
-+    address owner = _msgSender();
-+    uint256 currentAllowance = _allowances[owner][spender];
-+    require(
-+      currentAllowance >= subtractedValue,
-+      'ERC20: decreased allowance below zero'
-+    );
-+    unchecked {
-+      _approve(owner, spender, currentAllowance - subtractedValue);
-     }
-+
-+    return true;
-   }
- 
+-    }
+-  }
+-
 -  /**
 -   * @dev searches a snapshot by block number. Uses binary search.
 -   * @param snapshots the snapshots mapping
@@ -2033,35 +2031,15 @@ index 6b21e42..0e45f5c 100644
 -    if (snapshotsCount == 0) {
 -      return balanceOf(user);
 -    }
-+  function _transfer(
-+    address from,
-+    address to,
-+    uint256 amount
-+  ) internal virtual {
-+    require(from != address(0), 'ERC20: transfer from the zero address');
-+    require(to != address(0), 'ERC20: transfer to the zero address');
-+
-+    uint104 fromBalanceBefore = _balances[from].balance;
-+    uint104 toBalanceBefore = _balances[to].balance;
- 
+-
 -    // Check implicit zero balance
 -    if (snapshots[user][0].blockNumber > blockNumber) {
 -      return 0;
-+    require(
-+      fromBalanceBefore >= amount,
-+      'ERC20: transfer amount exceeds balance'
-+    );
-+    unchecked {
-+      _balances[from].balance = fromBalanceBefore - uint104(amount);
-     }
- 
+-    }
+-
 -    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
-+    _balances[to].balance = toBalanceBefore + uint104(amount);
-+
-+    _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
-+    emit Transfer(from, to, amount);
-   }
- 
+-  }
+-
 -  function _binarySearch(
 -    mapping(uint256 => Snapshot) storage snapshots,
 -    uint256 snapshotsCount,
@@ -2072,18 +2050,7 @@ index 6b21e42..0e45f5c 100644
 -      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
 -        return snapshots[snapshotsCount - 1].value;
 -      }
-+  function _approve(
-+    address owner,
-+    address spender,
-+    uint256 amount
-+  ) internal virtual {
-+    require(owner != address(0), 'ERC20: approve from the zero address');
-+    require(spender != address(0), 'ERC20: approve to the zero address');
-+
-+    _allowances[owner][spender] = amount;
-+    emit Approval(owner, spender, amount);
-+  }
- 
+-
 -      uint256 lower = 0;
 -      uint256 upper = snapshotsCount - 1;
 -      while (upper > lower) {
@@ -2096,34 +2063,18 @@ index 6b21e42..0e45f5c 100644
 -        } else {
 -          upper = center - 1;
 -        }
-+  function _spendAllowance(
-+    address owner,
-+    address spender,
-+    uint256 amount
-+  ) internal virtual {
-+    uint256 currentAllowance = allowance(owner, spender);
-+    if (currentAllowance != type(uint256).max) {
-+      require(currentAllowance >= amount, 'ERC20: insufficient allowance');
-+      unchecked {
-+        _approve(owner, spender, currentAllowance - amount);
-       }
+-      }
 -      return snapshots[lower].value;
-     }
-   }
- 
-   /**
+-    }
+-  }
+-
+-  /**
 -   * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type
 -   * NOTE: Ideal implementation would have mapped this in a struct by delegation type. Unfortunately,
 -   * the AAVE token and StakeToken already include a mapping for the snapshots, so we require contracts
 -   * who inherit from this to provide access to the delegation data by overriding this method.
 -   * @param delegationType the type of delegation
-+   * @dev after token transfer hook, added for delegation system
-+   * @param from token sender
-+   * @param to token recipient
-+   * @param fromBalanceBefore balance of the sender before transfer
-+   * @param toBalanceBefore balance of the recipient before transfer
-+   * @param amount amount of tokens sent
-    **/
+-   **/
 -  function _getDelegationDataByType(
 -    DelegationType delegationType
 -  )
@@ -2135,35 +2086,13 @@ index 6b21e42..0e45f5c 100644
 -      mapping(address => uint256) storage, //snapshots count
 -      mapping(address => address) storage //delegatees list
 -    );
-+  function _afterTokenTransfer(
-+    address from,
-+    address to,
-+    uint256 fromBalanceBefore,
-+    uint256 toBalanceBefore,
-+    uint256 amount
-+  ) internal virtual {}
-+}
- 
+-
 -  /**
 -   * @dev Writes a snapshot for an owner of tokens
 -   * @param owner The owner of the tokens
 -   * @param oldValue The value before the operation that is gonna be executed after the snapshot
 -   * @param newValue The value after the operation
-+/**
-+ * @title BaseMintableAaveToken
-+ * @author BGD labs
-+ * @notice extension for BaseAaveToken adding mint/burn and transfer hooks
-+ */
-+contract BaseMintableAaveToken is BaseAaveToken {
-+  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-+   * the total supply.
-+   *
-+   * Emits a {Transfer} event with `from` set to the zero address.
-+   *
-+   * Requirements:
-+   *
-+   * - `account` cannot be the zero address.
-    */
+-   */
 -  function _writeSnapshot(
 -    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
 -    mapping(address => uint256) storage snapshotsCounts,
@@ -2186,19 +2115,9 @@ index 6b21e42..0e45f5c 100644
 -      snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);
 -      snapshotsCounts[owner] = ownerSnapshotsCount + 1;
 -    }
-+  function _mint(address account, uint104 amount) internal virtual {
-+    require(account != address(0), 'ERC20: mint to the zero address');
-+
-+    _beforeTokenTransfer(address(0), account, amount);
-+
-+    _totalSupply += amount;
-+    _balances[account].balance += amount;
-+    emit Transfer(address(0), account, amount);
-+
-+    _afterTokenTransfer(address(0), account, amount);
-   }
- 
-   /**
+-  }
+-
+-  /**
 -   * @dev returns the user delegatee. If a user never performed any delegation,
 -   * his delegated address will be 0x0. In that case we simply return the user itself
 -   * @param delegator the address of the user for which return the delegatee
@@ -2212,6 +2131,264 @@ index 6b21e42..0e45f5c 100644
 -
 -    if (previousDelegatee == address(0)) {
 -      return delegator;
+-    }
+-
+-    return previousDelegatee;
+-  }
+-}
+-
+ /**
+  * @title ERC20WithSnapshot
+  * @notice ERC20 including snapshots of balances on transfer-related actions
+  * @author Aave
+  **/
+-abstract contract GovernancePowerWithSnapshot is
+-  GovernancePowerDelegationERC20
+-{
++abstract contract GovernancePowerWithSnapshot {
++  uint256[3] private __________DEPRECATED_GOV_V2_PART;
++}
++
++// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
++
++/**
++ * @dev Provides information about the current execution context, including the
++ * sender of the transaction and its data. While these are generally available
++ * via msg.sender and msg.data, they should not be accessed in such a direct
++ * manner, since when dealing with meta-transactions the account sending and
++ * paying for execution may not be the actual sender (as far as an application
++ * is concerned).
++ *
++ * This contract is only required for intermediate, library-like contracts.
++ */
++abstract contract Context {
++  function _msgSender() internal view virtual returns (address) {
++    return msg.sender;
++  }
++
++  function _msgData() internal view virtual returns (bytes calldata) {
++    return msg.data;
++  }
++}
++
++enum DelegationMode {
++  NO_DELEGATION,
++  VOTING_DELEGATED,
++  PROPOSITION_DELEGATED,
++  FULL_POWER_DELEGATED
++}
++
++// Inspired by OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
++abstract contract BaseAaveToken is Context, IERC20Metadata {
++  struct DelegationAwareBalance {
++    uint104 balance;
++    uint72 delegatedPropositionBalance;
++    uint72 delegatedVotingBalance;
++    DelegationMode delegationMode;
++  }
++
++  mapping(address => DelegationAwareBalance) internal _balances;
++
++  mapping(address => mapping(address => uint256)) internal _allowances;
++
++  uint256 internal _totalSupply;
++
++  string internal _name;
++  string internal _symbol;
++
++  // @dev DEPRECATED
++  // kept for backwards compatibility with old storage layout
++  uint8 private ______DEPRECATED_OLD_ERC20_DECIMALS;
++
++  /**
++   * @dev Returns the name of the token.
++   */
++  function name() public view virtual override returns (string memory) {
++    return _name;
++  }
++
++  /**
++   * @dev Returns the symbol of the token, usually a shorter version of the
++   * name.
++   */
++  function symbol() public view virtual override returns (string memory) {
++    return _symbol;
++  }
++
++  function decimals() public view virtual override returns (uint8) {
++    return 18;
++  }
++
++  function totalSupply() public view virtual override returns (uint256) {
++    return _totalSupply;
++  }
++
++  function balanceOf(
++    address account
++  ) public view virtual override returns (uint256) {
++    return _balances[account].balance;
++  }
++
++  function transfer(
++    address to,
++    uint256 amount
++  ) public virtual override returns (bool) {
++    address owner = _msgSender();
++    _transfer(owner, to, amount);
++    return true;
++  }
++
++  function allowance(
++    address owner,
++    address spender
++  ) public view virtual override returns (uint256) {
++    return _allowances[owner][spender];
++  }
++
++  function approve(
++    address spender,
++    uint256 amount
++  ) public virtual override returns (bool) {
++    address owner = _msgSender();
++    _approve(owner, spender, amount);
++    return true;
++  }
++
++  function transferFrom(
++    address from,
++    address to,
++    uint256 amount
++  ) public virtual override returns (bool) {
++    address spender = _msgSender();
++    _spendAllowance(from, spender, amount);
++    _transfer(from, to, amount);
++    return true;
++  }
++
++  function increaseAllowance(
++    address spender,
++    uint256 addedValue
++  ) public virtual returns (bool) {
++    address owner = _msgSender();
++    _approve(owner, spender, _allowances[owner][spender] + addedValue);
++    return true;
++  }
++
++  function decreaseAllowance(
++    address spender,
++    uint256 subtractedValue
++  ) public virtual returns (bool) {
++    address owner = _msgSender();
++    uint256 currentAllowance = _allowances[owner][spender];
++    require(
++      currentAllowance >= subtractedValue,
++      'ERC20: decreased allowance below zero'
++    );
++    unchecked {
++      _approve(owner, spender, currentAllowance - subtractedValue);
++    }
++
++    return true;
++  }
++
++  function _transfer(
++    address from,
++    address to,
++    uint256 amount
++  ) internal virtual {
++    require(from != address(0), 'ERC20: transfer from the zero address');
++    require(to != address(0), 'ERC20: transfer to the zero address');
++
++    if (from != to) {
++      uint104 fromBalanceBefore = _balances[from].balance;
++      uint104 toBalanceBefore = _balances[to].balance;
++
++      require(
++        fromBalanceBefore >= amount,
++        'ERC20: transfer amount exceeds balance'
++      );
++      unchecked {
++        _balances[from].balance = fromBalanceBefore - uint104(amount);
++      }
++
++      _balances[to].balance = toBalanceBefore + uint104(amount);
++
++      _afterTokenTransfer(from, to, fromBalanceBefore, toBalanceBefore, amount);
++    }
++    emit Transfer(from, to, amount);
++  }
++
++  function _approve(
++    address owner,
++    address spender,
++    uint256 amount
++  ) internal virtual {
++    require(owner != address(0), 'ERC20: approve from the zero address');
++    require(spender != address(0), 'ERC20: approve to the zero address');
++
++    _allowances[owner][spender] = amount;
++    emit Approval(owner, spender, amount);
++  }
++
++  function _spendAllowance(
++    address owner,
++    address spender,
++    uint256 amount
++  ) internal virtual {
++    uint256 currentAllowance = allowance(owner, spender);
++    if (currentAllowance != type(uint256).max) {
++      require(currentAllowance >= amount, 'ERC20: insufficient allowance');
++      unchecked {
++        _approve(owner, spender, currentAllowance - amount);
++      }
++    }
++  }
++
++  /**
++   * @dev after token transfer hook, added for delegation system
++   * @param from token sender
++   * @param to token recipient
++   * @param fromBalanceBefore balance of the sender before transfer
++   * @param toBalanceBefore balance of the recipient before transfer
++   * @param amount amount of tokens sent
++   **/
++  function _afterTokenTransfer(
++    address from,
++    address to,
++    uint256 fromBalanceBefore,
++    uint256 toBalanceBefore,
++    uint256 amount
++  ) internal virtual {}
++}
++
++/**
++ * @title BaseMintableAaveToken
++ * @author BGD labs
++ * @notice extension for BaseAaveToken adding mint/burn and transfer hooks
++ */
++contract BaseMintableAaveToken is BaseAaveToken {
++  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
++   * the total supply.
++   *
++   * Emits a {Transfer} event with `from` set to the zero address.
++   *
++   * Requirements:
++   *
++   * - `account` cannot be the zero address.
++   */
++  function _mint(address account, uint104 amount) internal virtual {
++    require(account != address(0), 'ERC20: mint to the zero address');
++
++    _beforeTokenTransfer(address(0), account, amount);
++
++    _totalSupply += amount;
++    _balances[account].balance += amount;
++    emit Transfer(address(0), account, amount);
++
++    _afterTokenTransfer(address(0), account, amount);
++  }
++
++  /**
 +   * @dev Destroys `amount` tokens from `account`, reducing the
 +   * total supply.
 +   *
@@ -2233,28 +2410,14 @@ index 6b21e42..0e45f5c 100644
 +      _balances[account].balance = accountBalance - amount;
 +      // Overflow not possible: amount <= accountBalance <= totalSupply.
 +      _totalSupply -= amount;
-     }
- 
--    return previousDelegatee;
++    }
++
 +    emit Transfer(account, address(0), amount);
 +
 +    _afterTokenTransfer(account, address(0), amount);
-   }
--}
- 
--/**
-- * @title ERC20WithSnapshot
-- * @notice ERC20 including snapshots of balances on transfer-related actions
-- * @author Aave
-- **/
--abstract contract GovernancePowerWithSnapshot is
--  GovernancePowerDelegationERC20
--{
-   /**
--   * @dev The following storage layout points to the prior StakedToken.sol implementation:
--   * _snapshots => _votingSnapshots
--   * _snapshotsCounts =>  _votingSnapshotsCounts
--   * _aaveGovernance => _aaveGovernance
++  }
++
++  /**
 +   * @dev Hook that is called before any transfer of tokens. This includes
 +   * minting and burning.
 +   *
@@ -2267,21 +2430,18 @@ index 6b21e42..0e45f5c 100644
 +   * - `from` and `to` are never both zero.
 +   *
 +   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-    */
--  mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
--  mapping(address => uint256) public _votingSnapshotsCounts;
++   */
 +  function _beforeTokenTransfer(
 +    address from,
 +    address to,
 +    uint256 amount
 +  ) internal virtual {}
- 
--  /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
--  /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
--  /// to control all potential reentrancies by calling back the this contract
--  /// @dev DEPRECATED
--  ITransferHook public _aaveGovernance;
-+  /**
++
+   /**
+-   * @dev The following storage layout points to the prior StakedToken.sol implementation:
+-   * _snapshots => _votingSnapshots
+-   * _snapshotsCounts =>  _votingSnapshotsCounts
+-   * _aaveGovernance => _aaveGovernance
 +   * @dev Hook that is called after any transfer of tokens. This includes
 +   * minting and burning.
 +   *
@@ -2294,7 +2454,15 @@ index 6b21e42..0e45f5c 100644
 +   * - `from` and `to` are never both zero.
 +   *
 +   * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-+   */
+    */
+-  mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
+-  mapping(address => uint256) public _votingSnapshotsCounts;
+-
+-  /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
+-  /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
+-  /// to control all potential reentrancies by calling back the this contract
+-  /// @dev DEPRECATED
+-  ITransferHook public _aaveGovernance;
 +  function _afterTokenTransfer(
 +    address from,
 +    address to,
@@ -2303,7 +2471,7 @@ index 6b21e42..0e45f5c 100644
  }
  
  /**
-@@ -1747,9 +2444,11 @@ abstract contract GovernancePowerWithSnapshot is
+@@ -1747,9 +2558,11 @@ abstract contract GovernancePowerWithSnapshot is
   */
  abstract contract StakedTokenV2 is
    IStakedTokenV2,
@@ -2316,20 +2484,20 @@ index 6b21e42..0e45f5c 100644
  {
    using SafeERC20 for IERC20;
  
-@@ -1771,16 +2470,13 @@ abstract contract StakedTokenV2 is
-   mapping(address => address) internal _votingDelegates;
+@@ -1766,21 +2579,8 @@ abstract contract StakedTokenV2 is
+   mapping(address => CooldownSnapshot) public stakersCooldowns;
  
-   mapping(address => mapping(uint256 => Snapshot))
+   /// @dev End of Storage layout from StakedToken v1
++  uint256[5] private ______DEPRECATED_FROM_STK_AAVE_V2;
+ 
+-  /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
+-  mapping(address => address) internal _votingDelegates;
+-
+-  mapping(address => mapping(uint256 => Snapshot))
 -    internal _propositionPowerSnapshots;
 -  mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
 -  mapping(address => address) internal _propositionPowerDelegates;
-+    internal deprecated_propositionPowerSnapshots;
-+  mapping(address => uint256)
-+    internal deprecated_propositionPowerSnapshotsCounts;
-+  mapping(address => address) internal deprecated_propositionPowerDelegates;
-+
-+  bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
- 
+-
 -  bytes32 public DOMAIN_SEPARATOR;
 -  bytes public constant EIP712_REVISION = bytes('1');
 -  bytes32 internal constant EIP712_DOMAIN =
@@ -2339,7 +2507,7 @@ index 6b21e42..0e45f5c 100644
    bytes32 public constant PERMIT_TYPEHASH =
      keccak256(
        'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-@@ -1796,13 +2492,30 @@ abstract contract StakedTokenV2 is
+@@ -1796,13 +2596,30 @@ abstract contract StakedTokenV2 is
      address rewardsVault,
      address emissionManager,
      uint128 distributionDuration
@@ -2371,7 +2539,7 @@ index 6b21e42..0e45f5c 100644
    /// @inheritdoc IStakedTokenV2
    function stake(address onBehalfOf, uint256 amount) external virtual override;
  
-@@ -1845,99 +2558,26 @@ abstract contract StakedTokenV2 is
+@@ -1845,99 +2662,26 @@ abstract contract StakedTokenV2 is
      //solium-disable-next-line
      require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
      uint256 currentValidNonce = _nonces[owner];
@@ -2481,7 +2649,7 @@ index 6b21e42..0e45f5c 100644
    /**
     * @dev Updates the user state related with his accrued rewards
     * @param user Address of the user
-@@ -1967,34 +2607,6 @@ abstract contract StakedTokenV2 is
+@@ -1967,34 +2711,6 @@ abstract contract StakedTokenV2 is
  
      return unclaimedRewards;
    }
@@ -2516,7 +2684,7 @@ index 6b21e42..0e45f5c 100644
  }
  
  interface IStakedTokenV3 is IStakedTokenV2 {
-@@ -3516,6 +4128,627 @@ library SafeCast {
+@@ -3516,6 +4232,627 @@ library SafeCast {
    }
  }
  
@@ -3144,7 +3312,7 @@ index 6b21e42..0e45f5c 100644
  /**
   * @title StakedTokenV3
   * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
-@@ -3525,11 +4758,13 @@ contract StakedTokenV3 is
+@@ -3525,11 +4862,13 @@ contract StakedTokenV3 is
    StakedTokenV2,
    IStakedTokenV3,
    RoleManager,
@@ -3159,7 +3327,7 @@ index 6b21e42..0e45f5c 100644
  
    uint256 public constant SLASH_ADMIN_ROLE = 0;
    uint256 public constant COOLDOWN_ADMIN_ROLE = 1;
-@@ -3542,7 +4777,7 @@ contract StakedTokenV3 is
+@@ -3542,7 +4881,7 @@ contract StakedTokenV3 is
    uint256 public immutable LOWER_BOUND;
  
    // Reserved storage space to allow for layout changes in the future.
@@ -3168,7 +3336,7 @@ index 6b21e42..0e45f5c 100644
    /// @notice Seconds between starting cooldown and being able to withdraw
    uint256 internal _cooldownSeconds;
    /// @notice The maximum amount of funds that can be slashed at any given time
-@@ -3604,7 +4839,7 @@ contract StakedTokenV3 is
+@@ -3604,7 +4943,7 @@ contract StakedTokenV3 is
     * @return The revision
     */
    function REVISION() public pure virtual returns (uint256) {
@@ -3177,7 +3345,7 @@ index 6b21e42..0e45f5c 100644
    }
  
    /**
-@@ -3618,21 +4853,7 @@ contract StakedTokenV3 is
+@@ -3618,21 +4957,7 @@ contract StakedTokenV3 is
    /**
     * @dev Called by the proxy contract
     */
@@ -3200,7 +3368,7 @@ index 6b21e42..0e45f5c 100644
  
    function _initialize(
      address slashingAdmin,
-@@ -3705,7 +4926,7 @@ contract StakedTokenV3 is
+@@ -3705,7 +5030,7 @@ contract StakedTokenV3 is
      address to,
      uint256 amount
    ) external override(IStakedTokenV2, StakedTokenV2) {
@@ -3209,7 +3377,7 @@ index 6b21e42..0e45f5c 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3714,7 +4935,7 @@ contract StakedTokenV3 is
+@@ -3714,7 +5039,7 @@ contract StakedTokenV3 is
      address to,
      uint256 amount
    ) external override onlyClaimHelper {
@@ -3218,7 +3386,7 @@ index 6b21e42..0e45f5c 100644
    }
  
    /// @inheritdoc IStakedTokenV2
-@@ -3741,7 +4962,7 @@ contract StakedTokenV3 is
+@@ -3741,7 +5066,7 @@ contract StakedTokenV3 is
      uint256 redeemAmount
    ) external override {
      _claimRewards(msg.sender, to, claimAmount);
@@ -3227,7 +3395,7 @@ index 6b21e42..0e45f5c 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3752,7 +4973,7 @@ contract StakedTokenV3 is
+@@ -3752,7 +5077,7 @@ contract StakedTokenV3 is
      uint256 redeemAmount
    ) external override onlyClaimHelper {
      _claimRewards(from, to, claimAmount);
@@ -3236,7 +3404,7 @@ index 6b21e42..0e45f5c 100644
    }
  
    /// @inheritdoc IStakedTokenV3
-@@ -3956,7 +5177,7 @@ contract StakedTokenV3 is
+@@ -3956,7 +5281,7 @@ contract StakedTokenV3 is
  
      STAKED_TOKEN.safeTransferFrom(from, address(this), amount);
  
@@ -3245,7 +3413,7 @@ index 6b21e42..0e45f5c 100644
  
      emit Staked(from, to, amount, sharesToMint);
    }
-@@ -3967,13 +5188,13 @@ contract StakedTokenV3 is
+@@ -3967,13 +5292,13 @@ contract StakedTokenV3 is
     * @param to Address to redeem to
     * @param amount Amount to redeem
     */
@@ -3261,7 +3429,7 @@ index 6b21e42..0e45f5c 100644
          'INSUFFICIENT_COOLDOWN'
        );
        require(
-@@ -3995,7 +5216,7 @@ contract StakedTokenV3 is
+@@ -3995,7 +5320,7 @@ contract StakedTokenV3 is
  
      uint256 underlyingToRedeem = previewRedeem(amountToRedeem);
  
@@ -3270,7 +3438,7 @@ index 6b21e42..0e45f5c 100644
  
      if (cooldownSnapshot.timestamp != 0) {
        if (cooldownSnapshot.amount - amountToRedeem == 0) {
-@@ -4058,11 +5279,66 @@ contract StakedTokenV3 is
+@@ -4058,11 +5383,66 @@ contract StakedTokenV3 is
          if (balanceOfFrom == amount) {
            delete stakersCooldowns[from];
          } else if (balanceOfFrom - amount < previousSenderCooldown.amount) {

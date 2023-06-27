@@ -17,10 +17,7 @@ import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
 
-  uint32 internal deprecated_exchangeRateSnapshotsCount;
-  /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => ExchangeRateSnapshot)
-    internal deprecated_exchangeRateSnapshots;
+  uint256[1] private ______DEPRECATED_FROM_STK_AAVE_V3;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtTokenTransferHook public ghoDebtToken;
