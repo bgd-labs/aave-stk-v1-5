@@ -46,7 +46,7 @@ contract GovernanceValidation is BaseTest {
 
   function test_delegateAfterSlash(uint256 amount) public {
     uint256 slashingPercent = 10;
-    vm.assume(amount < type(uint128).max);
+    vm.assume(amount < type(uint104).max);
     vm.assume(amount > 1 ether);
     _stake(amount);
     address delegatee = address(100);

@@ -9,22 +9,11 @@ import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-
 import {StakedAaveV3} from './StakedAaveV3.sol';
 import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
-import {IInitializableAdminUpgradeabilityProxy} from '../interfaces/IInitializableAdminUpgradeabilityProxy.sol';
 
 library GenericProposal {
-  address public constant SLASHING_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  address public constant COOLDOWN_ADMIN = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  address public constant CLAIM_HELPER = AaveGovernanceV2.SHORT_EXECUTOR;
-
   address public constant REWARDS_VAULT = AaveMisc.ECOSYSTEM_RESERVE;
 
   address public constant EMISSION_MANAGER = AaveGovernanceV2.SHORT_EXECUTOR;
-
-  uint256 public constant MAX_SLASHING = 3000; // 30%
-
-  uint256 public constant COOLDOWN_SECONDS = 1728000; // 20 days
 
   uint256 public constant UNSTAKE_WINDOW = 172800; // 2 days
 
@@ -40,11 +29,7 @@ contract ProposalPayloadStkAave {
   address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   function execute() external {
-    // 1. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STK_AAVE).changeAdmin(
-      address(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG)
-    );
-    // 2. deploy newimplementation
+    // 1. deploy newimplementation
     StakedAaveV3 newImpl = new StakedAaveV3(
       IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
       IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
@@ -53,18 +38,11 @@ contract ProposalPayloadStkAave {
       GenericProposal.EMISSION_MANAGER,
       GenericProposal.DISTRIBUTION_DURATION
     );
-    // 3. upgrade & initialize on proxy
+    // 2. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM_LONG).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_AAVE)),
       address(newImpl),
-      abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint256)',
-        GenericProposal.SLASHING_ADMIN,
-        GenericProposal.COOLDOWN_ADMIN,
-        GenericProposal.CLAIM_HELPER,
-        GenericProposal.MAX_SLASHING,
-        GenericProposal.COOLDOWN_SECONDS
-      )
+      abi.encodeWithSignature('initialize()')
     );
   }
 }
@@ -79,11 +57,7 @@ contract ProposalPayloadStkAbpt {
   address public constant ABPT = 0x41A08648C3766F9F9d85598fF102a08f4ef84F84;
 
   function execute() external {
-    // 1. move ownership of current token to new proxy
-    IInitializableAdminUpgradeabilityProxy(STK_ABPT).changeAdmin(
-      AaveMisc.PROXY_ADMIN_ETHEREUM
-    );
-    // 2. deploy newimplementation
+    // 1. deploy newimplementation
     StakedTokenV3 newImpl = new StakedTokenV3(
       IERC20(ABPT),
       IERC20(AaveV2EthereumAssets.AAVE_UNDERLYING),
@@ -92,18 +66,11 @@ contract ProposalPayloadStkAbpt {
       GenericProposal.EMISSION_MANAGER,
       GenericProposal.DISTRIBUTION_DURATION
     );
-    // 3. upgrade & initialize on proxy
+    // 2. upgrade & initialize on proxy
     ProxyAdmin(AaveMisc.PROXY_ADMIN_ETHEREUM).upgradeAndCall(
       TransparentUpgradeableProxy(payable(STK_ABPT)),
       address(newImpl),
-      abi.encodeWithSignature(
-        'initialize(address,address,address,uint256,uint256)',
-        GenericProposal.SLASHING_ADMIN,
-        GenericProposal.COOLDOWN_ADMIN,
-        GenericProposal.CLAIM_HELPER,
-        GenericProposal.MAX_SLASHING,
-        GenericProposal.COOLDOWN_SECONDS
-      )
+      abi.encodeWithSignature('initialize()')
     );
   }
 }

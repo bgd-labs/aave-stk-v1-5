@@ -17,10 +17,7 @@ import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   using SafeCast for uint256;
 
-  uint32 internal deprecated_exchangeRateSnapshotsCount;
-  /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => ExchangeRateSnapshot)
-    internal deprecated_exchangeRateSnapshots;
+  uint256[1] private ______DEPRECATED_FROM_STK_AAVE_V3;
 
   /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
   IGhoVariableDebtTokenTransferHook public ghoDebtToken;
@@ -53,24 +50,7 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   /**
    * @dev Called by the proxy contract
    */
-  function initialize(
-    address slashingAdmin,
-    address cooldownPauseAdmin,
-    address claimHelper,
-    uint256 maxSlashablePercentage,
-    uint256 cooldownSeconds
-  ) external override initializer {
-    _initialize(
-      slashingAdmin,
-      cooldownPauseAdmin,
-      claimHelper,
-      maxSlashablePercentage,
-      cooldownSeconds
-    );
-
-    // needed to claimRewardsAndStake works without a custom approval each time
-    STAKED_TOKEN.approve(address(this), type(uint256).max);
-  }
+  function initialize() external override initializer {}
 
   /// @inheritdoc IStakedAaveV3
   function setGHODebtToken(

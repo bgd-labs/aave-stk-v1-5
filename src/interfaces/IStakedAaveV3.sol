@@ -5,11 +5,6 @@ import {IStakedTokenV3} from './IStakedTokenV3.sol';
 import {IGhoVariableDebtTokenTransferHook} from './IGhoVariableDebtTokenTransferHook.sol';
 
 interface IStakedAaveV3 is IStakedTokenV3 {
-  struct ExchangeRateSnapshot {
-    uint40 blockNumber;
-    uint216 value;
-  }
-
   event GHODebtTokenChanged(address indexed newDebtToken);
 
   /**
