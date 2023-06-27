@@ -41,17 +41,7 @@ abstract contract StakedTokenV2 is
   mapping(address => CooldownSnapshot) public stakersCooldowns;
 
   /// @dev End of Storage layout from StakedToken v1
-
-  /// @dev To see the voting mappings, go to GovernancePowerWithSnapshot.sol
-  mapping(address => address) internal _votingDelegates;
-
-  mapping(address => mapping(uint256 => Snapshot))
-    internal deprecated_propositionPowerSnapshots;
-  mapping(address => uint256)
-    internal deprecated_propositionPowerSnapshotsCounts;
-  mapping(address => address) internal deprecated_propositionPowerDelegates;
-
-  bytes32 public _______DEPRECATED_DOMAIN_SEPARATOR;
+  uint256[5] private ______DEPRECATED_FROM_STK_AAVE_V2;
 
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256(
