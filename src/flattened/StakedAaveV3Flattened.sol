@@ -47,10 +47,10 @@ interface IERC20 {
    *
    * This value changes when {approve} or {transferFrom} are called.
    */
-  function allowance(address owner, address spender)
-    external
-    view
-    returns (uint256);
+  function allowance(
+    address owner,
+    address spender
+  ) external view returns (uint256);
 
   /**
    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -235,13 +235,9 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   /**
    * @dev See {IERC20-balanceOf}.
    */
-  function balanceOf(address account)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function balanceOf(
+    address account
+  ) public view virtual override returns (uint256) {
     return _balances[account];
   }
 
@@ -253,12 +249,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    * - `to` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address to, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function transfer(
+    address to,
+    uint256 amount
+  ) public virtual override returns (bool) {
     address owner = _msgSender();
     _transfer(owner, to, amount);
     return true;
@@ -267,13 +261,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   /**
    * @dev See {IERC20-allowance}.
    */
-  function allowance(address owner, address spender)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function allowance(
+    address owner,
+    address spender
+  ) public view virtual override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -287,12 +278,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function approve(
+    address spender,
+    uint256 amount
+  ) public virtual override returns (bool) {
     address owner = _msgSender();
     _approve(owner, spender, amount);
     return true;
@@ -337,11 +326,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    *
    * - `spender` cannot be the zero address.
    */
-  function increaseAllowance(address spender, uint256 addedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function increaseAllowance(
+    address spender,
+    uint256 addedValue
+  ) public virtual returns (bool) {
     address owner = _msgSender();
     _approve(owner, spender, allowance(owner, spender) + addedValue);
     return true;
@@ -361,11 +349,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    * - `spender` must have allowance for the caller of at least
    * `subtractedValue`.
    */
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function decreaseAllowance(
+    address spender,
+    uint256 subtractedValue
+  ) public virtual returns (bool) {
     address owner = _msgSender();
     uint256 currentAllowance = allowance(owner, spender);
     require(
@@ -593,8 +580,10 @@ interface IGovernancePowerDelegationToken {
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external;
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external;
 
   /**
    * @dev delegates all the powers to a specific user
@@ -606,20 +595,20 @@ interface IGovernancePowerDelegationToken {
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    returns (address);
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view returns (address);
 
   /**
    * @dev returns the current delegated power of a user. The current power is the
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    returns (uint256);
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view returns (uint256);
 
   /**
    * @dev returns the delegated power of a user at a certain block
@@ -665,10 +654,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external
-    override
-  {
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external override {
     _delegateByType(msg.sender, delegatee, delegationType);
   }
 
@@ -685,12 +674,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    override
-    returns (address)
-  {
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view override returns (address) {
     (
       ,
       ,
@@ -705,12 +692,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view override returns (uint256) {
     (
       mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
       mapping(address => uint256) storage snapshotsCounts,
@@ -909,7 +894,9 @@ abstract contract GovernancePowerDelegationERC20 is
    * who inherit from this to provide access to the delegation data by overriding this method.
    * @param delegationType the type of delegation
    **/
-  function _getDelegationDataByType(DelegationType delegationType)
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
     internal
     view
     virtual
@@ -1055,10 +1042,10 @@ library Address {
    *
    * _Available since v3.1._
    */
-  function functionCall(address target, bytes memory data)
-    internal
-    returns (bytes memory)
-  {
+  function functionCall(
+    address target,
+    bytes memory data
+  ) internal returns (bytes memory) {
     return
       functionCallWithValue(target, data, 0, 'Address: low-level call failed');
   }
@@ -1129,11 +1116,10 @@ library Address {
    *
    * _Available since v3.3._
    */
-  function functionStaticCall(address target, bytes memory data)
-    internal
-    view
-    returns (bytes memory)
-  {
+  function functionStaticCall(
+    address target,
+    bytes memory data
+  ) internal view returns (bytes memory) {
     return
       functionStaticCall(target, data, 'Address: low-level static call failed');
   }
@@ -1160,10 +1146,10 @@ library Address {
    *
    * _Available since v3.4._
    */
-  function functionDelegateCall(address target, bytes memory data)
-    internal
-    returns (bytes memory)
-  {
+  function functionDelegateCall(
+    address target,
+    bytes memory data
+  ) internal returns (bytes memory) {
     return
       functionDelegateCall(
         target,
@@ -1230,10 +1216,10 @@ library Address {
     }
   }
 
-  function _revert(bytes memory returndata, string memory errorMessage)
-    private
-    pure
-  {
+  function _revert(
+    bytes memory returndata,
+    string memory errorMessage
+  ) private pure {
     // Look for revert reason and bubble it up if present
     if (returndata.length > 0) {
       // The easiest way to bubble the revert reason is using memory via assembly
@@ -1260,11 +1246,7 @@ library Address {
 library SafeERC20 {
   using Address for address;
 
-  function safeTransfer(
-    IERC20 token,
-    address to,
-    uint256 value
-  ) internal {
+  function safeTransfer(IERC20 token, address to, uint256 value) internal {
     _callOptionalReturn(
       token,
       abi.encodeWithSelector(token.transfer.selector, to, value)
@@ -1290,11 +1272,7 @@ library SafeERC20 {
    * Whenever possible, use {safeIncreaseAllowance} and
    * {safeDecreaseAllowance} instead.
    */
-  function safeApprove(
-    IERC20 token,
-    address spender,
-    uint256 value
-  ) internal {
+  function safeApprove(IERC20 token, address spender, uint256 value) internal {
     // safeApprove should only be called when setting an initial allowance,
     // or when resetting it to zero. To increase and decrease it, use
     // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
@@ -1416,10 +1394,9 @@ interface IStakedTokenV2 {
    * @param staker The staker address
    * @return The rewards
    */
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256);
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256);
 
   /**
    * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
@@ -1686,7 +1663,7 @@ contract AaveDistributionManager {
   ) internal pure returns (uint256) {
     return
       (principalUserBalance * (reserveIndex - userIndex)) /
-      (10**uint256(PRECISION));
+      (10 ** uint256(PRECISION));
   }
 
   /**
@@ -1717,7 +1694,7 @@ contract AaveDistributionManager {
       : block.timestamp;
     uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
     return
-      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
+      ((emissionPerSecond * timeDelta * (10 ** uint256(PRECISION))) /
         totalBalance) + currentIndex;
   }
 
@@ -1727,21 +1704,16 @@ contract AaveDistributionManager {
    * @param asset The address of the reference asset of the distribution
    * @return The new index
    */
-  function getUserAssetData(address user, address asset)
-    public
-    view
-    returns (uint256)
-  {
+  function getUserAssetData(
+    address user,
+    address asset
+  ) public view returns (uint256) {
     return assets[asset].users[user];
   }
 }
 
 interface ITransferHook {
-  function onTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function onTransfer(address from, address to, uint256 amount) external;
 }
 
 /**
@@ -1844,11 +1816,9 @@ abstract contract StakedTokenV2 is
   function claimRewards(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256)
-  {
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256) {
     DistributionTypes.UserStakeInput[]
       memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
     userStakeInputs[0] = DistributionTypes.UserStakeInput({
@@ -2003,7 +1973,9 @@ abstract contract StakedTokenV2 is
    * @param delegationType the requested DelegationType
    * @return the relevant storage
    */
-  function _getDelegationDataByType(DelegationType delegationType)
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
     internal
     view
     override
@@ -2063,9 +2035,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
    */
-  function slash(address destination, uint256 amount)
-    external
-    returns (uint256);
+  function slash(
+    address destination,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Settles an ongoing slashing event
@@ -2149,11 +2122,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
    */
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function redeemOnBehalf(address from, address to, uint256 amount) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
@@ -2200,11 +2169,10 @@ library PercentageMath {
    * @param percentage The percentage of the value to be calculated
    * @return The percentage of value
    **/
-  function percentMul(uint256 value, uint256 percentage)
-    internal
-    pure
-    returns (uint256)
-  {
+  function percentMul(
+    uint256 value,
+    uint256 percentage
+  ) internal pure returns (uint256) {
     if (value == 0 || percentage == 0) {
       return 0;
     }
@@ -2223,11 +2191,10 @@ library PercentageMath {
    * @param percentage The percentage of the value to be calculated
    * @return The value divided the percentage
    **/
-  function percentDiv(uint256 value, uint256 percentage)
-    internal
-    pure
-    returns (uint256)
-  {
+  function percentDiv(
+    uint256 value,
+    uint256 percentage
+  ) internal pure returns (uint256) {
     require(percentage != 0, 'MATH_DIVISION_BY_ZERO');
 
     require(
@@ -2291,10 +2258,10 @@ contract RoleManager {
    * @param role the role associated with the new pending admin being set
    * @param newPendingAdmin the address of the new pending admin
    **/
-  function setPendingAdmin(uint256 role, address newPendingAdmin)
-    public
-    onlyRoleAdmin(role)
-  {
+  function setPendingAdmin(
+    uint256 role,
+    address newPendingAdmin
+  ) public onlyRoleAdmin(role) {
     _pendingAdmins[role] = newPendingAdmin;
     emit PendingAdminChanged(newPendingAdmin, role);
   }
@@ -3629,7 +3596,7 @@ contract StakedTokenV3 is
     // brick initialize
     lastInitializedRevision = REVISION();
     uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
-    LOWER_BOUND = 10**decimals;
+    LOWER_BOUND = 10 ** decimals;
   }
 
   /**
@@ -3705,10 +3672,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function stake(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function stake(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _stake(msg.sender, to, amount);
   }
 
@@ -3734,10 +3701,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function redeem(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function redeem(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _redeem(msg.sender, to, amount);
   }
 
@@ -3751,10 +3718,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function claimRewards(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function claimRewards(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _claimRewards(msg.sender, to, amount);
   }
 
@@ -3794,22 +3761,17 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function previewRedeem(uint256 shares)
-    public
-    view
-    override
-    returns (uint256)
-  {
+  function previewRedeem(
+    uint256 shares
+  ) public view override returns (uint256) {
     return (EXCHANGE_RATE_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
-  function slash(address destination, uint256 amount)
-    external
-    override
-    onlySlashingAdmin
-    returns (uint256)
-  {
+  function slash(
+    address destination,
+    uint256 amount
+  ) external override onlySlashingAdmin returns (uint256) {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
     require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
@@ -3850,11 +3812,9 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setMaxSlashablePercentage(uint256 percentage)
-    external
-    override
-    onlySlashingAdmin
-  {
+  function setMaxSlashablePercentage(
+    uint256 percentage
+  ) external override onlySlashingAdmin {
     _setMaxSlashablePercentage(percentage);
   }
 
@@ -3869,10 +3829,9 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setCooldownSeconds(uint256 cooldownSeconds)
-    external
-    onlyCooldownAdmin
-  {
+  function setCooldownSeconds(
+    uint256 cooldownSeconds
+  ) external onlyCooldownAdmin {
     _setCooldownSeconds(cooldownSeconds);
   }
 
@@ -3975,11 +3934,7 @@ contract StakedTokenV3 is
    * @param to The address to receiving the shares
    * @param amount The amount of assets to be staked
    */
-  function _stake(
-    address from,
-    address to,
-    uint256 amount
-  ) internal {
+  function _stake(address from, address to, uint256 amount) internal {
     require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
@@ -4012,11 +3967,7 @@ contract StakedTokenV3 is
    * @param to Address to redeem to
    * @param amount Amount to redeem
    */
-  function _redeem(
-    address from,
-    address to,
-    uint256 amount
-  ) internal {
+  function _redeem(address from, address to, uint256 amount) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
@@ -4078,11 +4029,10 @@ contract StakedTokenV3 is
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint216
    */
-  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
-    internal
-    pure
-    returns (uint216)
-  {
+  function _getExchangeRate(
+    uint256 totalAssets,
+    uint256 totalShares
+  ) internal pure returns (uint216) {
     return
       (((totalShares * EXCHANGE_RATE_UNIT) + totalAssets - 1) / totalAssets)
         .toUint216();
@@ -4148,17 +4098,19 @@ interface IStakedAaveV3 is IStakedTokenV3 {
    * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
    * @param newGHODebtToken Address to GHO debt token
    */
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external;
+  function setGHODebtToken(
+    IGhoVariableDebtTokenTransferHook newGHODebtToken
+  ) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
    * @param to Address to stake to
    * @param amount Amount to claim
    */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and stakes. Only the claim helper contract is allowed to call this function
@@ -4266,20 +4218,19 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external
-  {
+  function setGHODebtToken(
+    IGhoVariableDebtTokenTransferHook newGHODebtToken
+  ) external {
     require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
   }
 
   /// @inheritdoc IStakedAaveV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external override returns (uint256) {
     return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
