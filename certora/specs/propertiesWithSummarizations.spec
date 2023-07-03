@@ -25,6 +25,6 @@ invariant allSharesAreBacked()
         preserved initialize(address slashingAdmin, address cooldownPauseAdmin, address claimHelper,
                             uint256 maxSlashablePercentage, uint256 cooldownSeconds) with (env e5)
         {
-            require getExchangeRate() == INITIAL_EXCHANGE_RATE();
+            require getExchangeRate() == INITIAL_EXCHANGE_RATE_F();
         }
     }

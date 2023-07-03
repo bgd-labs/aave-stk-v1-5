@@ -1,50 +1,51 @@
-using DummyERC20Impl as stake_token
-using DummyERC20Impl as reward_token
+using DummyERC20Impl as stake_token;
+using DummyERC20Impl as reward_token;
 
 methods {
 
-    stake_token.balanceOf(address) returns (uint256) envfree
+    function stake_token.balanceOf(address) external returns (uint256) envfree;
 
     // public variables
-    REWARDS_VAULT() returns (address) envfree
-    UNSTAKE_WINDOW() returns (uint256) envfree
-    LOWER_BOUND() returns (uint256) envfree
-    INITIAL_EXCHANGE_RATE() returns (uint216) envfree
+    function REWARDS_VAULT() external returns (address) envfree;
+    function UNSTAKE_WINDOW() external returns (uint256) envfree;
+    function LOWER_BOUND() external returns (uint256) envfree;
+    //    function INITIAL_EXCHANGE_RATE() external returns (uint216) envfree;
 
     // envfree
-    balanceOf(address) returns (uint256) envfree
-    cooldownAmount(address) returns (uint216) envfree
-    cooldownTimestamp(address) returns (uint40) envfree
-    totalSupply() returns (uint256) envfree
-    stakerRewardsToClaim(address) returns (uint256) envfree
-    stakersCooldowns(address) returns (uint40, uint216) envfree
-    getCooldownSeconds() returns (uint256) envfree
-    getExchangeRate() returns (uint216) envfree
-    inPostSlashingPeriod() returns (bool) envfree
-    getMaxSlashablePercentage() returns (uint256) envfree
-    getAssetGlobalIndex(address) returns (uint256) envfree
-    getUserPersonalIndex(address, address) returns (uint256) envfree
-    previewStake(uint256) returns (uint256) envfree
-    previewRedeem(uint256) returns (uint256) envfree
-    permit(address, address, uint256, uint256, uint8, bytes32, bytes32) => NONDET
+    function balanceOf(address) external returns (uint256) envfree;
+    function cooldownAmount(address) external returns (uint216) envfree;
+    function cooldownTimestamp(address) external returns (uint40) envfree;
+    function totalSupply() external returns (uint256) envfree;
+    function stakerRewardsToClaim(address) external returns (uint256) envfree;
+    function stakersCooldowns(address) external returns (uint40, uint216) envfree;
+    function getCooldownSeconds() external returns (uint256) envfree;
+    function getExchangeRate() external returns (uint216) envfree;
+    function inPostSlashingPeriod() external returns (bool) envfree;
+    function getMaxSlashablePercentage() external returns (uint256) envfree;
+    function getAssetGlobalIndex(address) external returns (uint256) envfree;
+    function getUserPersonalIndex(address, address) external returns (uint256) envfree;
+    function previewStake(uint256) external returns (uint256) envfree;
+    function previewRedeem(uint256) external returns (uint256) envfree;
+    function _.permit(address, address, uint256, uint256, uint8, bytes32, bytes32) external => NONDET;
+    function _.permit(address, address, uint256, uint256, uint8, bytes32, bytes32) internal => NONDET;
 
     // address, block, delegation type
-    _votingSnapshotsCounts(address) returns (uint256) envfree
-    _updateCurrentUnclaimedRewards(address, uint256, bool) returns (uint256) envfree
+    function _votingSnapshotsCounts(address) external returns (uint256) envfree;
+    //function _updateCurrentUnclaimedRewards(address, uint256, bool) external returns (uint256) envfree;
 
     // view but not envfree - uses block.timestamp
-    getNextCooldownTimestamp(uint256,uint256,address,uint256)
-    getPowerAtBlock(address,uint256,uint8) returns (uint256)
+    function getNextCooldownTimestamp(uint256,uint256,address,uint256) external;
+    function getPowerAtBlock(address,uint256,uint8) external returns (uint256);
 
     // state changing operations
-    initialize(address,address,address,uint256,uint256)
-    stake(address,uint256)
-    redeem(address,uint256)
-    slash(address,uint256) returns (uint256)
-    returnFunds(uint256)
+    function initialize(address,address,address,uint256,uint256) external;
+    function stake(address,uint256) external;
+    function redeem(address,uint256) external;
+    function slash(address,uint256) external returns (uint256);
+    function returnFunds(uint256) external;
 
     // variable debt token
-    updateDiscountDistribution(address, address, uint256, uint256, uint256) => NONDET
+    function _.updateDiscountDistribution(address, address, uint256, uint256, uint256) external => NONDET;
 }
 
 definition AAVE_MAX_SUPPLY() returns uint256 = 16000000 * 10^18;
@@ -53,8 +54,8 @@ definition PERCENTAGE_FACTOR() returns uint256 = 10^4;
 
 // a reasonable assumption that slashing is below 99%
 definition MAX_EXCHANGE_RATE() returns uint256 = 100 * 10^18;
-definition MAX_PERCENTAGE() returns uint256 = 100 * PERCENTAGE_FACTOR();
-definition INITIAL_EXCHANGE_RATE() returns uint256 = 10^18;
+definition MAX_PERCENTAGE() returns mathint = 100 * PERCENTAGE_FACTOR();
+definition INITIAL_EXCHANGE_RATE_F() returns uint216 = 10^18;
 definition MAX_COOLDOWN() returns uint256 = 2302683158; //20 years from now
 
 definition VOTING_POWER() returns uint8 = 0;
@@ -63,18 +64,18 @@ definition PROPOSITION_POWER() returns uint8 = 1;
 
 definition claimRewards_funcs(method f) returns bool =
 (
-    f.selector == claimRewards(address, uint256).selector ||
-    f.selector == claimRewardsOnBehalf(address, address, uint256).selector ||
-    f.selector == claimRewardsAndStake(address, uint256).selector ||
-    f.selector == claimRewardsAndStakeOnBehalf(address, address, uint256).selector ||
-    f.selector == claimRewardsAndRedeem(address, uint256, uint256).selector ||
-    f.selector == claimRewardsAndRedeemOnBehalf(address, address, uint256, uint256).selector
+    f.selector == sig:claimRewards(address, uint256).selector ||
+    f.selector == sig:claimRewardsOnBehalf(address, address, uint256).selector ||
+    f.selector == sig:claimRewardsAndStake(address, uint256).selector ||
+    f.selector == sig:claimRewardsAndStakeOnBehalf(address, address, uint256).selector ||
+    f.selector == sig:claimRewardsAndRedeem(address, uint256, uint256).selector ||
+    f.selector == sig:claimRewardsAndRedeemOnBehalf(address, address, uint256, uint256).selector
 );
 
 definition redeem_funcs(method f) returns bool =
 (
-    f.selector == redeem(address, uint256).selector ||
-    f.selector == redeemOnBehalf(address, address, uint256).selector ||
-    f.selector == claimRewardsAndRedeem(address, uint256, uint256).selector ||
-    f.selector == claimRewardsAndRedeemOnBehalf(address, address, uint256, uint256).selector
+    f.selector == sig:redeem(address, uint256).selector ||
+    f.selector == sig:redeemOnBehalf(address, address, uint256).selector ||
+    f.selector == sig:claimRewardsAndRedeem(address, uint256, uint256).selector ||
+    f.selector == sig:claimRewardsAndRedeemOnBehalf(address, address, uint256, uint256).selector
 );

@@ -1,12 +1,12 @@
-import "invariants.spec"
-import "propertiesWithSummarizations.spec"
+import "invariants.spec";
+import "propertiesWithSummarizations.spec";
 
-use invariant allSharesAreBacked
-use invariant cooldownAmountNotGreaterThanBalance
-use invariant cooldownDataCorrectness // this is imported because we use it in invariants.spec
-use invariant lowerBoundNotZero
-use invariant PersonalIndexLessOrEqualGlobalIndex
-use invariant totalSupplyGreaterThanUserBalance // this is imported because we use it in invariants.spec
+use invariant allSharesAreBacked;
+use invariant cooldownAmountNotGreaterThanBalance;
+use invariant cooldownDataCorrectness; // this is imported because we use it in invariants.spec;
+use invariant lowerBoundNotZero;
+use invariant PersonalIndexLessOrEqualGlobalIndex;
+use invariant totalSupplyGreaterThanUserBalance; // this is imported because we use it in invariants.spec;
 
 /*
     @Rule integrityOfStaking
@@ -52,10 +52,10 @@ rule integrityOfStaking(address onBehalfOf, uint256 amount) {
 
     uint216 currentExchangeRate = getExchangeRate();
 
-    assert balanceAfter == balanceBefore +
+    assert to_mathint(balanceAfter) == balanceBefore +
         amount * currentExchangeRate / EXCHANGE_RATE_FACTOR();
-    assert balanceStakeTokenDepositorAfter == balanceStakeTokenDepositorBefore - amount;
-    assert balanceStakeTokenVaultAfter == balanceStakeTokenVaultBefore + amount;
+    assert to_mathint(balanceStakeTokenDepositorAfter) == balanceStakeTokenDepositorBefore - amount;
+    assert to_mathint(balanceStakeTokenVaultAfter) == balanceStakeTokenVaultBefore + amount;
 }
 
 /*
@@ -100,10 +100,10 @@ rule noSlashingMoreThanMax(uint256 amount, address recipient){
     uint vaultBalanceBefore = stake_token.balanceOf(currentContract);
     require(vaultBalanceBefore < AAVE_MAX_SUPPLY());
     require(getMaxSlashablePercentage() >= PERCENTAGE_FACTOR() &&
-        getMaxSlashablePercentage() <= MAX_PERCENTAGE());
-    uint256 maxSlashable = vaultBalanceBefore * getMaxSlashablePercentage() / PERCENTAGE_FACTOR();
+            to_mathint(getMaxSlashablePercentage()) <= MAX_PERCENTAGE());
+    mathint maxSlashable = vaultBalanceBefore * getMaxSlashablePercentage() / PERCENTAGE_FACTOR();
 
-    require (amount > maxSlashable);
+    require (to_mathint(amount) > maxSlashable);
     require (recipient != currentContract);
     slash(e, recipient, amount);
     uint vaultBalanceAfter = stake_token.balanceOf(currentContract);
@@ -136,7 +136,7 @@ rule integrityOfSlashing(address to, uint256 amount){
     require(amount < AAVE_MAX_SUPPLY());
     require(e.msg.sender != currentContract && to != currentContract);
     require(getMaxSlashablePercentage() >= PERCENTAGE_FACTOR() &&
-        getMaxSlashablePercentage() <= MAX_PERCENTAGE());
+            to_mathint(getMaxSlashablePercentage()) <= MAX_PERCENTAGE());
 
     require(totalSupply() > 0 && totalSupply() < AAVE_MAX_SUPPLY());
     uint256 total = totalSupply();
@@ -148,17 +148,17 @@ rule integrityOfSlashing(address to, uint256 amount){
     slash(e, to, amount);
     uint256 balanceStakeTokenToAfter = stake_token.balanceOf(to);
     uint256 balanceStakeTokenVaultAfter = stake_token.balanceOf(currentContract);
-    uint256 maxSlashable = balanceStakeTokenVaultBefore * getMaxSlashablePercentage() / PERCENTAGE_FACTOR();
+    mathint maxSlashable = balanceStakeTokenVaultBefore * getMaxSlashablePercentage() / PERCENTAGE_FACTOR();
 
-    uint256 amountToSlash;
-    if (amount > maxSlashable) {
+    mathint amountToSlash;
+    if (to_mathint(amount) > maxSlashable) {
         amountToSlash = maxSlashable;
     } else {
         amountToSlash = amount;
     }
 
-    assert balanceStakeTokenToAfter == balanceStakeTokenToBefore + amountToSlash;
-    assert balanceStakeTokenVaultAfter == balanceStakeTokenVaultBefore - amountToSlash;
+    assert to_mathint(balanceStakeTokenToAfter) == balanceStakeTokenToBefore + amountToSlash;
+    assert to_mathint(balanceStakeTokenVaultAfter) == balanceStakeTokenVaultBefore - amountToSlash;
     assert inPostSlashingPeriod();
 }
 
@@ -195,8 +195,8 @@ rule integrityOfReturnFunds(uint256 amount){
     uint256 balanceStakeTokenVaultAfter = stake_token.balanceOf(currentContract);
     require(balanceStakeTokenVaultAfter > 0);
 
-    assert balanceStakeTokenSenderAfter == balanceStakeTokenSenderBefore - amount;
-    assert balanceStakeTokenVaultAfter == balanceStakeTokenVaultBefore + amount;
+    assert to_mathint(balanceStakeTokenSenderAfter) == balanceStakeTokenSenderBefore - amount;
+    assert to_mathint(balanceStakeTokenVaultAfter) == balanceStakeTokenVaultBefore + amount;
 }
 
 /*
@@ -274,8 +274,8 @@ rule noRedeemOutOfUnstakeWindow(address to, uint256 amount){
 
     // assert cooldown is inside the unstake window or it's a post slashing period
     assert inPostSlashingPeriod() ||
-     (e.block.timestamp > cooldown + getCooldownSeconds() &&
-        e.block.timestamp - (cooldown + getCooldownSeconds()) <= UNSTAKE_WINDOW());
+        (to_mathint(e.block.timestamp) >= to_mathint(cooldown) + getCooldownSeconds() &&
+         to_mathint(e.block.timestamp) - (to_mathint(cooldown) + getCooldownSeconds()) <= to_mathint(UNSTAKE_WINDOW()));
 }
 
 /*
@@ -318,17 +318,17 @@ rule cooldownCorrectness(env e)
     uint256 sharesBefore = balanceOf(user); // number of shares
 
 
-    require(sharesBefore >= sharesCooldownStart);
+    require(sharesBefore >= require_uint256(sharesCooldownStart));
     // The following 3 requirements make sure we are in the unstake period
     require(cooldownStart > 0);
-    require(e.block.timestamp > cooldownStart + getCooldownSeconds());
-    require(e.block.timestamp - (cooldownStart + getCooldownSeconds()) <= UNSTAKE_WINDOW());
+    require(to_mathint(e.block.timestamp) > cooldownStart + getCooldownSeconds());
+    require(to_mathint(e.block.timestamp) - (cooldownStart + getCooldownSeconds()) <= to_mathint(UNSTAKE_WINDOW()));
 
     redeem(e, to, amountToUnstake);
-    uint256 soldShares = sharesBefore - balanceOf(user);
+    mathint soldShares = sharesBefore - balanceOf(user);
 
-    assert amountToUnstake <= sharesCooldownStart => soldShares == amountToUnstake;
-    assert amountToUnstake > sharesCooldownStart => soldShares == sharesCooldownStart;
+    assert amountToUnstake <= assert_uint256(sharesCooldownStart) => soldShares == to_mathint(amountToUnstake);
+    assert amountToUnstake > assert_uint256(sharesCooldownStart) => soldShares == to_mathint(sharesCooldownStart);
 }
 
 /*
@@ -359,7 +359,7 @@ rule rewardsGetterEquivalentClaim(method f, env e, address to, address from) {
     uint256 receiverBalance_ = reward_token.balanceOf(to);
 
     assert(deservedRewards == claimedAmount);
-    assert(receiverBalance_ == _receiverBalance + claimedAmount);
+    assert(to_mathint(receiverBalance_) == _receiverBalance + claimedAmount);
 }
 
 /*
@@ -525,7 +525,7 @@ rule returnFundsDecreaseExchangeRate(address receiver, uint256 amount) {
 
     @Notes: We used the following require to prove, that violation of this rule happened
             when totalSupply() == 0:
-            require f.selector == returnFunds(uint256).selector => totalSupply() != 0;
+            require f.selector == sig:returnFunds(uint256).selector => totalSupply() != 0;
             This has been solved by Lukas in this commit:
             https://github.com/Certora/aave-stk-slashing-mgmt/pull/1/commits/8336dc0747965a06c7dc39b4f89273c4ef7ed18a
     @Link: https://prover.certora.com/output/40577/3fdb151c46c84b1ab323b99c80890273/?anonymousKey=68e37ada870b7b91c68a5eadaf6030f3989002a6
@@ -604,8 +604,8 @@ rule integrityOfRedeem(method f, env e, address to, uint256 amount) {
 
     uint256 receiverBalance_ = stake_token.balanceOf(to);
 
-    assert(amount <= cooldownAmount(e.msg.sender) =>
-        totalUnderlying == receiverBalance_ - _receiverBalance);
+    assert(amount <= assert_uint256(cooldownAmount(e.msg.sender)) =>
+           to_mathint(totalUnderlying) == receiverBalance_ - _receiverBalance);
 }
 
 /*
@@ -634,5 +634,5 @@ rule previewStakeEquivalentStake(method f, env e, address to, uint256 amount){
 
     uint256 receiverBalance_ = balanceOf(to);
 
-    assert(amountOfShares == receiverBalance_ - _receiverBalance);
+    assert(to_mathint(amountOfShares) == receiverBalance_ - _receiverBalance);
 }

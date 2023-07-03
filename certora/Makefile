@@ -12,11 +12,15 @@ help:
 
 munged:  $(wildcard $(CONTRACTS_DIR)/*.sol) $(PATCH)
 	rm -rf $@
-	cp -r $(CONTRACTS_DIR) $@
-	patch -p0 -d $@ < $(PATCH)
+#	mkdir $@
+#	cp -r $(CONTRACTS_DIR) $@
+#	patch -p0 -d $@ < $(PATCH)
 
 record:
-	diff -ruN $(CONTRACTS_DIR) $(MUNGED_DIR) | sed 's+\.\./$(CONTRACTS_DIR)/++g' | sed 's+$(MUNGED_DIR)/++g' > $(PATCH)
+	mkdir tmp
+	cp -r ../src tmp
+	diff -ruN tmp $(MUNGED_DIR) | sed 's+tmp/++g' | sed 's+$(MUNGED_DIR)/++g' > $(PATCH)
+	rm -rf tmp
 
 clean:
 	git clean -fdX
