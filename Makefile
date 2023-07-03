@@ -25,7 +25,7 @@ diff-all :
 	forge flatten src/contracts/StakedTokenV3.sol --output src/flattened/StakedTokenV3Flattened.sol
 	forge flatten src/etherscan/mainnet_0x9921c8cea5815364d0f8350e6cbe9042A92448c9/StakedTokenV3/src/contracts/StakedTokenV3.sol --output src/flattened/CurrentStakedTokenV3Flattened.sol
 	npm run lint:fix
-	make git-diff before=src/flattened/CurrentStakedTokenV3Flattened.sol after=src/flattened/StakedTokenV3Flattened.sol out=StakedTokenDidd
+	make git-diff before=src/flattened/CurrentStakedTokenV3Flattened.sol after=src/flattened/StakedTokenV3Flattened.sol out=StakedTokenDiff
 	make git-diff before=src/flattened/CurrentStakedAaveV3Flattened.sol after=src/flattened/StakedAaveV3Flattened.sol out=StakedAaveDiff
 	forge inspect src/flattened/CurrentStakedAaveV3Flattened.sol:StakedAaveV3 storage-layout --pretty > diffs/currentStakedAave.md
 	sed -i '' -E 's/(.*)\|[^|]*\s*\|/\1|/' diffs/currentStakedAave.md
