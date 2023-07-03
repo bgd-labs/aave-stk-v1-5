@@ -22,11 +22,10 @@ contract ExchangeRateMock is Test {
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint128
    */
-  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
-    internal
-    pure
-    returns (uint216)
-  {
+  function _getExchangeRate(
+    uint256 totalAssets,
+    uint256 totalShares
+  ) internal pure returns (uint216) {
     return
       (((totalShares * TOKEN_UNIT) + totalAssets - 1) / totalAssets)
         .toUint216();

@@ -47,10 +47,10 @@ interface IERC20 {
    *
    * This value changes when {approve} or {transferFrom} are called.
    */
-  function allowance(address owner, address spender)
-    external
-    view
-    returns (uint256);
+  function allowance(
+    address owner,
+    address spender
+  ) external view returns (uint256);
 
   /**
    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -98,7 +98,397 @@ library DistributionTypes {
   }
 }
 
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
+
+// OpenZeppelin Contracts (last updated v4.8.0) (utils/Address.sol)
+
+/**
+ * @dev Collection of functions related to the address type
+ */
+library Address {
+  /**
+   * @dev Returns true if `account` is a contract.
+   *
+   * [IMPORTANT]
+   * ====
+   * It is unsafe to assume that an address for which this function returns
+   * false is an externally-owned account (EOA) and not a contract.
+   *
+   * Among others, `isContract` will return false for the following
+   * types of addresses:
+   *
+   *  - an externally-owned account
+   *  - a contract in construction
+   *  - an address where a contract will be created
+   *  - an address where a contract lived, but was destroyed
+   * ====
+   *
+   * [IMPORTANT]
+   * ====
+   * You shouldn't rely on `isContract` to protect against flash loan attacks!
+   *
+   * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+   * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+   * constructor.
+   * ====
+   */
+  function isContract(address account) internal view returns (bool) {
+    // This method relies on extcodesize/address.code.length, which returns 0
+    // for contracts in construction, since the code is only stored at the end
+    // of the constructor execution.
+
+    return account.code.length > 0;
+  }
+
+  /**
+   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
+   * `recipient`, forwarding all available gas and reverting on errors.
+   *
+   * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
+   * of certain opcodes, possibly making contracts go over the 2300 gas limit
+   * imposed by `transfer`, making them unable to receive funds via
+   * `transfer`. {sendValue} removes this limitation.
+   *
+   * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+   *
+   * IMPORTANT: because control is transferred to `recipient`, care must be
+   * taken to not create reentrancy vulnerabilities. Consider using
+   * {ReentrancyGuard} or the
+   * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+   */
+  function sendValue(address payable recipient, uint256 amount) internal {
+    require(address(this).balance >= amount, 'Address: insufficient balance');
+
+    (bool success, ) = recipient.call{value: amount}('');
+    require(
+      success,
+      'Address: unable to send value, recipient may have reverted'
+    );
+  }
+
+  /**
+   * @dev Performs a Solidity function call using a low level `call`. A
+   * plain `call` is an unsafe replacement for a function call: use this
+   * function instead.
+   *
+   * If `target` reverts with a revert reason, it is bubbled up by this
+   * function (like regular Solidity function calls).
+   *
+   * Returns the raw returned data. To convert to the expected return value,
+   * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+   *
+   * Requirements:
+   *
+   * - `target` must be a contract.
+   * - calling `target` with `data` must not revert.
+   *
+   * _Available since v3.1._
+   */
+  function functionCall(
+    address target,
+    bytes memory data
+  ) internal returns (bytes memory) {
+    return
+      functionCallWithValue(target, data, 0, 'Address: low-level call failed');
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+   * `errorMessage` as a fallback revert reason when `target` reverts.
+   *
+   * _Available since v3.1._
+   */
+  function functionCall(
+    address target,
+    bytes memory data,
+    string memory errorMessage
+  ) internal returns (bytes memory) {
+    return functionCallWithValue(target, data, 0, errorMessage);
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+   * but also transferring `value` wei to `target`.
+   *
+   * Requirements:
+   *
+   * - the calling contract must have an ETH balance of at least `value`.
+   * - the called Solidity function must be `payable`.
+   *
+   * _Available since v3.1._
+   */
+  function functionCallWithValue(
+    address target,
+    bytes memory data,
+    uint256 value
+  ) internal returns (bytes memory) {
+    return
+      functionCallWithValue(
+        target,
+        data,
+        value,
+        'Address: low-level call with value failed'
+      );
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+   * with `errorMessage` as a fallback revert reason when `target` reverts.
+   *
+   * _Available since v3.1._
+   */
+  function functionCallWithValue(
+    address target,
+    bytes memory data,
+    uint256 value,
+    string memory errorMessage
+  ) internal returns (bytes memory) {
+    require(
+      address(this).balance >= value,
+      'Address: insufficient balance for call'
+    );
+    (bool success, bytes memory returndata) = target.call{value: value}(data);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+   * but performing a static call.
+   *
+   * _Available since v3.3._
+   */
+  function functionStaticCall(
+    address target,
+    bytes memory data
+  ) internal view returns (bytes memory) {
+    return
+      functionStaticCall(target, data, 'Address: low-level static call failed');
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+   * but performing a static call.
+   *
+   * _Available since v3.3._
+   */
+  function functionStaticCall(
+    address target,
+    bytes memory data,
+    string memory errorMessage
+  ) internal view returns (bytes memory) {
+    (bool success, bytes memory returndata) = target.staticcall(data);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+   * but performing a delegate call.
+   *
+   * _Available since v3.4._
+   */
+  function functionDelegateCall(
+    address target,
+    bytes memory data
+  ) internal returns (bytes memory) {
+    return
+      functionDelegateCall(
+        target,
+        data,
+        'Address: low-level delegate call failed'
+      );
+  }
+
+  /**
+   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+   * but performing a delegate call.
+   *
+   * _Available since v3.4._
+   */
+  function functionDelegateCall(
+    address target,
+    bytes memory data,
+    string memory errorMessage
+  ) internal returns (bytes memory) {
+    (bool success, bytes memory returndata) = target.delegatecall(data);
+    return
+      verifyCallResultFromTarget(target, success, returndata, errorMessage);
+  }
+
+  /**
+   * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling
+   * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.
+   *
+   * _Available since v4.8._
+   */
+  function verifyCallResultFromTarget(
+    address target,
+    bool success,
+    bytes memory returndata,
+    string memory errorMessage
+  ) internal view returns (bytes memory) {
+    if (success) {
+      if (returndata.length == 0) {
+        // only check isContract if the call was successful and the return data is empty
+        // otherwise we already know that it was a contract
+        require(isContract(target), 'Address: call to non-contract');
+      }
+      return returndata;
+    } else {
+      _revert(returndata, errorMessage);
+    }
+  }
+
+  /**
+   * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the
+   * revert reason or using the provided one.
+   *
+   * _Available since v4.3._
+   */
+  function verifyCallResult(
+    bool success,
+    bytes memory returndata,
+    string memory errorMessage
+  ) internal pure returns (bytes memory) {
+    if (success) {
+      return returndata;
+    } else {
+      _revert(returndata, errorMessage);
+    }
+  }
+
+  function _revert(
+    bytes memory returndata,
+    string memory errorMessage
+  ) private pure {
+    // Look for revert reason and bubble it up if present
+    if (returndata.length > 0) {
+      // The easiest way to bubble the revert reason is using memory via assembly
+      /// @solidity memory-safe-assembly
+      assembly {
+        let returndata_size := mload(returndata)
+        revert(add(32, returndata), returndata_size)
+      }
+    } else {
+      revert(errorMessage);
+    }
+  }
+}
+
+/**
+ * @title SafeERC20
+ * @dev Wrappers around ERC20 operations that throw on failure (when the token
+ * contract returns false). Tokens that return no value (and instead revert or
+ * throw on failure) are also supported, non-reverting calls are assumed to be
+ * successful.
+ * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
+ * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
+ */
+library SafeERC20 {
+  using Address for address;
+
+  function safeTransfer(IERC20 token, address to, uint256 value) internal {
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.transfer.selector, to, value)
+    );
+  }
+
+  function safeTransferFrom(
+    IERC20 token,
+    address from,
+    address to,
+    uint256 value
+  ) internal {
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+    );
+  }
+
+  /**
+   * @dev Deprecated. This function has issues similar to the ones found in
+   * {IERC20-approve}, and its usage is discouraged.
+   *
+   * Whenever possible, use {safeIncreaseAllowance} and
+   * {safeDecreaseAllowance} instead.
+   */
+  function safeApprove(IERC20 token, address spender, uint256 value) internal {
+    // safeApprove should only be called when setting an initial allowance,
+    // or when resetting it to zero. To increase and decrease it, use
+    // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
+    require(
+      (value == 0) || (token.allowance(address(this), spender) == 0),
+      'SafeERC20: approve from non-zero to non-zero allowance'
+    );
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.approve.selector, spender, value)
+    );
+  }
+
+  function safeIncreaseAllowance(
+    IERC20 token,
+    address spender,
+    uint256 value
+  ) internal {
+    uint256 newAllowance = token.allowance(address(this), spender) + value;
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
+    );
+  }
+
+  function safeDecreaseAllowance(
+    IERC20 token,
+    address spender,
+    uint256 value
+  ) internal {
+    unchecked {
+      uint256 oldAllowance = token.allowance(address(this), spender);
+      require(
+        oldAllowance >= value,
+        'SafeERC20: decreased allowance below zero'
+      );
+      uint256 newAllowance = oldAllowance - value;
+      _callOptionalReturn(
+        token,
+        abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
+      );
+    }
+  }
+
+  /**
+   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+   * on the return value: the return value is optional (but if data is returned, it must not be false).
+   * @param token The token targeted by the call.
+   * @param data The call data (encoded using abi.encode or one of its variants).
+   */
+  function _callOptionalReturn(IERC20 token, bytes memory data) private {
+    // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+    // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
+    // the target address contains contract code and also asserts for success in the low-level call.
+
+    bytes memory returndata = address(token).functionCall(
+      data,
+      'SafeERC20: low-level call failed'
+    );
+    if (returndata.length > 0) {
+      // Return data is optional
+      require(
+        abi.decode(returndata, (bool)),
+        'SafeERC20: ERC20 operation did not succeed'
+      );
+    }
+  }
+}
+
+interface IAaveDistributionManager {
+  function configureAssets(
+    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
+  ) external;
+}
 
 // OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)
 
@@ -123,6 +513,79 @@ interface IERC20Metadata is IERC20 {
    */
   function decimals() external view returns (uint8);
 }
+
+interface IStakedTokenV2 {
+  struct CooldownSnapshot {
+    uint40 timestamp;
+    uint216 amount;
+  }
+
+  event RewardsAccrued(address user, uint256 amount);
+  event RewardsClaimed(
+    address indexed from,
+    address indexed to,
+    uint256 amount
+  );
+  event Cooldown(address indexed user, uint256 amount);
+
+  /**
+   * @dev Allows staking a specified amount of STAKED_TOKEN
+   * @param to The address to receiving the shares
+   * @param amount The amount of assets to be staked
+   */
+  function stake(address to, uint256 amount) external;
+
+  /**
+   * @dev Redeems shares, and stop earning rewards
+   * @param to Address to redeem to
+   * @param amount Amount of shares to redeem
+   */
+  function redeem(address to, uint256 amount) external;
+
+  /**
+   * @dev Activates the cooldown period to unstake
+   * - It can't be called if the user is not staking
+   */
+  function cooldown() external;
+
+  /**
+   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
+   * @param to Address to send the claimed rewards
+   * @param amount Amount to stake
+   */
+  function claimRewards(address to, uint256 amount) external;
+
+  /**
+   * @dev Return the total rewards pending to claim by an staker
+   * @param staker The staker address
+   * @return The rewards
+   */
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256);
+
+  /**
+   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
+   * @param owner the owner of the funds
+   * @param spender the spender
+   * @param value the amount
+   * @param deadline the deadline timestamp, type(uint256).max for no deadline
+   * @param v signature param
+   * @param s signature param
+   * @param r signature param
+   */
+  function permit(
+    address owner,
+    address spender,
+    uint256 value,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external;
+}
+
+// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
@@ -235,13 +698,9 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   /**
    * @dev See {IERC20-balanceOf}.
    */
-  function balanceOf(address account)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function balanceOf(
+    address account
+  ) public view virtual override returns (uint256) {
     return _balances[account];
   }
 
@@ -253,12 +712,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    * - `to` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address to, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function transfer(
+    address to,
+    uint256 amount
+  ) public virtual override returns (bool) {
     address owner = _msgSender();
     _transfer(owner, to, amount);
     return true;
@@ -267,13 +724,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
   /**
    * @dev See {IERC20-allowance}.
    */
-  function allowance(address owner, address spender)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function allowance(
+    address owner,
+    address spender
+  ) public view virtual override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -287,12 +741,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function approve(
+    address spender,
+    uint256 amount
+  ) public virtual override returns (bool) {
     address owner = _msgSender();
     _approve(owner, spender, amount);
     return true;
@@ -337,11 +789,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    *
    * - `spender` cannot be the zero address.
    */
-  function increaseAllowance(address spender, uint256 addedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function increaseAllowance(
+    address spender,
+    uint256 addedValue
+  ) public virtual returns (bool) {
     address owner = _msgSender();
     _approve(owner, spender, allowance(owner, spender) + addedValue);
     return true;
@@ -361,11 +812,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
    * - `spender` must have allowance for the caller of at least
    * `subtractedValue`.
    */
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function decreaseAllowance(
+    address spender,
+    uint256 subtractedValue
+  ) public virtual returns (bool) {
     address owner = _msgSender();
     uint256 currentAllowance = allowance(owner, spender);
     require(
@@ -556,890 +1006,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     address to,
     uint256 amount
   ) internal virtual {}
-}
-
-interface IGovernancePowerDelegationToken {
-  enum DelegationType {
-    VOTING_POWER,
-    PROPOSITION_POWER
-  }
-
-  /**
-   * @dev emitted when a user delegates to another
-   * @param delegator the delegator
-   * @param delegatee the delegatee
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  event DelegateChanged(
-    address indexed delegator,
-    address indexed delegatee,
-    DelegationType delegationType
-  );
-
-  /**
-   * @dev emitted when an action changes the delegated power of a user
-   * @param user the user which delegated power has changed
-   * @param amount the amount of delegated power for the user
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  event DelegatedPowerChanged(
-    address indexed user,
-    uint256 amount,
-    DelegationType delegationType
-  );
-
-  /**
-   * @dev delegates the specific power to a delegatee
-   * @param delegatee the user which delegated power has changed
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external;
-
-  /**
-   * @dev delegates all the powers to a specific user
-   * @param delegatee the user to which the power will be delegated
-   **/
-  function delegate(address delegatee) external;
-
-  /**
-   * @dev returns the delegatee of an user
-   * @param delegator the address of the delegator
-   **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    returns (address);
-
-  /**
-   * @dev returns the current delegated power of a user. The current power is the
-   * power delegated at the time of the last snapshot
-   * @param user the user
-   **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    returns (uint256);
-
-  /**
-   * @dev returns the delegated power of a user at a certain block
-   * @param user the user
-   **/
-  function getPowerAtBlock(
-    address user,
-    uint256 blockNumber,
-    DelegationType delegationType
-  ) external view returns (uint256);
-
-  /**
-   * @dev returns the total supply at a certain block number
-   **/
-  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
-}
-
-/**
- * @notice implementation of the AAVE token contract
- * @author Aave
- */
-abstract contract GovernancePowerDelegationERC20 is
-  ERC20,
-  IGovernancePowerDelegationToken
-{
-  /// @notice The EIP-712 typehash for the delegation struct used by the contract
-  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
-    keccak256(
-      'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
-    );
-
-  bytes32 public constant DELEGATE_TYPEHASH =
-    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
-
-  /// @dev snapshot of a value on a specific block, used for votes
-  struct Snapshot {
-    uint128 blockNumber;
-    uint128 value;
-  }
-
-  /**
-   * @dev delegates one specific power to a delegatee
-   * @param delegatee the user which delegated power has changed
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external
-    override
-  {
-    _delegateByType(msg.sender, delegatee, delegationType);
-  }
-
-  /**
-   * @dev delegates all the powers to a specific user
-   * @param delegatee the user to which the power will be delegated
-   **/
-  function delegate(address delegatee) external override {
-    _delegateByType(msg.sender, delegatee, DelegationType.VOTING_POWER);
-    _delegateByType(msg.sender, delegatee, DelegationType.PROPOSITION_POWER);
-  }
-
-  /**
-   * @dev returns the delegatee of an user
-   * @param delegator the address of the delegator
-   **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    override
-    returns (address)
-  {
-    (
-      ,
-      ,
-      mapping(address => address) storage delegates
-    ) = _getDelegationDataByType(delegationType);
-
-    return _getDelegatee(delegator, delegates);
-  }
-
-  /**
-   * @dev returns the current delegated power of a user. The current power is the
-   * power delegated at the time of the last snapshot
-   * @param user the user
-   **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    override
-    returns (uint256)
-  {
-    (
-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-      mapping(address => uint256) storage snapshotsCounts,
-
-    ) = _getDelegationDataByType(delegationType);
-
-    return _searchByBlockNumber(snapshots, snapshotsCounts, user, block.number);
-  }
-
-  /**
-   * @dev returns the delegated power of a user at a certain block
-   * @param user the user
-   **/
-  function getPowerAtBlock(
-    address user,
-    uint256 blockNumber,
-    DelegationType delegationType
-  ) external view override returns (uint256) {
-    (
-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-      mapping(address => uint256) storage snapshotsCounts,
-
-    ) = _getDelegationDataByType(delegationType);
-
-    return _searchByBlockNumber(snapshots, snapshotsCounts, user, blockNumber);
-  }
-
-  /**
-   * @dev returns the total supply at a certain block number
-   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
-   * In this initial implementation with no AAVE minting, simply returns the current supply
-   * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
-   **/
-  function totalSupplyAt(uint256) external view override returns (uint256) {
-    return super.totalSupply();
-  }
-
-  /**
-   * @dev delegates the specific power to a delegatee
-   * @param delegatee the user which delegated power has changed
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  function _delegateByType(
-    address delegator,
-    address delegatee,
-    DelegationType delegationType
-  ) internal {
-    require(delegatee != address(0), 'INVALID_DELEGATEE');
-
-    (
-      ,
-      ,
-      mapping(address => address) storage delegates
-    ) = _getDelegationDataByType(delegationType);
-
-    uint256 delegatorBalance = balanceOf(delegator);
-
-    address previousDelegatee = _getDelegatee(delegator, delegates);
-
-    delegates[delegator] = delegatee;
-
-    _moveDelegatesByType(
-      previousDelegatee,
-      delegatee,
-      delegatorBalance,
-      delegationType
-    );
-    emit DelegateChanged(delegator, delegatee, delegationType);
-  }
-
-  /**
-   * @dev moves delegated power from one user to another
-   * @param from the user from which delegated power is moved
-   * @param to the user that will receive the delegated power
-   * @param amount the amount of delegated power to be moved
-   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
-   **/
-  function _moveDelegatesByType(
-    address from,
-    address to,
-    uint256 amount,
-    DelegationType delegationType
-  ) internal {
-    if (from == to) {
-      return;
-    }
-
-    (
-      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-      mapping(address => uint256) storage snapshotsCounts,
-
-    ) = _getDelegationDataByType(delegationType);
-
-    if (from != address(0)) {
-      uint256 previous = 0;
-      uint256 fromSnapshotsCount = snapshotsCounts[from];
-
-      if (fromSnapshotsCount != 0) {
-        previous = snapshots[from][fromSnapshotsCount - 1].value;
-      } else {
-        previous = balanceOf(from);
-      }
-
-      _writeSnapshot(
-        snapshots,
-        snapshotsCounts,
-        from,
-        uint128(previous),
-        uint128(previous - amount)
-      );
-
-      emit DelegatedPowerChanged(from, previous - amount, delegationType);
-    }
-    if (to != address(0)) {
-      uint256 previous = 0;
-      uint256 toSnapshotsCount = snapshotsCounts[to];
-      if (toSnapshotsCount != 0) {
-        previous = snapshots[to][toSnapshotsCount - 1].value;
-      } else {
-        previous = balanceOf(to);
-      }
-
-      _writeSnapshot(
-        snapshots,
-        snapshotsCounts,
-        to,
-        uint128(previous),
-        uint128(previous + amount)
-      );
-
-      emit DelegatedPowerChanged(to, previous + amount, delegationType);
-    }
-  }
-
-  /**
-   * @dev searches a snapshot by block number. Uses binary search.
-   * @param snapshots the snapshots mapping
-   * @param snapshotsCounts the number of snapshots
-   * @param user the user for which the snapshot is being searched
-   * @param blockNumber the block number being searched
-   **/
-  function _searchByBlockNumber(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address user,
-    uint256 blockNumber
-  ) internal view virtual returns (uint256) {
-    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
-
-    uint256 snapshotsCount = snapshotsCounts[user];
-
-    if (snapshotsCount == 0) {
-      return balanceOf(user);
-    }
-
-    // Check implicit zero balance
-    if (snapshots[user][0].blockNumber > blockNumber) {
-      return 0;
-    }
-
-    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
-  }
-
-  function _binarySearch(
-    mapping(uint256 => Snapshot) storage snapshots,
-    uint256 snapshotsCount,
-    uint256 blockNumber
-  ) internal view returns (uint256) {
-    unchecked {
-      // First check most recent balance
-      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-        return snapshots[snapshotsCount - 1].value;
-      }
-
-      uint256 lower = 0;
-      uint256 upper = snapshotsCount - 1;
-      while (upper > lower) {
-        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-        Snapshot memory snapshot = snapshots[center];
-        if (snapshot.blockNumber == blockNumber) {
-          return snapshot.value;
-        } else if (snapshot.blockNumber < blockNumber) {
-          lower = center;
-        } else {
-          upper = center - 1;
-        }
-      }
-      return snapshots[lower].value;
-    }
-  }
-
-  /**
-   * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type
-   * NOTE: Ideal implementation would have mapped this in a struct by delegation type. Unfortunately,
-   * the AAVE token and StakeToken already include a mapping for the snapshots, so we require contracts
-   * who inherit from this to provide access to the delegation data by overriding this method.
-   * @param delegationType the type of delegation
-   **/
-  function _getDelegationDataByType(DelegationType delegationType)
-    internal
-    view
-    virtual
-    returns (
-      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
-      mapping(address => uint256) storage, //snapshots count
-      mapping(address => address) storage //delegatees list
-    );
-
-  /**
-   * @dev Writes a snapshot for an owner of tokens
-   * @param owner The owner of the tokens
-   * @param oldValue The value before the operation that is gonna be executed after the snapshot
-   * @param newValue The value after the operation
-   */
-  function _writeSnapshot(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address owner,
-    uint128 oldValue,
-    uint128 newValue
-  ) internal {
-    uint128 currentBlock = uint128(block.number);
-
-    uint256 ownerSnapshotsCount = snapshotsCounts[owner];
-    mapping(uint256 => Snapshot) storage snapshotsOwner = snapshots[owner];
-
-    // Doing multiple operations in the same block
-    if (
-      ownerSnapshotsCount != 0 &&
-      snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock
-    ) {
-      snapshotsOwner[ownerSnapshotsCount - 1].value = newValue;
-    } else {
-      snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);
-      snapshotsCounts[owner] = ownerSnapshotsCount + 1;
-    }
-  }
-
-  /**
-   * @dev returns the user delegatee. If a user never performed any delegation,
-   * his delegated address will be 0x0. In that case we simply return the user itself
-   * @param delegator the address of the user for which return the delegatee
-   * @param delegates the array of delegates for a particular type of delegation
-   **/
-  function _getDelegatee(
-    address delegator,
-    mapping(address => address) storage delegates
-  ) internal view returns (address) {
-    address previousDelegatee = delegates[delegator];
-
-    if (previousDelegatee == address(0)) {
-      return delegator;
-    }
-
-    return previousDelegatee;
-  }
-}
-
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/utils/SafeERC20.sol)
-
-// OpenZeppelin Contracts (last updated v4.8.0) (utils/Address.sol)
-
-/**
- * @dev Collection of functions related to the address type
- */
-library Address {
-  /**
-   * @dev Returns true if `account` is a contract.
-   *
-   * [IMPORTANT]
-   * ====
-   * It is unsafe to assume that an address for which this function returns
-   * false is an externally-owned account (EOA) and not a contract.
-   *
-   * Among others, `isContract` will return false for the following
-   * types of addresses:
-   *
-   *  - an externally-owned account
-   *  - a contract in construction
-   *  - an address where a contract will be created
-   *  - an address where a contract lived, but was destroyed
-   * ====
-   *
-   * [IMPORTANT]
-   * ====
-   * You shouldn't rely on `isContract` to protect against flash loan attacks!
-   *
-   * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
-   * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
-   * constructor.
-   * ====
-   */
-  function isContract(address account) internal view returns (bool) {
-    // This method relies on extcodesize/address.code.length, which returns 0
-    // for contracts in construction, since the code is only stored at the end
-    // of the constructor execution.
-
-    return account.code.length > 0;
-  }
-
-  /**
-   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
-   * `recipient`, forwarding all available gas and reverting on errors.
-   *
-   * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
-   * of certain opcodes, possibly making contracts go over the 2300 gas limit
-   * imposed by `transfer`, making them unable to receive funds via
-   * `transfer`. {sendValue} removes this limitation.
-   *
-   * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].
-   *
-   * IMPORTANT: because control is transferred to `recipient`, care must be
-   * taken to not create reentrancy vulnerabilities. Consider using
-   * {ReentrancyGuard} or the
-   * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
-   */
-  function sendValue(address payable recipient, uint256 amount) internal {
-    require(address(this).balance >= amount, 'Address: insufficient balance');
-
-    (bool success, ) = recipient.call{value: amount}('');
-    require(
-      success,
-      'Address: unable to send value, recipient may have reverted'
-    );
-  }
-
-  /**
-   * @dev Performs a Solidity function call using a low level `call`. A
-   * plain `call` is an unsafe replacement for a function call: use this
-   * function instead.
-   *
-   * If `target` reverts with a revert reason, it is bubbled up by this
-   * function (like regular Solidity function calls).
-   *
-   * Returns the raw returned data. To convert to the expected return value,
-   * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
-   *
-   * Requirements:
-   *
-   * - `target` must be a contract.
-   * - calling `target` with `data` must not revert.
-   *
-   * _Available since v3.1._
-   */
-  function functionCall(address target, bytes memory data)
-    internal
-    returns (bytes memory)
-  {
-    return
-      functionCallWithValue(target, data, 0, 'Address: low-level call failed');
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
-   * `errorMessage` as a fallback revert reason when `target` reverts.
-   *
-   * _Available since v3.1._
-   */
-  function functionCall(
-    address target,
-    bytes memory data,
-    string memory errorMessage
-  ) internal returns (bytes memory) {
-    return functionCallWithValue(target, data, 0, errorMessage);
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-   * but also transferring `value` wei to `target`.
-   *
-   * Requirements:
-   *
-   * - the calling contract must have an ETH balance of at least `value`.
-   * - the called Solidity function must be `payable`.
-   *
-   * _Available since v3.1._
-   */
-  function functionCallWithValue(
-    address target,
-    bytes memory data,
-    uint256 value
-  ) internal returns (bytes memory) {
-    return
-      functionCallWithValue(
-        target,
-        data,
-        value,
-        'Address: low-level call with value failed'
-      );
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
-   * with `errorMessage` as a fallback revert reason when `target` reverts.
-   *
-   * _Available since v3.1._
-   */
-  function functionCallWithValue(
-    address target,
-    bytes memory data,
-    uint256 value,
-    string memory errorMessage
-  ) internal returns (bytes memory) {
-    require(
-      address(this).balance >= value,
-      'Address: insufficient balance for call'
-    );
-    (bool success, bytes memory returndata) = target.call{value: value}(data);
-    return
-      verifyCallResultFromTarget(target, success, returndata, errorMessage);
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-   * but performing a static call.
-   *
-   * _Available since v3.3._
-   */
-  function functionStaticCall(address target, bytes memory data)
-    internal
-    view
-    returns (bytes memory)
-  {
-    return
-      functionStaticCall(target, data, 'Address: low-level static call failed');
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
-   * but performing a static call.
-   *
-   * _Available since v3.3._
-   */
-  function functionStaticCall(
-    address target,
-    bytes memory data,
-    string memory errorMessage
-  ) internal view returns (bytes memory) {
-    (bool success, bytes memory returndata) = target.staticcall(data);
-    return
-      verifyCallResultFromTarget(target, success, returndata, errorMessage);
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-   * but performing a delegate call.
-   *
-   * _Available since v3.4._
-   */
-  function functionDelegateCall(address target, bytes memory data)
-    internal
-    returns (bytes memory)
-  {
-    return
-      functionDelegateCall(
-        target,
-        data,
-        'Address: low-level delegate call failed'
-      );
-  }
-
-  /**
-   * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
-   * but performing a delegate call.
-   *
-   * _Available since v3.4._
-   */
-  function functionDelegateCall(
-    address target,
-    bytes memory data,
-    string memory errorMessage
-  ) internal returns (bytes memory) {
-    (bool success, bytes memory returndata) = target.delegatecall(data);
-    return
-      verifyCallResultFromTarget(target, success, returndata, errorMessage);
-  }
-
-  /**
-   * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling
-   * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.
-   *
-   * _Available since v4.8._
-   */
-  function verifyCallResultFromTarget(
-    address target,
-    bool success,
-    bytes memory returndata,
-    string memory errorMessage
-  ) internal view returns (bytes memory) {
-    if (success) {
-      if (returndata.length == 0) {
-        // only check isContract if the call was successful and the return data is empty
-        // otherwise we already know that it was a contract
-        require(isContract(target), 'Address: call to non-contract');
-      }
-      return returndata;
-    } else {
-      _revert(returndata, errorMessage);
-    }
-  }
-
-  /**
-   * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the
-   * revert reason or using the provided one.
-   *
-   * _Available since v4.3._
-   */
-  function verifyCallResult(
-    bool success,
-    bytes memory returndata,
-    string memory errorMessage
-  ) internal pure returns (bytes memory) {
-    if (success) {
-      return returndata;
-    } else {
-      _revert(returndata, errorMessage);
-    }
-  }
-
-  function _revert(bytes memory returndata, string memory errorMessage)
-    private
-    pure
-  {
-    // Look for revert reason and bubble it up if present
-    if (returndata.length > 0) {
-      // The easiest way to bubble the revert reason is using memory via assembly
-      /// @solidity memory-safe-assembly
-      assembly {
-        let returndata_size := mload(returndata)
-        revert(add(32, returndata), returndata_size)
-      }
-    } else {
-      revert(errorMessage);
-    }
-  }
-}
-
-/**
- * @title SafeERC20
- * @dev Wrappers around ERC20 operations that throw on failure (when the token
- * contract returns false). Tokens that return no value (and instead revert or
- * throw on failure) are also supported, non-reverting calls are assumed to be
- * successful.
- * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
- * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
- */
-library SafeERC20 {
-  using Address for address;
-
-  function safeTransfer(
-    IERC20 token,
-    address to,
-    uint256 value
-  ) internal {
-    _callOptionalReturn(
-      token,
-      abi.encodeWithSelector(token.transfer.selector, to, value)
-    );
-  }
-
-  function safeTransferFrom(
-    IERC20 token,
-    address from,
-    address to,
-    uint256 value
-  ) internal {
-    _callOptionalReturn(
-      token,
-      abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-    );
-  }
-
-  /**
-   * @dev Deprecated. This function has issues similar to the ones found in
-   * {IERC20-approve}, and its usage is discouraged.
-   *
-   * Whenever possible, use {safeIncreaseAllowance} and
-   * {safeDecreaseAllowance} instead.
-   */
-  function safeApprove(
-    IERC20 token,
-    address spender,
-    uint256 value
-  ) internal {
-    // safeApprove should only be called when setting an initial allowance,
-    // or when resetting it to zero. To increase and decrease it, use
-    // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
-    require(
-      (value == 0) || (token.allowance(address(this), spender) == 0),
-      'SafeERC20: approve from non-zero to non-zero allowance'
-    );
-    _callOptionalReturn(
-      token,
-      abi.encodeWithSelector(token.approve.selector, spender, value)
-    );
-  }
-
-  function safeIncreaseAllowance(
-    IERC20 token,
-    address spender,
-    uint256 value
-  ) internal {
-    uint256 newAllowance = token.allowance(address(this), spender) + value;
-    _callOptionalReturn(
-      token,
-      abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
-    );
-  }
-
-  function safeDecreaseAllowance(
-    IERC20 token,
-    address spender,
-    uint256 value
-  ) internal {
-    unchecked {
-      uint256 oldAllowance = token.allowance(address(this), spender);
-      require(
-        oldAllowance >= value,
-        'SafeERC20: decreased allowance below zero'
-      );
-      uint256 newAllowance = oldAllowance - value;
-      _callOptionalReturn(
-        token,
-        abi.encodeWithSelector(token.approve.selector, spender, newAllowance)
-      );
-    }
-  }
-
-  /**
-   * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
-   * on the return value: the return value is optional (but if data is returned, it must not be false).
-   * @param token The token targeted by the call.
-   * @param data The call data (encoded using abi.encode or one of its variants).
-   */
-  function _callOptionalReturn(IERC20 token, bytes memory data) private {
-    // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
-    // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
-    // the target address contains contract code and also asserts for success in the low-level call.
-
-    bytes memory returndata = address(token).functionCall(
-      data,
-      'SafeERC20: low-level call failed'
-    );
-    if (returndata.length > 0) {
-      // Return data is optional
-      require(
-        abi.decode(returndata, (bool)),
-        'SafeERC20: ERC20 operation did not succeed'
-      );
-    }
-  }
-}
-
-interface IAaveDistributionManager {
-  function configureAssets(
-    DistributionTypes.AssetConfigInput[] memory assetsConfigInput
-  ) external;
-}
-
-interface IStakedTokenV2 {
-  struct CooldownSnapshot {
-    uint40 timestamp;
-    uint216 amount;
-  }
-
-  event RewardsAccrued(address user, uint256 amount);
-  event RewardsClaimed(
-    address indexed from,
-    address indexed to,
-    uint256 amount
-  );
-  event Cooldown(address indexed user, uint256 amount);
-
-  /**
-   * @dev Allows staking a specified amount of STAKED_TOKEN
-   * @param to The address to receiving the shares
-   * @param amount The amount of assets to be staked
-   */
-  function stake(address to, uint256 amount) external;
-
-  /**
-   * @dev Redeems shares, and stop earning rewards
-   * @param to Address to redeem to
-   * @param amount Amount of shares to redeem
-   */
-  function redeem(address to, uint256 amount) external;
-
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   */
-  function cooldown() external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` to the address `to`
-   * @param to Address to send the claimed rewards
-   * @param amount Amount to stake
-   */
-  function claimRewards(address to, uint256 amount) external;
-
-  /**
-   * @dev Return the total rewards pending to claim by an staker
-   * @param staker The staker address
-   * @return The rewards
-   */
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256);
-
-  /**
-   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner the owner of the funds
-   * @param spender the spender
-   * @param value the amount
-   * @param deadline the deadline timestamp, type(uint256).max for no deadline
-   * @param v signature param
-   * @param s signature param
-   * @param r signature param
-   */
-  function permit(
-    address owner,
-    address spender,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
 }
 
 /**
@@ -1686,7 +1252,7 @@ contract AaveDistributionManager {
   ) internal pure returns (uint256) {
     return
       (principalUserBalance * (reserveIndex - userIndex)) /
-      (10**uint256(PRECISION));
+      (10 ** uint256(PRECISION));
   }
 
   /**
@@ -1717,7 +1283,7 @@ contract AaveDistributionManager {
       : block.timestamp;
     uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
     return
-      ((emissionPerSecond * timeDelta * (10**uint256(PRECISION))) /
+      ((emissionPerSecond * timeDelta * (10 ** uint256(PRECISION))) /
         totalBalance) + currentIndex;
   }
 
@@ -1727,21 +1293,427 @@ contract AaveDistributionManager {
    * @param asset The address of the reference asset of the distribution
    * @return The new index
    */
-  function getUserAssetData(address user, address asset)
-    public
-    view
-    returns (uint256)
-  {
+  function getUserAssetData(
+    address user,
+    address asset
+  ) public view returns (uint256) {
     return assets[asset].users[user];
   }
 }
 
 interface ITransferHook {
-  function onTransfer(
+  function onTransfer(address from, address to, uint256 amount) external;
+}
+
+interface IGovernancePowerDelegationToken {
+  enum DelegationType {
+    VOTING_POWER,
+    PROPOSITION_POWER
+  }
+
+  /**
+   * @dev emitted when a user delegates to another
+   * @param delegator the delegator
+   * @param delegatee the delegatee
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  event DelegateChanged(
+    address indexed delegator,
+    address indexed delegatee,
+    DelegationType delegationType
+  );
+
+  /**
+   * @dev emitted when an action changes the delegated power of a user
+   * @param user the user which delegated power has changed
+   * @param amount the amount of delegated power for the user
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  event DelegatedPowerChanged(
+    address indexed user,
+    uint256 amount,
+    DelegationType delegationType
+  );
+
+  /**
+   * @dev delegates the specific power to a delegatee
+   * @param delegatee the user which delegated power has changed
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external;
+
+  /**
+   * @dev delegates all the powers to a specific user
+   * @param delegatee the user to which the power will be delegated
+   **/
+  function delegate(address delegatee) external;
+
+  /**
+   * @dev returns the delegatee of an user
+   * @param delegator the address of the delegator
+   **/
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view returns (address);
+
+  /**
+   * @dev returns the current delegated power of a user. The current power is the
+   * power delegated at the time of the last snapshot
+   * @param user the user
+   **/
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view returns (uint256);
+
+  /**
+   * @dev returns the delegated power of a user at a certain block
+   * @param user the user
+   **/
+  function getPowerAtBlock(
+    address user,
+    uint256 blockNumber,
+    DelegationType delegationType
+  ) external view returns (uint256);
+
+  /**
+   * @dev returns the total supply at a certain block number
+   **/
+  function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
+}
+
+/**
+ * @notice implementation of the AAVE token contract
+ * @author Aave
+ */
+abstract contract GovernancePowerDelegationERC20 is
+  ERC20,
+  IGovernancePowerDelegationToken
+{
+  /// @notice The EIP-712 typehash for the delegation struct used by the contract
+  bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
+    keccak256(
+      'DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)'
+    );
+
+  bytes32 public constant DELEGATE_TYPEHASH =
+    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
+
+  /// @dev snapshot of a value on a specific block, used for votes
+  struct Snapshot {
+    uint128 blockNumber;
+    uint128 value;
+  }
+
+  /**
+   * @dev delegates one specific power to a delegatee
+   * @param delegatee the user which delegated power has changed
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external override {
+    _delegateByType(msg.sender, delegatee, delegationType);
+  }
+
+  /**
+   * @dev delegates all the powers to a specific user
+   * @param delegatee the user to which the power will be delegated
+   **/
+  function delegate(address delegatee) external override {
+    _delegateByType(msg.sender, delegatee, DelegationType.VOTING_POWER);
+    _delegateByType(msg.sender, delegatee, DelegationType.PROPOSITION_POWER);
+  }
+
+  /**
+   * @dev returns the delegatee of an user
+   * @param delegator the address of the delegator
+   **/
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view override returns (address) {
+    (
+      ,
+      ,
+      mapping(address => address) storage delegates
+    ) = _getDelegationDataByType(delegationType);
+
+    return _getDelegatee(delegator, delegates);
+  }
+
+  /**
+   * @dev returns the current delegated power of a user. The current power is the
+   * power delegated at the time of the last snapshot
+   * @param user the user
+   **/
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view override returns (uint256) {
+    (
+      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+      mapping(address => uint256) storage snapshotsCounts,
+
+    ) = _getDelegationDataByType(delegationType);
+
+    return _searchByBlockNumber(snapshots, snapshotsCounts, user, block.number);
+  }
+
+  /**
+   * @dev returns the delegated power of a user at a certain block
+   * @param user the user
+   **/
+  function getPowerAtBlock(
+    address user,
+    uint256 blockNumber,
+    DelegationType delegationType
+  ) external view override returns (uint256) {
+    (
+      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+      mapping(address => uint256) storage snapshotsCounts,
+
+    ) = _getDelegationDataByType(delegationType);
+
+    return _searchByBlockNumber(snapshots, snapshotsCounts, user, blockNumber);
+  }
+
+  /**
+   * @dev returns the total supply at a certain block number
+   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
+   * In this initial implementation with no AAVE minting, simply returns the current supply
+   * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
+   **/
+  function totalSupplyAt(uint256) external view override returns (uint256) {
+    return super.totalSupply();
+  }
+
+  /**
+   * @dev delegates the specific power to a delegatee
+   * @param delegatee the user which delegated power has changed
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  function _delegateByType(
+    address delegator,
+    address delegatee,
+    DelegationType delegationType
+  ) internal {
+    require(delegatee != address(0), 'INVALID_DELEGATEE');
+
+    (
+      ,
+      ,
+      mapping(address => address) storage delegates
+    ) = _getDelegationDataByType(delegationType);
+
+    uint256 delegatorBalance = balanceOf(delegator);
+
+    address previousDelegatee = _getDelegatee(delegator, delegates);
+
+    delegates[delegator] = delegatee;
+
+    _moveDelegatesByType(
+      previousDelegatee,
+      delegatee,
+      delegatorBalance,
+      delegationType
+    );
+    emit DelegateChanged(delegator, delegatee, delegationType);
+  }
+
+  /**
+   * @dev moves delegated power from one user to another
+   * @param from the user from which delegated power is moved
+   * @param to the user that will receive the delegated power
+   * @param amount the amount of delegated power to be moved
+   * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
+   **/
+  function _moveDelegatesByType(
     address from,
     address to,
-    uint256 amount
-  ) external;
+    uint256 amount,
+    DelegationType delegationType
+  ) internal {
+    if (from == to) {
+      return;
+    }
+
+    (
+      mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+      mapping(address => uint256) storage snapshotsCounts,
+
+    ) = _getDelegationDataByType(delegationType);
+
+    if (from != address(0)) {
+      uint256 previous = 0;
+      uint256 fromSnapshotsCount = snapshotsCounts[from];
+
+      if (fromSnapshotsCount != 0) {
+        previous = snapshots[from][fromSnapshotsCount - 1].value;
+      } else {
+        previous = balanceOf(from);
+      }
+
+      _writeSnapshot(
+        snapshots,
+        snapshotsCounts,
+        from,
+        uint128(previous),
+        uint128(previous - amount)
+      );
+
+      emit DelegatedPowerChanged(from, previous - amount, delegationType);
+    }
+    if (to != address(0)) {
+      uint256 previous = 0;
+      uint256 toSnapshotsCount = snapshotsCounts[to];
+      if (toSnapshotsCount != 0) {
+        previous = snapshots[to][toSnapshotsCount - 1].value;
+      } else {
+        previous = balanceOf(to);
+      }
+
+      _writeSnapshot(
+        snapshots,
+        snapshotsCounts,
+        to,
+        uint128(previous),
+        uint128(previous + amount)
+      );
+
+      emit DelegatedPowerChanged(to, previous + amount, delegationType);
+    }
+  }
+
+  /**
+   * @dev searches a snapshot by block number. Uses binary search.
+   * @param snapshots the snapshots mapping
+   * @param snapshotsCounts the number of snapshots
+   * @param user the user for which the snapshot is being searched
+   * @param blockNumber the block number being searched
+   **/
+  function _searchByBlockNumber(
+    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+    mapping(address => uint256) storage snapshotsCounts,
+    address user,
+    uint256 blockNumber
+  ) internal view virtual returns (uint256) {
+    require(blockNumber <= block.number, 'INVALID_BLOCK_NUMBER');
+
+    uint256 snapshotsCount = snapshotsCounts[user];
+
+    if (snapshotsCount == 0) {
+      return balanceOf(user);
+    }
+
+    // Check implicit zero balance
+    if (snapshots[user][0].blockNumber > blockNumber) {
+      return 0;
+    }
+
+    return _binarySearch(snapshots[user], snapshotsCount, blockNumber);
+  }
+
+  function _binarySearch(
+    mapping(uint256 => Snapshot) storage snapshots,
+    uint256 snapshotsCount,
+    uint256 blockNumber
+  ) internal view returns (uint256) {
+    unchecked {
+      // First check most recent balance
+      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
+        return snapshots[snapshotsCount - 1].value;
+      }
+
+      uint256 lower = 0;
+      uint256 upper = snapshotsCount - 1;
+      while (upper > lower) {
+        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+        Snapshot memory snapshot = snapshots[center];
+        if (snapshot.blockNumber == blockNumber) {
+          return snapshot.value;
+        } else if (snapshot.blockNumber < blockNumber) {
+          lower = center;
+        } else {
+          upper = center - 1;
+        }
+      }
+      return snapshots[lower].value;
+    }
+  }
+
+  /**
+   * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type
+   * NOTE: Ideal implementation would have mapped this in a struct by delegation type. Unfortunately,
+   * the AAVE token and StakeToken already include a mapping for the snapshots, so we require contracts
+   * who inherit from this to provide access to the delegation data by overriding this method.
+   * @param delegationType the type of delegation
+   **/
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
+    internal
+    view
+    virtual
+    returns (
+      mapping(address => mapping(uint256 => Snapshot)) storage, //snapshots
+      mapping(address => uint256) storage, //snapshots count
+      mapping(address => address) storage //delegatees list
+    );
+
+  /**
+   * @dev Writes a snapshot for an owner of tokens
+   * @param owner The owner of the tokens
+   * @param oldValue The value before the operation that is gonna be executed after the snapshot
+   * @param newValue The value after the operation
+   */
+  function _writeSnapshot(
+    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
+    mapping(address => uint256) storage snapshotsCounts,
+    address owner,
+    uint128 oldValue,
+    uint128 newValue
+  ) internal {
+    uint128 currentBlock = uint128(block.number);
+
+    uint256 ownerSnapshotsCount = snapshotsCounts[owner];
+    mapping(uint256 => Snapshot) storage snapshotsOwner = snapshots[owner];
+
+    // Doing multiple operations in the same block
+    if (
+      ownerSnapshotsCount != 0 &&
+      snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock
+    ) {
+      snapshotsOwner[ownerSnapshotsCount - 1].value = newValue;
+    } else {
+      snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);
+      snapshotsCounts[owner] = ownerSnapshotsCount + 1;
+    }
+  }
+
+  /**
+   * @dev returns the user delegatee. If a user never performed any delegation,
+   * his delegated address will be 0x0. In that case we simply return the user itself
+   * @param delegator the address of the user for which return the delegatee
+   * @param delegates the array of delegates for a particular type of delegation
+   **/
+  function _getDelegatee(
+    address delegator,
+    mapping(address => address) storage delegates
+  ) internal view returns (address) {
+    address previousDelegatee = delegates[delegator];
+
+    if (previousDelegatee == address(0)) {
+      return delegator;
+    }
+
+    return previousDelegatee;
+  }
 }
 
 /**
@@ -1844,11 +1816,9 @@ abstract contract StakedTokenV2 is
   function claimRewards(address to, uint256 amount) external virtual override;
 
   /// @inheritdoc IStakedTokenV2
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256)
-  {
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256) {
     DistributionTypes.UserStakeInput[]
       memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
     userStakeInputs[0] = DistributionTypes.UserStakeInput({
@@ -2003,7 +1973,9 @@ abstract contract StakedTokenV2 is
    * @param delegationType the requested DelegationType
    * @return the relevant storage
    */
-  function _getDelegationDataByType(DelegationType delegationType)
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
     internal
     view
     override
@@ -2063,9 +2035,10 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * - if the amount bigger than maximum allowed, the maximum will be slashed instead.
    * @return amount the amount slashed
    */
-  function slash(address destination, uint256 amount)
-    external
-    returns (uint256);
+  function slash(
+    address destination,
+    uint256 amount
+  ) external returns (uint256);
 
   /**
    * @dev Settles an ongoing slashing event
@@ -2149,11 +2122,7 @@ interface IStakedTokenV3 is IStakedTokenV2 {
    * @param to Address to redeem to
    * @param amount Amount of shares to redeem
    */
-  function redeemOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function redeemOnBehalf(address from, address to, uint256 amount) external;
 
   /**
    * @dev Claims an `amount` of `REWARD_TOKEN` and redeems to the provided address
@@ -2200,11 +2169,10 @@ library PercentageMath {
    * @param percentage The percentage of the value to be calculated
    * @return The percentage of value
    **/
-  function percentMul(uint256 value, uint256 percentage)
-    internal
-    pure
-    returns (uint256)
-  {
+  function percentMul(
+    uint256 value,
+    uint256 percentage
+  ) internal pure returns (uint256) {
     if (value == 0 || percentage == 0) {
       return 0;
     }
@@ -2223,11 +2191,10 @@ library PercentageMath {
    * @param percentage The percentage of the value to be calculated
    * @return The value divided the percentage
    **/
-  function percentDiv(uint256 value, uint256 percentage)
-    internal
-    pure
-    returns (uint256)
-  {
+  function percentDiv(
+    uint256 value,
+    uint256 percentage
+  ) internal pure returns (uint256) {
     require(percentage != 0, 'MATH_DIVISION_BY_ZERO');
 
     require(
@@ -2291,10 +2258,10 @@ contract RoleManager {
    * @param role the role associated with the new pending admin being set
    * @param newPendingAdmin the address of the new pending admin
    **/
-  function setPendingAdmin(uint256 role, address newPendingAdmin)
-    public
-    onlyRoleAdmin(role)
-  {
+  function setPendingAdmin(
+    uint256 role,
+    address newPendingAdmin
+  ) public onlyRoleAdmin(role) {
     _pendingAdmins[role] = newPendingAdmin;
     emit PendingAdminChanged(newPendingAdmin, role);
   }
@@ -3629,7 +3596,7 @@ contract StakedTokenV3 is
     // brick initialize
     lastInitializedRevision = REVISION();
     uint256 decimals = IERC20Metadata(address(stakedToken)).decimals();
-    LOWER_BOUND = 10**decimals;
+    LOWER_BOUND = 10 ** decimals;
   }
 
   /**
@@ -3705,10 +3672,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function stake(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function stake(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _stake(msg.sender, to, amount);
   }
 
@@ -3734,10 +3701,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function redeem(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function redeem(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _redeem(msg.sender, to, amount);
   }
 
@@ -3751,10 +3718,10 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV2
-  function claimRewards(address to, uint256 amount)
-    external
-    override(IStakedTokenV2, StakedTokenV2)
-  {
+  function claimRewards(
+    address to,
+    uint256 amount
+  ) external override(IStakedTokenV2, StakedTokenV2) {
     _claimRewards(msg.sender, to, amount);
   }
 
@@ -3794,22 +3761,17 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function previewRedeem(uint256 shares)
-    public
-    view
-    override
-    returns (uint256)
-  {
+  function previewRedeem(
+    uint256 shares
+  ) public view override returns (uint256) {
     return (EXCHANGE_RATE_UNIT * shares) / _currentExchangeRate;
   }
 
   /// @inheritdoc IStakedTokenV3
-  function slash(address destination, uint256 amount)
-    external
-    override
-    onlySlashingAdmin
-    returns (uint256)
-  {
+  function slash(
+    address destination,
+    uint256 amount
+  ) external override onlySlashingAdmin returns (uint256) {
     require(!inPostSlashingPeriod, 'PREVIOUS_SLASHING_NOT_SETTLED');
     require(amount > 0, 'ZERO_AMOUNT');
     uint256 currentShares = totalSupply();
@@ -3850,11 +3812,9 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setMaxSlashablePercentage(uint256 percentage)
-    external
-    override
-    onlySlashingAdmin
-  {
+  function setMaxSlashablePercentage(
+    uint256 percentage
+  ) external override onlySlashingAdmin {
     _setMaxSlashablePercentage(percentage);
   }
 
@@ -3869,10 +3829,9 @@ contract StakedTokenV3 is
   }
 
   /// @inheritdoc IStakedTokenV3
-  function setCooldownSeconds(uint256 cooldownSeconds)
-    external
-    onlyCooldownAdmin
-  {
+  function setCooldownSeconds(
+    uint256 cooldownSeconds
+  ) external onlyCooldownAdmin {
     _setCooldownSeconds(cooldownSeconds);
   }
 
@@ -3975,11 +3934,7 @@ contract StakedTokenV3 is
    * @param to The address to receiving the shares
    * @param amount The amount of assets to be staked
    */
-  function _stake(
-    address from,
-    address to,
-    uint256 amount
-  ) internal {
+  function _stake(address from, address to, uint256 amount) internal {
     require(!inPostSlashingPeriod, 'SLASHING_ONGOING');
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
@@ -4012,11 +3967,7 @@ contract StakedTokenV3 is
    * @param to Address to redeem to
    * @param amount Amount to redeem
    */
-  function _redeem(
-    address from,
-    address to,
-    uint256 amount
-  ) internal {
+  function _redeem(address from, address to, uint256 amount) internal {
     require(amount != 0, 'INVALID_ZERO_AMOUNT');
 
     CooldownSnapshot memory cooldownSnapshot = stakersCooldowns[from];
@@ -4078,11 +4029,10 @@ contract StakedTokenV3 is
    * @param totalShares The total amount of shares
    * @return exchangeRate as 18 decimal precision uint216
    */
-  function _getExchangeRate(uint256 totalAssets, uint256 totalShares)
-    internal
-    pure
-    returns (uint216)
-  {
+  function _getExchangeRate(
+    uint256 totalAssets,
+    uint256 totalShares
+  ) internal pure returns (uint216) {
     return
       (((totalShares * EXCHANGE_RATE_UNIT) + totalAssets - 1) / totalAssets)
         .toUint216();
@@ -4114,326 +4064,5 @@ contract StakedTokenV3 is
     }
 
     super._transfer(from, to, amount);
-  }
-}
-
-interface IGhoVariableDebtTokenTransferHook {
-  /**
-   * @dev updates the discount when discount token is transferred
-   * @dev Only callable by discount token
-   * @param sender address of sender
-   * @param recipient address of recipient
-   * @param senderDiscountTokenBalance sender discount token balance
-   * @param recipientDiscountTokenBalance recipient discount token balance
-   * @param amount amount of discount token being transferred
-   **/
-  function updateDiscountDistribution(
-    address sender,
-    address recipient,
-    uint256 senderDiscountTokenBalance,
-    uint256 recipientDiscountTokenBalance,
-    uint256 amount
-  ) external;
-}
-
-interface IStakedAaveV3 is IStakedTokenV3 {
-  struct ExchangeRateSnapshot {
-    uint40 blockNumber;
-    uint216 value;
-  }
-
-  event GHODebtTokenChanged(address indexed newDebtToken);
-
-  /**
-   * @dev Sets the GHO debt token (only callable by SHORT_EXECUTOR)
-   * @param newGHODebtToken Address to GHO debt token
-   */
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external;
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes.
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    returns (uint256);
-
-  /**
-   * @dev Claims an `amount` of `REWARD_TOKEN` and stakes. Only the claim helper contract is allowed to call this function
-   * @param from The address of the from from which to claim
-   * @param to Address to stake to
-   * @param amount Amount to claim
-   */
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external returns (uint256);
-
-  /**
-   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
-   * @param from The address staking the token
-   * @param amount The amount to be staked
-   * @param deadline The permit execution deadline
-   * @param v The v component of the signed message
-   * @param r The r component of the signed message
-   * @param s The s component of the signed message
-   */
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-}
-
-interface IERC20WithPermit is IERC20 {
-  function permit(
-    address owner,
-    address spender,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external;
-}
-
-/**
- * @title StakedAaveV3
- * @notice StakedTokenV3 with AAVE token as staked token
- * @author BGD Labs
- */
-contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
-  using SafeCast for uint256;
-
-  uint32 internal _exchangeRateSnapshotsCount;
-  /// @notice Snapshots of the exchangeRate for a given block
-  mapping(uint256 => ExchangeRateSnapshot) public _exchangeRateSnapshots;
-
-  /// @notice GHO debt token to be used in the _beforeTokenTransfer hook
-  IGhoVariableDebtTokenTransferHook public ghoDebtToken;
-
-  function REVISION() public pure virtual override returns (uint256) {
-    return 5;
-  }
-
-  constructor(
-    IERC20 stakedToken,
-    IERC20 rewardToken,
-    uint256 unstakeWindow,
-    address rewardsVault,
-    address emissionManager,
-    uint128 distributionDuration
-  )
-    StakedTokenV3(
-      stakedToken,
-      rewardToken,
-      unstakeWindow,
-      rewardsVault,
-      emissionManager,
-      distributionDuration
-    )
-  {
-    // brick initialize
-    lastInitializedRevision = REVISION();
-  }
-
-  /**
-   * @dev Called by the proxy contract
-   */
-  function initialize(
-    address slashingAdmin,
-    address cooldownPauseAdmin,
-    address claimHelper,
-    uint256 maxSlashablePercentage,
-    uint256 cooldownSeconds
-  ) external override initializer {
-    _initialize(
-      slashingAdmin,
-      cooldownPauseAdmin,
-      claimHelper,
-      maxSlashablePercentage,
-      cooldownSeconds
-    );
-
-    // needed to claimRewardsAndStake works without a custom approval each time
-    STAKED_TOKEN.approve(address(this), type(uint256).max);
-  }
-
-  /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external
-  {
-    require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
-    ghoDebtToken = newGHODebtToken;
-    emit GHODebtTokenChanged(address(newGHODebtToken));
-  }
-
-  /// @inheritdoc IStakedAaveV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
-    return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
-  }
-
-  /// @inheritdoc IStakedAaveV3
-  function claimRewardsAndStakeOnBehalf(
-    address from,
-    address to,
-    uint256 amount
-  ) external override onlyClaimHelper returns (uint256) {
-    return _claimRewardsAndStakeOnBehalf(from, to, amount);
-  }
-
-  /// @inheritdoc IStakedAaveV3
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, from, amount);
-  }
-
-  /**
-   * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
-   * - On _transfer, it writes snapshots for both "from" and "to"
-   * - On _mint, only for _to
-   * - On _burn, only for _from
-   * @param from the from address
-   * @param to the to address
-   * @param amount the amount to transfer
-   */
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    IGhoVariableDebtTokenTransferHook cachedGhoDebtToken = ghoDebtToken;
-    if (address(cachedGhoDebtToken) != address(0)) {
-      try
-        cachedGhoDebtToken.updateDiscountDistribution(
-          from,
-          to,
-          balanceOf(from),
-          balanceOf(to),
-          amount
-        )
-      {} catch (bytes memory) {}
-    }
-    address votingFromDelegatee = _votingDelegates[from];
-    address votingToDelegatee = _votingDelegates[to];
-
-    if (votingFromDelegatee == address(0)) {
-      votingFromDelegatee = from;
-    }
-    if (votingToDelegatee == address(0)) {
-      votingToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      votingFromDelegatee,
-      votingToDelegatee,
-      amount,
-      DelegationType.VOTING_POWER
-    );
-
-    address propPowerFromDelegatee = _propositionPowerDelegates[from];
-    address propPowerToDelegatee = _propositionPowerDelegates[to];
-
-    if (propPowerFromDelegatee == address(0)) {
-      propPowerFromDelegatee = from;
-    }
-    if (propPowerToDelegatee == address(0)) {
-      propPowerToDelegatee = to;
-    }
-
-    _moveDelegatesByType(
-      propPowerFromDelegatee,
-      propPowerToDelegatee,
-      amount,
-      DelegationType.PROPOSITION_POWER
-    );
-  }
-
-  /// @dev Modified version accounting for exchange rate at block
-  /// @inheritdoc GovernancePowerDelegationERC20
-  function _searchByBlockNumber(
-    mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
-    mapping(address => uint256) storage snapshotsCounts,
-    address user,
-    uint256 blockNumber
-  ) internal view override returns (uint256) {
-    return
-      (super._searchByBlockNumber(
-        snapshots,
-        snapshotsCounts,
-        user,
-        blockNumber
-      ) * EXCHANGE_RATE_UNIT) /
-      _binarySearchExchangeRate(
-        _exchangeRateSnapshots,
-        _exchangeRateSnapshotsCount,
-        blockNumber
-      );
-  }
-
-  /**
-   * @dev Updates the exchangeRate and emits events accordingly
-   * @param newExchangeRate the new exchange rate
-   */
-  function _updateExchangeRate(uint216 newExchangeRate) internal override {
-    _exchangeRateSnapshots[_exchangeRateSnapshotsCount] = ExchangeRateSnapshot(
-      block.number.toUint40(),
-      newExchangeRate
-    );
-    ++_exchangeRateSnapshotsCount;
-    super._updateExchangeRate(newExchangeRate);
-  }
-
-  function _binarySearchExchangeRate(
-    mapping(uint256 => ExchangeRateSnapshot) storage snapshots,
-    uint256 snapshotsCount,
-    uint256 blockNumber
-  ) internal view returns (uint256) {
-    unchecked {
-      // First check most recent balance
-      if (snapshots[snapshotsCount - 1].blockNumber <= blockNumber) {
-        return snapshots[snapshotsCount - 1].value;
-      }
-
-      uint256 lower = 0;
-      uint256 upper = snapshotsCount - 1;
-      while (upper > lower) {
-        uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-        ExchangeRateSnapshot memory snapshot = snapshots[center];
-        if (snapshot.blockNumber == blockNumber) {
-          return snapshot.value;
-        } else if (snapshot.blockNumber < blockNumber) {
-          lower = center;
-        } else {
-          upper = center - 1;
-        }
-      }
-      return snapshots[lower].value;
-    }
   }
 }
