@@ -73,20 +73,19 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function setGHODebtToken(IGhoVariableDebtTokenTransferHook newGHODebtToken)
-    external
-  {
+  function setGHODebtToken(
+    IGhoVariableDebtTokenTransferHook newGHODebtToken
+  ) external {
     require(msg.sender == 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5); // Short executor
     ghoDebtToken = newGHODebtToken;
     emit GHODebtTokenChanged(address(newGHODebtToken));
   }
 
   /// @inheritdoc IStakedAaveV3
-  function claimRewardsAndStake(address to, uint256 amount)
-    external
-    override
-    returns (uint256)
-  {
+  function claimRewardsAndStake(
+    address to,
+    uint256 amount
+  ) external override returns (uint256) {
     return _claimRewardsAndStakeOnBehalf(msg.sender, to, amount);
   }
 
@@ -100,37 +99,14 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
   }
 
   /// @inheritdoc IStakedAaveV3
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, from, amount);
-  }
-
-  /// @inheritdoc IStakedAaveV3
   function getExchangeRateSnapshotsCount() external view returns (uint32) {
     return _exchangeRateSnapshotsCount;
   }
 
   /// @inheritdoc IStakedAaveV3
-  function getExchangeRateSnapshot(uint32 index)
-    external
-    view
-    returns (ExchangeRateSnapshot memory)
-  {
+  function getExchangeRateSnapshot(
+    uint32 index
+  ) external view returns (ExchangeRateSnapshot memory) {
     return _exchangeRateSnapshots[index];
   }
 

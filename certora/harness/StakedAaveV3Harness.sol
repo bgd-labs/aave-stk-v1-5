@@ -34,20 +34,16 @@ contract StakedAaveV3Harness is StakedAaveV3 {
   }
 
   // Returns the asset's emission per second from the sturct
-  function getAssetEmissionPerSecond(address token)
-    public
-    view
-    returns (uint128)
-  {
+  function getAssetEmissionPerSecond(
+    address token
+  ) public view returns (uint128) {
     return assets[token].emissionPerSecond;
   }
 
   // Returns the asset's last updated timestamp from the sturct
-  function getAssetLastUpdateTimestamp(address token)
-    public
-    view
-    returns (uint128)
-  {
+  function getAssetLastUpdateTimestamp(
+    address token
+  ) public view returns (uint128) {
     return assets[token].lastUpdateTimestamp;
   }
 
@@ -57,19 +53,17 @@ contract StakedAaveV3Harness is StakedAaveV3 {
   }
 
   // Returns the user's personal index for the specific asset
-  function getUserPersonalIndex(address token, address user)
-    public
-    view
-    returns (uint256)
-  {
+  function getUserPersonalIndex(
+    address token,
+    address user
+  ) public view returns (uint256) {
     return assets[token].users[user];
   }
 
-  function _getExchangeRateWrapper(uint256 totalAssets, uint256 totalShares)
-    public
-    pure
-    returns (uint216)
-  {
+  function _getExchangeRateWrapper(
+    uint256 totalAssets,
+    uint256 totalShares
+  ) public pure returns (uint216) {
     return _getExchangeRate(totalAssets, totalShares);
   }
 }
