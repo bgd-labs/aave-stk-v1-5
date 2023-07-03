@@ -36,9 +36,10 @@ interface IDelegationAwareToken {
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegate(address delegatee, DelegationType delegationType)
-    external
-    virtual;
+  function delegate(
+    address delegatee,
+    DelegationType delegationType
+  ) external virtual;
 
   /**
    * @dev delegates all the powers to a specific user
@@ -50,22 +51,20 @@ interface IDelegationAwareToken {
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegatee(address delegator, DelegationType delegationType)
-    external
-    view
-    virtual
-    returns (address);
+  function getDelegatee(
+    address delegator,
+    DelegationType delegationType
+  ) external view virtual returns (address);
 
   /**
    * @dev returns the current delegated power of a user. The current power is the
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    virtual
-    returns (uint256);
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view virtual returns (uint256);
 
   /**
    * @dev returns the delegated power of a user at a certain block
@@ -80,9 +79,7 @@ interface IDelegationAwareToken {
   /**
    * @dev returns the total supply at a certain block number
    **/
-  function totalSupplyAt(uint256 blockNumber)
-    external
-    view
-    virtual
-    returns (uint256);
+  function totalSupplyAt(
+    uint256 blockNumber
+  ) external view virtual returns (uint256);
 }

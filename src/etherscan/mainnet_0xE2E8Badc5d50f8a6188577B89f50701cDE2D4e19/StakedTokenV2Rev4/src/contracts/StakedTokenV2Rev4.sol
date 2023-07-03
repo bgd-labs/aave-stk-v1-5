@@ -37,9 +37,10 @@ interface IGovernancePowerDelegationToken {
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external
-    virtual;
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external virtual;
 
   /**
    * @dev delegates all the powers to a specific user
@@ -51,22 +52,20 @@ interface IGovernancePowerDelegationToken {
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    virtual
-    returns (address);
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view virtual returns (address);
 
   /**
    * @dev returns the current delegated power of a user. The current power is the
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    virtual
-    returns (uint256);
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view virtual returns (uint256);
 
   /**
    * @dev returns the delegated power of a user at a certain block
@@ -81,11 +80,9 @@ interface IGovernancePowerDelegationToken {
   /**
    * @dev returns the total supply at a certain block number
    **/
-  function totalSupplyAt(uint256 blockNumber)
-    external
-    view
-    virtual
-    returns (uint256);
+  function totalSupplyAt(
+    uint256 blockNumber
+  ) external view virtual returns (uint256);
 }
 
 /**
@@ -141,10 +138,10 @@ interface IERC20 {
    *
    * This value changes when {approve} or {transferFrom} are called.
    */
-  function allowance(address owner, address spender)
-    external
-    view
-    returns (uint256);
+  function allowance(
+    address owner,
+    address spender
+  ) external view returns (uint256);
 
   /**
    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -524,12 +521,10 @@ contract ERC20 is Context, IERC20 {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function transfer(
+    address recipient,
+    uint256 amount
+  ) public virtual override returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -537,13 +532,10 @@ contract ERC20 is Context, IERC20 {
   /**
    * @dev See {IERC20-allowance}.
    */
-  function allowance(address owner, address spender)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function allowance(
+    address owner,
+    address spender
+  ) public view virtual override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -554,12 +546,10 @@ contract ERC20 is Context, IERC20 {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount)
-    public
-    virtual
-    override
-    returns (bool)
-  {
+  function approve(
+    address spender,
+    uint256 amount
+  ) public virtual override returns (bool) {
     _approve(_msgSender(), spender, amount);
     return true;
   }
@@ -605,11 +595,10 @@ contract ERC20 is Context, IERC20 {
    *
    * - `spender` cannot be the zero address.
    */
-  function increaseAllowance(address spender, uint256 addedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function increaseAllowance(
+    address spender,
+    uint256 addedValue
+  ) public virtual returns (bool) {
     _approve(
       _msgSender(),
       spender,
@@ -632,11 +621,10 @@ contract ERC20 is Context, IERC20 {
    * - `spender` must have allowance for the caller of at least
    * `subtractedValue`.
    */
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    public
-    virtual
-    returns (bool)
-  {
+  function decreaseAllowance(
+    address spender,
+    uint256 subtractedValue
+  ) public virtual returns (bool) {
     _approve(
       _msgSender(),
       spender,
@@ -791,11 +779,7 @@ interface IStakedAave {
 }
 
 interface ITransferHook {
-  function onTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) external;
+  function onTransfer(address from, address to, uint256 amount) external;
 }
 
 library DistributionTypes {
@@ -826,11 +810,7 @@ library SafeERC20 {
   using SafeMath for uint256;
   using Address for address;
 
-  function safeTransfer(
-    IERC20 token,
-    address to,
-    uint256 value
-  ) internal {
+  function safeTransfer(IERC20 token, address to, uint256 value) internal {
     callOptionalReturn(
       token,
       abi.encodeWithSelector(token.transfer.selector, to, value)
@@ -849,11 +829,7 @@ library SafeERC20 {
     );
   }
 
-  function safeApprove(
-    IERC20 token,
-    address spender,
-    uint256 value
-  ) internal {
+  function safeApprove(IERC20 token, address spender, uint256 value) internal {
     require(
       (value == 0) || (token.allowance(address(this), spender) == 0),
       'SafeERC20: approve from non-zero to non-zero allowance'
@@ -1132,7 +1108,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
   ) internal pure returns (uint256) {
     return
       principalUserBalance.mul(reserveIndex.sub(userIndex)).div(
-        10**uint256(PRECISION)
+        10 ** uint256(PRECISION)
       );
   }
 
@@ -1166,7 +1142,7 @@ contract AaveDistributionManager is IAaveDistributionManager {
     return
       emissionPerSecond
         .mul(timeDelta)
-        .mul(10**uint256(PRECISION))
+        .mul(10 ** uint256(PRECISION))
         .div(totalBalance)
         .add(currentIndex);
   }
@@ -1177,11 +1153,10 @@ contract AaveDistributionManager is IAaveDistributionManager {
    * @param asset The address of the reference asset of the distribution
    * @return The new index
    **/
-  function getUserAssetData(address user, address asset)
-    public
-    view
-    returns (uint256)
-  {
+  function getUserAssetData(
+    address user,
+    address asset
+  ) public view returns (uint256) {
     return assets[asset].users[user];
   }
 }
@@ -1215,10 +1190,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
    **/
-  function delegateByType(address delegatee, DelegationType delegationType)
-    external
-    override
-  {
+  function delegateByType(
+    address delegatee,
+    DelegationType delegationType
+  ) external override {
     _delegateByType(msg.sender, delegatee, delegationType);
   }
 
@@ -1235,12 +1210,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * @dev returns the delegatee of an user
    * @param delegator the address of the delegator
    **/
-  function getDelegateeByType(address delegator, DelegationType delegationType)
-    external
-    view
-    override
-    returns (address)
-  {
+  function getDelegateeByType(
+    address delegator,
+    DelegationType delegationType
+  ) external view override returns (address) {
     (
       ,
       ,
@@ -1255,12 +1228,10 @@ abstract contract GovernancePowerDelegationERC20 is
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function getPowerCurrent(
+    address user,
+    DelegationType delegationType
+  ) external view override returns (uint256) {
     (
       mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
       mapping(address => uint256) storage snapshotsCounts,
@@ -1294,12 +1265,9 @@ abstract contract GovernancePowerDelegationERC20 is
    * In this initial implementation with no AAVE minting, simply returns the current supply
    * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
    **/
-  function totalSupplyAt(uint256 blockNumber)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function totalSupplyAt(
+    uint256 blockNumber
+  ) external view override returns (uint256) {
     return super.totalSupply();
   }
 
@@ -1454,7 +1422,9 @@ abstract contract GovernancePowerDelegationERC20 is
    * who inherit from this to provide access to the delegation data by overriding this method.
    * @param delegationType the type of delegation
    **/
-  function _getDelegationDataByType(DelegationType delegationType)
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
     internal
     view
     virtual
@@ -1896,11 +1866,9 @@ contract StakedTokenV2Rev4 is
    * @param staker The staker address
    * @return The rewards
    */
-  function getTotalRewardsBalance(address staker)
-    external
-    view
-    returns (uint256)
-  {
+  function getTotalRewardsBalance(
+    address staker
+  ) external view returns (uint256) {
     DistributionTypes.UserStakeInput[]
       memory userStakeInputs = new DistributionTypes.UserStakeInput[](1);
     userStakeInputs[0] = DistributionTypes.UserStakeInput({
@@ -2023,7 +1991,9 @@ contract StakedTokenV2Rev4 is
     }
   }
 
-  function _getDelegationDataByType(DelegationType delegationType)
+  function _getDelegationDataByType(
+    DelegationType delegationType
+  )
     internal
     view
     override

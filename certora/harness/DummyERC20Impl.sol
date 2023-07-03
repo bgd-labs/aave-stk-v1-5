@@ -50,30 +50,26 @@ contract DummyERC20Impl is IERC20 {
     return b[account];
   }
 
-  function transfer(address recipient, uint256 amount)
-    external
-    override
-    returns (bool)
-  {
+  function transfer(
+    address recipient,
+    uint256 amount
+  ) external override returns (bool) {
     b[msg.sender] = sub(b[msg.sender], amount);
     b[recipient] = add(b[recipient], amount);
     return true;
   }
 
-  function allowance(address owner, address spender)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function allowance(
+    address owner,
+    address spender
+  ) external view override returns (uint256) {
     return a[owner][spender];
   }
 
-  function approve(address spender, uint256 amount)
-    external
-    override
-    returns (bool)
-  {
+  function approve(
+    address spender,
+    uint256 amount
+  ) external override returns (bool) {
     a[msg.sender][spender] = amount;
     return true;
   }
