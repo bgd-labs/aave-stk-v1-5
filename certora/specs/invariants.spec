@@ -1,11 +1,11 @@
-import "base.spec"
+import "base.spec";
 
 ghost mathint totalStaked {
     init_state axiom totalStaked == 0;
 }
 
 ghost uint216 exchangeRate {
-    init_state axiom exchangeRate == INITIAL_EXCHANGE_RATE();
+    init_state axiom exchangeRate == INITIAL_EXCHANGE_RATE_F();
 }
 
 hook Sstore _currentExchangeRate uint216 new_rate (uint216 old_rate) STORAGE {
@@ -18,14 +18,14 @@ hook Sstore _currentExchangeRate uint216 new_rate (uint216 old_rate) STORAGE {
     @Link: https://prover.certora.com/output/40577/55c78438915b43cfa84014b153baee5e/?anonymousKey=cc47986c3d9dc44e8801e3e591ec56d048e26f30
 */
 invariant balanceOfZero()
-    balanceOf(0) == 0
+    balanceOf(0) == 0;
 
 /*
     @Invariant lowerBoundNotZero
     @Link: https://prover.certora.com/output/40577/55c78438915b43cfa84014b153baee5e/?anonymousKey=cc47986c3d9dc44e8801e3e591ec56d048e26f30
 */
 invariant lowerBoundNotZero()
-    LOWER_BOUND() > 0
+    LOWER_BOUND() > 0;
 
 /*
     @Invariant cooldownDataCorrectness
@@ -49,7 +49,7 @@ invariant cooldownDataCorrectness(address user, env e)
     @Link: https://prover.certora.com/output/40577/55c78438915b43cfa84014b153baee5e/?anonymousKey=cc47986c3d9dc44e8801e3e591ec56d048e26f30
 */
 invariant cooldownAmountNotGreaterThanBalance(address user)
-    balanceOf(user) >= cooldownAmount(user)
+    balanceOf(user) >= assert_uint256(cooldownAmount(user))
     {
         preserved with (env e1)
         {
@@ -58,13 +58,13 @@ invariant cooldownAmountNotGreaterThanBalance(address user)
         }
         preserved transferFrom(address from, address to, uint256 amount) with (env e2)
         {
-            require balanceOf(from) + balanceOf(to) <= totalSupply();
+            require balanceOf(from) + balanceOf(to) <= to_mathint(totalSupply());
             requireInvariant cooldownDataCorrectness(user, e2);
             requireInvariant totalSupplyGreaterThanUserBalance(user);
         }
         preserved transfer(address to, uint256 amount) with (env e3)
         {
-            require balanceOf(e3.msg.sender) + balanceOf(to) <= totalSupply();
+            require balanceOf(e3.msg.sender) + balanceOf(to) <= to_mathint(totalSupply());
             requireInvariant cooldownDataCorrectness(user, e3);
             requireInvariant totalSupplyGreaterThanUserBalance(user);
         }
@@ -80,31 +80,31 @@ invariant totalSupplyGreaterThanUserBalance(address user)
     {
         preserved transferFrom(address from, address to, uint256 amount) with (env e2)
         {
-            require balanceOf(from) + balanceOf(to) <= totalSupply();
+            require balanceOf(from) + balanceOf(to) <= to_mathint(totalSupply());
         }
         preserved transfer(address to, uint256 amount) with (env e3)
         {
-            require balanceOf(e3.msg.sender) + balanceOf(to) <= totalSupply();
+            require balanceOf(e3.msg.sender) + balanceOf(to) <= to_mathint(totalSupply());
         }
         preserved redeem(address to, uint256 amount) with (env e4)
         {
             require to == user;
-            require balanceOf(e4.msg.sender) + balanceOf(to) <= totalSupply();
+            require balanceOf(e4.msg.sender) + balanceOf(to) <= to_mathint(totalSupply());
         }
         preserved redeemOnBehalf(address from, address to, uint256 amount) with (env e5)
         {
             require to == user;
-            require balanceOf(from) + balanceOf(to) <= totalSupply();
+            require balanceOf(from) + balanceOf(to) <= to_mathint(totalSupply());
         }
         preserved claimRewardsAndRedeem(address to, uint256 claimAmount, uint256 redeemAmount) with (env e6)
         {
             require to == user;
-            require balanceOf(e6.msg.sender) + balanceOf(to) <= totalSupply();
+            require balanceOf(e6.msg.sender) + balanceOf(to) <= to_mathint(totalSupply());
         }
         preserved claimRewardsAndRedeemOnBehalf(address from, address to, uint256 claimAmount, uint256 redeemAmount) with (env e7)
         {
             require to == user;
-            require balanceOf(from) + balanceOf(to) <= totalSupply();
+            require balanceOf(from) + balanceOf(to) <= to_mathint(totalSupply());
         }
     }
 
@@ -115,4 +115,4 @@ invariant totalSupplyGreaterThanUserBalance(address user)
     @Link: https://prover.certora.com/output/40577/55c78438915b43cfa84014b153baee5e/?anonymousKey=cc47986c3d9dc44e8801e3e591ec56d048e26f30
 */
 invariant PersonalIndexLessOrEqualGlobalIndex(address asset, address user)
-    getUserPersonalIndex(asset, user) <= getAssetGlobalIndex(asset)
+    getUserPersonalIndex(asset, user) <= getAssetGlobalIndex(asset);
