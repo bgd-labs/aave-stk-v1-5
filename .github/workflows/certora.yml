@@ -19,11 +19,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Check key
-        env:
-          CERTORAKEY: ${{ secrets.CERTORAKEY }}
-        run: echo "key length" ${#CERTORAKEY}
-
       - name: Install python
         uses: actions/setup-python@v2
         with: { python-version: 3.9 }
@@ -37,9 +32,9 @@ jobs:
 
       - name: Install solc
         run: |
-          wget https://github.com/ethereum/solidity/releases/download/v0.8.17/solc-static-linux
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.19/solc-static-linux
           chmod +x solc-static-linux
-          sudo mv solc-static-linux /usr/local/bin/solc8.17
+          sudo mv solc-static-linux /usr/local/bin/solc8.19
 
       - name: Verify rule ${{ matrix.rule }}
         run: |
@@ -48,7 +43,7 @@ jobs:
           make munged
           cd ..
           echo "key length" ${#CERTORAKEY}
-          sh certora/scripts/${{ matrix.rule }}
+          certoraRun certora/conf/${{ matrix.rule }}
         env:
           CERTORAKEY: ${{ secrets.CERTORAKEY }}
 
@@ -57,14 +52,21 @@ jobs:
       max-parallel: 16
       matrix:
         rule:
-          - runPropertiesWithSummarization.sh
-          - runInvariants.sh
-          - runAllProps.sh integrityOfSlashing integrityOfStaking previewStakeEquivalentStake noStakingPostSlashingPeriod noSlashingMoreThanMax noRedeemOutOfUnstakeWindow noEntryUntilSlashingSettled integrityOfRedeem cooldownCorrectness airdropNotMutualized integrityOfReturnFunds slashAndReturnFundsOfZeroDoesntChangeExchangeRate
-          - runAllProps.sh rewardsIncreaseForNonClaimFunctions
-          - runAllProps.sh rewardsMonotonicallyIncrease
-          - runAllProps.sh rewardsGetterEquivalentClaim
-          - runAllProps.sh indexesMonotonicallyIncrease
-          - runAllProps.sh exchangeRateNeverZero
-          - runAllProps.sh totalSupplyDoesNotDropToZero
-          - runAllProps.sh slashingIncreaseExchangeRate
-          - runAllProps.sh returnFundsDecreaseExchangeRate
+          - propertiesWithSummarization.conf
+          - invariants.conf
+          - allProps.conf --rule integrityOfSlashing --rule integrityOfStaking --rule previewStakeEquivalentStake --rule noStakingPostSlashingPeriod --rule noSlashingMoreThanMax --rule noRedeemOutOfUnstakeWindow --rule noEntryUntilSlashingSettled --rule integrityOfRedeem --rule cooldownCorrectness --rule airdropNotMutualized --rule integrityOfReturnFunds --rule slashAndReturnFundsOfZeroDoesntChangeExchangeRate
+          - allProps.conf --rule rewardsIncreaseForNonClaimFunctions
+          - allProps.conf --rule rewardsMonotonicallyIncrease
+          - allProps.conf --rule rewardsGetterEquivalentClaim
+          - allProps.conf --rule indexesMonotonicallyIncrease
+          - allProps.conf --rule exchangeRateNeverZero
+          - allProps.conf --rule totalSupplyDoesNotDropToZero
+          - allProps.conf --rule slashingIncreaseExchangeRate
+          - allProps.conf --rule returnFundsDecreaseExchangeRate
+          - token-v3-general.conf --rule delegateCorrectness
+          - token-v3-general.conf --rule sumOfVBalancesCorrectness
+          - token-v3-general.conf --rule sumOfPBalancesCorrectness
+          - token-v3-general.conf --rule transferDoesntChangeDelegationMode
+          - token-v3-erc20.conf
+          - token-v3-delegate.conf 
+          - token-v3-community.conf

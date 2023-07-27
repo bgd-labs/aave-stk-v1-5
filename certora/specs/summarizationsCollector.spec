@@ -1,4 +1,4 @@
-import "summarizations.spec"
-import "propertiesWithSummarizations.spec"
+import "summarizations.spec";
+import "propertiesWithSummarizations.spec";
 
-use invariant allSharesAreBacked
+use invariant allSharesAreBacked;
