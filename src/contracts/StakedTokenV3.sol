@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
 import {IERC20Metadata} from 'openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {BaseDelegation} from 'aave-token-v3/BaseDelegation.sol';
+
 import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {SafeERC20} from '../lib/SafeERC20.sol';
 import {IAaveDistributionManager} from '../interfaces/IAaveDistributionManager.sol';
@@ -12,7 +14,7 @@ import {IStakedTokenV3} from '../interfaces/IStakedTokenV3.sol';
 import {PercentageMath} from '../lib/PercentageMath.sol';
 import {RoleManager} from '../utils/RoleManager.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
-import {BaseDelegation} from 'aave-token-v3/BaseDelegation.sol';
+import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 
 /**
  * @title StakedTokenV3
@@ -163,6 +165,27 @@ contract StakedTokenV3 is
     uint256 amount
   ) external override(IStakedTokenV2, StakedTokenV2) {
     _stake(msg.sender, to, amount);
+  }
+
+  /// @inheritdoc IStakedTokenV3
+  function stakeWithPermit(
+    address from,
+    uint256 amount,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external override {
+    IERC20WithPermit(address(STAKED_TOKEN)).permit(
+      from,
+      address(this),
+      amount,
+      deadline,
+      v,
+      r,
+      s
+    );
+    _stake(from, from, amount);
   }
 
   /// @inheritdoc IStakedTokenV2
