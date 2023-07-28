@@ -6,9 +6,10 @@ certoraRun certora/harness/StakedAaveV3Harness.sol \
     --link StakedAaveV3Harness:REWARDS_VAULT=RewardVault \
     --verify StakedAaveV3Harness:certora/specs/allProps.spec \
     --solc solc8.17 \
+    --send_only \
     --cloud \
     --optimistic_loop \
     --loop_iter 3 \
-    --rules "${@}" \
-    --settings -t=600 \
-    --msg "Props"
+    --rule $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} \
+    --smt_timeout 600 \
+    --msg "all props"

@@ -1,0 +1,25 @@
+
+Status of Aave-stk-gov-v3
+=========================
+
+Nissan work up to 19/07/2023
+----------------------------
+- I integrated the delegate rules from the Aave-Token-v3 to the here. Specifically
+  I added the file token-v3-delegate.spec (originally delegate.spec) and edited the
+  harness file StakedAaveV3Harness.sol to suit the new rules.
+  In comparison to the token-v3 the verification time here is more difficault because
+  the function StakedTokenV3.getPowerCurrent() calculates:
+  super.getPowerCurrent() * EXCHANGE_RATE_UNIT / getExchangeRate();
+  To handle it I had to munged the code and summarize the above mul-div calculation.
+  It is summarized by the ghost function mul_div (in the file token-v3-delegate.spec).
+
+  AS a result of the above calculation the spec was not precise as the original, and
+  in many assertions instead of pure equality we have now equality up-to 1 or 2. (That is
+  instead of assert(x==y) we have assert(x==y || x==y+1 || x==y-1).)
+
+  It remains to:
+  - Add more spec files from Aave-v3. Currently they are not passing.
+  - For CI I need to add my Certore-Key to github.
+
+
+Check: Staked_Token is currently Reward_Token !
