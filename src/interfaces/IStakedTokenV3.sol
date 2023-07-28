@@ -25,6 +25,24 @@ interface IStakedTokenV3 is IStakedTokenV2 {
   event SlashingSettled();
 
   /**
+   * @dev Allows staking a certain amount of STAKED_TOKEN with gasless approvals (permit)
+   * @param from The address staking the token
+   * @param amount The amount to be staked
+   * @param deadline The permit execution deadline
+   * @param v The v component of the signed message
+   * @param r The r component of the signed message
+   * @param s The s component of the signed message
+   */
+  function stakeWithPermit(
+    address from,
+    uint256 amount,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external;
+
+  /**
    * @dev Returns the current exchange rate
    * @return exchangeRate as 18 decimal precision uint216
    */

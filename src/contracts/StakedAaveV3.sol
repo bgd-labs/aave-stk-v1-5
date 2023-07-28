@@ -7,7 +7,6 @@ import {StakedTokenV3} from './StakedTokenV3.sol';
 import {IGhoVariableDebtTokenTransferHook} from '../interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {SafeCast} from '../lib/SafeCast.sol';
 import {IStakedAaveV3} from '../interfaces/IStakedAaveV3.sol';
-import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
 
 /**
  * @title StakedAaveV3
@@ -76,27 +75,6 @@ contract StakedAaveV3 is StakedTokenV3, IStakedAaveV3 {
     uint256 amount
   ) external override onlyClaimHelper returns (uint256) {
     return _claimRewardsAndStakeOnBehalf(from, to, amount);
-  }
-
-  /// @inheritdoc IStakedAaveV3
-  function stakeWithPermit(
-    address from,
-    uint256 amount,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external override {
-    IERC20WithPermit(address(STAKED_TOKEN)).permit(
-      from,
-      address(this),
-      amount,
-      deadline,
-      v,
-      r,
-      s
-    );
-    _stake(from, from, amount);
   }
 
   /**
