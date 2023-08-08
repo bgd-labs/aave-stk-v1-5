@@ -106,7 +106,7 @@ contract StakedTokenV3 is
    * @return The revision
    */
   function REVISION() public pure virtual returns (uint256) {
-    return 4;
+    return 1;
   }
 
   /**
@@ -120,7 +120,24 @@ contract StakedTokenV3 is
   /**
    * @dev Called by the proxy contract
    */
-  function initialize() external virtual initializer {}
+  function initialize(
+    address slashingAdmin,
+    address cooldownPauseAdmin,
+    address claimHelper,
+    uint256 maxSlashablePercentage,
+    uint256 cooldownSeconds
+  ) external initializer {
+    _initialize(
+      slashingAdmin,
+      cooldownPauseAdmin,
+      claimHelper,
+      maxSlashablePercentage,
+      cooldownSeconds
+    );
+
+    // needed to claimRewardsAndStake works without a custom approval each time
+    STAKED_TOKEN.approve(address(this), type(uint256).max);
+  }
 
   function _initialize(
     address slashingAdmin,
