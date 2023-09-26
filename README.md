@@ -88,3 +88,11 @@ Generate a code & storage layout diff.
 ```sh
 make diff-all
 ```
+
+## Copyright
+
+Copyright © 2023, Aave DAO, represented by its governance smart contracts.
+
+Created by [BGD Labs](https://bgdlabs.com/).
+
+[MIT license](./LICENSE)
