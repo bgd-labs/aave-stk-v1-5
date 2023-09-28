@@ -16,6 +16,8 @@ node_modules
 # ignore foundry deploy artifacts
 broadcast/
 
+.DS_Store
+
 # certora temp files
 .certora/
 .certora*
