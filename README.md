@@ -54,10 +54,10 @@ An export of storage layout changes can be found [here](./storage.md)
 
 **External**
 
-- [SigmaPrime report](./audits/Sigma_Prime_Aave_Safety_Module_Security_Assessment_Report_v2.pdf)
-- [Certora report v1.5](./audits/Formal_Verification_Report_stk_v1_5.pdf)
-- [Certora report v3](./audits/Formal_Verification_Report_stk_v3.pdf)
-- [Certora properties](./certora/specs/)
+- [SigmaPrime report](security/sp/Sigma_Prime_Aave_Safety_Module_Security_Assessment_Report_v2.pdfpdf)
+- [Certora report v1.5](security/certora/reports/Formal_Verification_Report_stk_v1_5.pdfort_stk_v1_5.pdf)
+- [Certora report v3](security/certora/reports/Formal_Verification_Report_stk_v3.pdfeport_stk_v3.pdf)
+- [Certora properties](security/certora/specs/)
 
 **Procedures followed**
 
